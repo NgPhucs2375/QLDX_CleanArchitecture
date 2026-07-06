@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "toananhle.dev",
+    "identity": "Onion.Structure",
+    "name": "ASP.NET Core Onion Project Structure",
+    "shortName": "onion-clean",
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    },
+    "sourceName": "Onion.CleanArchitecture",
+    "classifications": [
+        "Library"
+    ],
+    "symbols": {
+        "author": {
+            "type": "parameter",
+            "replaces": "Project author"
+        },
+        "description": {
+            "type": "parameter",
+            "replaces": "Project description"
+        },
+        "year": {
+            "type": "parameter",
+            "replaces": "Year"
+        }
+    }
+}
