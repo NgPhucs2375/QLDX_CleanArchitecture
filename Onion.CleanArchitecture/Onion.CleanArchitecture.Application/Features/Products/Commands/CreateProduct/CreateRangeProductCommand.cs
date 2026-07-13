@@ -37,16 +37,17 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.CreateP
                     }
                 }
 
-                var validProducts = request.Where(product => productsResponse.All(productResponse => productResponse.Barcode != product.Barcode)).ToList();
+                var validProducts = request.Where(product => productsResponse.All(productResponse => productResponse.Code != product.Code)).ToList();
                 var products = _mapper.Map<List<Product>>(validProducts);
                 await _productRepository.AddRangeAsync(products);
                 productsResponse.AddRange(validProducts.Select(product => new CreateRangeProductResponse
                 {
-                    Barcode = product.Barcode,
+                    Code = product.Code,
                     Name = product.Name,
-                    Description = product.Description,
-                    Rate = product.Rate,
-                    Price = product.Price,
+                    Unit = product.Unit,
+                    CategoryId = product.CategoryId,
+                    UnitPrice = product.UnitPrice,
+                    IsActive = product.IsActive,
                     Message = "Product created successfully",
                     Success = true
                 }));
@@ -63,11 +64,12 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.CreateP
                     var validationResults = productValidationResults.Errors.Select(failure => new ValidationResult(failure.ErrorMessage, new List<string> { failure.PropertyName })).ToList();
                     return new CreateRangeProductResponse
                     {
-                        Barcode = product.Barcode,
+                        Code = product.Code,
                         Name = product.Name,
-                        Description = product.Description,
-                        Rate = product.Rate,
-                        Price = product.Price,
+                        Unit = product.Unit,
+                        CategoryId = product.CategoryId,
+                        UnitPrice = product.UnitPrice,
+                        IsActive = product.IsActive,
                         Message = string.Join(", ", validationResults.Select(vr => vr.ErrorMessage)),
                         Success = false
                     };

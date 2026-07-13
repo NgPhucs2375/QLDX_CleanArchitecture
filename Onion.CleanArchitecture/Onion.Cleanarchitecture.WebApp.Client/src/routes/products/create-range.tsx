@@ -81,14 +81,14 @@ export const CreateRangeProduct: React.FC = () => {
         ),
     },
     {
+      title: "Code",
+      dataIndex: "Code",
+      key: "Code",
+    },
+    {
       title: "Name",
       dataIndex: "Name",
       key: "Name",
-    },
-    {
-      title: "Barcode",
-      dataIndex: "Barcode",
-      key: "Barcode",
     },
     {
       title: "Message",

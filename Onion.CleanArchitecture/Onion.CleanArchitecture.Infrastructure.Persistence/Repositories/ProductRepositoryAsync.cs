@@ -21,10 +21,10 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
             _products = dbContext.Set<Product>();
         }
 
-        public Task<bool> IsUniqueBarcodeAsync(string barcode)
+        public Task<bool> IsUniqueCodeAsync(string Code)
         {
             return _products
-                .AllAsync(p => p.Barcode != barcode);
+                .AllAsync(p => p.Code != Code);
         }
 
         public async Task<int> DeleteRangeAsync(List<int> ids)

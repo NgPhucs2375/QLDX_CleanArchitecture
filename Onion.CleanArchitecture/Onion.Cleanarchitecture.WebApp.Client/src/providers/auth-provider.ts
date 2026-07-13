@@ -51,10 +51,9 @@ export const authProvider: AuthProvider = {
 
     const data = (await response.json()) as ResponseRoot;
     if (!data.Succeeded) {
-      const errorResponse = (await response.json()) as ResponseRoot;
       const error: HttpError = {
-        message: errorResponse.Message,
-        statusCode: errorResponse.Code,
+        message: data.Message,
+        statusCode: data.Code,
       };
       return Promise.reject(error);
     }

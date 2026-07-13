@@ -9,13 +9,17 @@ import { env } from "process";
 
 const baseFolder =
   env.APPDATA !== undefined && env.APPDATA !== ""
-    ? `${env.APPDATA}/ASP.NET/http`
-    : `${env.HOME}/.aspnet/http`;
-
-const certificateName = "Onion.CleanArchitecture.WebApp.Client";
+    ? `${env.APPDATA}/ASP.NET/https`
+    : `${env.HOME}/.aspnet/https`;
+ 
+const certificateName = "PhieuDeXuatOnline.Client";
+ 
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
 const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
-
+if (!fs.existsSync(baseFolder)) {
+  fs.mkdirSync(baseFolder, { recursive: true });
+}
+ 
 if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
   if (
     0 !==
@@ -37,12 +41,12 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
   }
 }
 
-// const target = env.ASPNETCORE_HTTPS_PORT
-//   ? `https://localhost:7058`
-//   : env.ASPNETCORE_URLS
-//     ? env.ASPNETCORE_URLS.split(";")[0]
-//     : "http://localhost:5220";
-const target = "https://localhost:7058"
+const target = env.ASPNETCORE_HTTPS_PORT
+  ? `http://localhost:5220`
+  : env.ASPNETCORE_URLS
+    ? env.ASPNETCORE_URLS.split(";")[0]
+    : "http://localhost:5220";
+// const target = "https://localhost:7058"
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [plugin()],

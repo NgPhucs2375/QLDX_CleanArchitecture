@@ -35,7 +35,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity
             using (var scope = sp.CreateScope())
             {
                 var _dbSetting = scope.ServiceProvider.GetRequiredService<IDatabaseSettingsProvider>();
-                string appConnStr = _dbSetting.GetSQLServerConnectionString();
+                string appConnStr = _dbSetting.GetIdentityConnectionString();
                 services.AddDbContext<IdentityContext>(options =>
                 options.UseSqlServer(
                 appConnStr,
@@ -71,16 +71,17 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity
         //    }
         //}
 
-        public static void AddNpgSqlPersistenceInfrastructure(this IServiceCollection services)
+        public static void AddNpgSqlIdentityInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             // Build the intermediate service provider
             var sp = services.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
                 var _dbSetting = scope.ServiceProvider.GetRequiredService<IDatabaseSettingsProvider>();
-                string appConnStr = _dbSetting.GetPostgresConnectionString();
+                string appConnStr = _dbSetting.GetPostgresConnectionString(); 
                 if (!string.IsNullOrWhiteSpace(appConnStr))
                 {
+                    // Bao cho EF Core biet cach ket noi db
                     services.AddDbContext<IdentityContext>(options =>
                     options.UseNpgsql(
                     appConnStr,

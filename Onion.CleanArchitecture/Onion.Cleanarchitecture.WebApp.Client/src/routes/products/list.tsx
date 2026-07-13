@@ -8,8 +8,6 @@ import {
   DateField,
   FilterDropdown,
   useSelect,
-  CloneButton,
-  ExportButton,
 } from "@refinedev/antd";
 import { Table, Space, Input, Button, DatePicker, Select } from "antd";
 import { IProduct } from "./types";
@@ -18,12 +16,12 @@ import {
   useNavigation,
   useDeleteMany,
   useMany,
-  useExport,
   CanAccess,
 } from "@refinedev/core";
 import React from "react";
 import { PaginationTotal } from "@components/pagination-total";
-import { IUser } from "@routes/identity/users";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+
 export const ListProduct = () => {
   const { mutate: deleteMutate } = useDeleteMany();
   const { tableProps, sorters, filters } = useTable<IProduct>({
@@ -31,32 +29,16 @@ export const ListProduct = () => {
     pagination: { current: 1, pageSize: 10 },
     sorters: { initial: [{ field: "Id", order: "desc" }] },
   });
-  const { data: usersCreateBy, isLoading: isLoadingCreateBy } = useMany<IUser>({
-    resource: "users",
-    ids: [...new Set(tableProps?.dataSource?.map((user) => user.CreatedBy))],
-  });
 
-  // const { data: usersModifiedBy, isLoading: isLoadingModifiedBy } =
-  //   useMany<IUser>({
-  //     resource: "users",
-  //     ids: [
-  //       ...new Set(tableProps?.dataSource?.map((user) => user.LastModifiedBy)),
-  //     ],
-  //   });
-
-  const { triggerExport, isLoading: exportLoading } = useExport<IProduct>({
-    filters,
-  });
-
-  const { selectProps } = useSelect({
-    resource: "users",
-    optionLabel: "UserName",
+  const { selectProps: categorySelectProps } = useSelect({
+    resource: "categories",
+    optionLabel: "Name",
     optionValue: "Id",
-    defaultValue: getDefaultFilter("CreatedBy", filters, "eq"),
+    defaultValue: getDefaultFilter("CategoryId", filters, "eq"),
   });
 
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<React.Key[]>([]);
-  const { create, push } = useNavigation();
+  const { create } = useNavigation();
 
   const handleDelete = () => {
     const ids = selectedRowKeys.map((key) => key.toString());
@@ -78,23 +60,13 @@ export const ListProduct = () => {
           <CanAccess resource="products" action="create">
             <Button onClick={() => create("products")}>Create</Button>
           </CanAccess>
-          <CanAccess resource="products" action="create-range">
-            <Button onClick={() => push("/products/create-range")}>
-              Create range
-            </Button>
-          </CanAccess>
-
-          <CanAccess resource="products" action="delete-range">
+          <CanAccess resource="products" action="delete">
             <Button
               disabled={selectedRowKeys.length === 0}
               onClick={() => handleDelete()}
             >
               Delete range {selectedRowKeys.length}
             </Button>
-          </CanAccess>
-
-          <CanAccess resource="products" action="export">
-            <ExportButton onClick={triggerExport} loading={exportLoading} />
           </CanAccess>
         </>
       }
@@ -117,6 +89,18 @@ export const ListProduct = () => {
           defaultSortOrder={getDefaultSortOrder("Id", sorters)}
         />
         <Table.Column
+          dataIndex="Code"
+          title="Code"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("Code", sorters)}
+          defaultFilteredValue={getDefaultFilter("Code", filters)}
+          filterDropdown={(props) => (
+            <FilterDropdown {...props}>
+              <Input placeholder="Search Code" />
+            </FilterDropdown>
+          )}
+        />
+        <Table.Column
           dataIndex="Name"
           title="Name"
           sorter
@@ -128,97 +112,53 @@ export const ListProduct = () => {
             </FilterDropdown>
           )}
         />
-
         <Table.Column
-          dataIndex="Barcode"
-          title="Barcode"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("Barcode", sorters)}
-          defaultFilteredValue={getDefaultFilter("Barcode", filters)}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Input placeholder="Search Barcode" />
-            </FilterDropdown>
-          )}
-        />
-        <Table.Column
-          dataIndex="Rate"
-          title="Rate"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("Rate", sorters)}
-          defaultFilteredValue={getDefaultFilter("Rate", filters)}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Input placeholder="Search Rate" />
-            </FilterDropdown>
-          )}
-        />
-        <Table.Column
-          dataIndex="Price"
-          title="Price"
-          sorter
-          defaultSortOrder={getDefaultSortOrder("Price", sorters)}
-          defaultFilteredValue={getDefaultFilter("Price", filters)}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <Input placeholder="Search Price" />
-            </FilterDropdown>
-          )}
-        />
-        <Table.Column
-          dataIndex="CreatedBy"
-          title="Created By"
+          dataIndex="CategoryId"
+          title="Category"
           render={(value) => {
-            if (isLoadingCreateBy) {
-              return "Loading...";
-            }
-            return (
-              usersCreateBy?.data?.find((role) => role.Id == value)?.UserName ??
-              "Not Found"
-            );
+            if (!value) return "-";
+            return value;
           }}
           filterDropdown={(props) => (
             <FilterDropdown
               {...props}
               mapValue={(selectedKey) => String(selectedKey)}
             >
-              <Select style={{ minWidth: 200 }} {...selectProps} />
+              <Select style={{ minWidth: 200 }} {...categorySelectProps} />
             </FilterDropdown>
           )}
-        />
-        {/* <Table.Column
-          dataIndex="LastModifiedBy"
-          title="Last Modified By"
-          render={(value) => {
-            if (isLoadingModifiedBy) {
-              return "Loading...";
-            }
-            return (
-              usersModifiedBy?.data?.find((role) => role.Id == value)
-                ?.UserName ?? "-"
-            );
-          }}
         />
         <Table.Column
-          dataIndex="LastModified"
-          title="Last Modified"
-          render={(value) => {
-            if (!value) return "-";
-            return <DateField format="LLL" value={value} />;
-          }}
-          defaultFilteredValue={getDefaultFilter(
-            "LastModified",
-            filters,
-            "between"
-          )}
-          filterDropdown={(props) => (
-            <FilterDropdown {...props}>
-              <DatePicker.RangePicker />
-            </FilterDropdown>
-          )}
+          dataIndex="UnitPrice"
+          title="Unit Price"
           sorter
-          defaultSortOrder={getDefaultSortOrder("LastModified", sorters)}
-        /> */}
+          defaultSortOrder={getDefaultSortOrder("UnitPrice", sorters)}
+          render={(value: number) =>
+            value?.toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            })
+          }
+        />
+        <Table.Column
+          dataIndex="Unit"
+          title="Unit"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("Unit", sorters)}
+        />
+        <Table.Column
+          dataIndex="IsActive"
+          title="Active"
+          sorter
+          defaultSortOrder={getDefaultSortOrder("IsActive", sorters)}
+          render={(value: boolean) =>
+            value ? (
+              <CheckCircleOutlined style={{ color: "green" }} />
+            ) : (
+              <CloseCircleOutlined style={{ color: "red" }} />
+            )
+          }
+        />
         <Table.Column
           dataIndex="Created"
           title="Created At"
@@ -236,13 +176,9 @@ export const ListProduct = () => {
           title="Actions"
           render={(_, record: IProduct) => (
             <Space>
-              {/* We'll use the `EditButton` and `ShowButton` to manage navigation easily */}
               <ShowButton hideText size="small" recordItemId={record.Id} />
               <EditButton hideText size="small" recordItemId={record.Id} />
               <DeleteButton hideText size="small" recordItemId={record.Id} />
-              <CanAccess resource="products" action="clone">
-                <CloneButton hideText size="small" recordItemId={record.Id} />
-              </CanAccess>
             </Space>
           )}
         />

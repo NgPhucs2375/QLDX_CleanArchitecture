@@ -41,6 +41,63 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Seeds
                 }
 
             }
+
+            // Ensure categories and products claims exist for SuperAdmin role even for existing databases
+            var superAdminRole = await roleManager.FindByNameAsync(Roles.SuperAdmin.ToString());
+            if (superAdminRole != null)
+            {
+                var claims = await roleManager.GetClaimsAsync(superAdminRole);
+                
+                if (!claims.Any(c => c.Type == "categories"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("categories", "list#create#show#edit#delete"));
+                }
+                
+                if (!claims.Any(c => c.Type == "products"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("products", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "departments"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("departments", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "proposal-configs"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("proposal-configs", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "config-categories"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("config-categories", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "config-approvers"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("config-approvers", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "purchase-requests"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("purchase-requests", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "purchase-request-categories"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("purchase-request-categories", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "purchase-request-items"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("purchase-request-items", "list#create#show#edit#delete"));
+                }
+
+                if (!claims.Any(c => c.Type == "purchase-request-logs"))
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new System.Security.Claims.Claim("purchase-request-logs", "list#create#show#edit#delete"));
+                }
+            }
         }
     }
 }

@@ -27,5 +27,11 @@ namespace Onion.CleanArchitecture.Application.DTOs.Account
         [Required]
         [Compare("Password")]
         public string ConfirmPassword { get; set; }
+
+        public bool IsActive { get; set; } = true;
+        [Required]
+        public Guid DepartmentId { get; set; }
+        [Required]
+        public string Role { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace Onion.CleanArchitecture.Application.Interfaces.Repositories
 {
     public interface IProductRepositoryAsync : IGenericRepositoryAsync<Product>
     {
-        Task<bool> IsUniqueBarcodeAsync(string barcode);
+        Task<bool> IsUniqueCodeAsync(string Code);
         Task<int> DeleteRangeAsync(List<int> ids);
         Task<PagedList<Product>> GetPagedProductsAsync(GetAllProductsParameter parameter);
     }

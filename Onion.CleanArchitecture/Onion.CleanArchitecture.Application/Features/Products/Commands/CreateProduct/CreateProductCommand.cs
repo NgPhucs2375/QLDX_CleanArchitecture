@@ -3,6 +3,7 @@ using MediatR;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,10 +12,11 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.CreateP
     public partial class CreateProductCommand : IRequest<Response<int>>
     {
         public string Name { get; set; }
-        public string Barcode { get; set; }
-        public string Description { get; set; }
-        public decimal Rate { get; set; }
-        public decimal Price { get; set; }
+        public string Code { get; set; }
+        public Guid CategoryId { get; set; }
+        public string Unit { get; set; }
+        public decimal UnitPrice { get; set; }
+        public bool IsActive { get; set; }
     }
     public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Response<int>>
     {

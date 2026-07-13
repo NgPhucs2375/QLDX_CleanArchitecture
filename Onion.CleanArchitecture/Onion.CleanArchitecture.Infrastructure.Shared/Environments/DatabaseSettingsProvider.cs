@@ -16,16 +16,16 @@ namespace Onion.CleanArchitecture.Infrastructure.Shared.Environments
             _env = env;
             _config = config;
         }
-        public string GetMySQLConnectionString()
-        {
+        // public string GetMySQLConnectionString()
+        // {
             
-            var isHasMySQLConnectionString = EnvironmentVariables.HasMySQLConnectionString();
-            if (_env.IsProduction() && isHasMySQLConnectionString)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.MySQLConnectionString);
-            }
-            return _config.GetConnectionString("MySQLConnection");
-        }
+        //     var isHasMySQLConnectionString = EnvironmentVariables.HasMySQLConnectionString();
+        //     if (_env.IsProduction() && isHasMySQLConnectionString)
+        //     {
+        //         return Environment.GetEnvironmentVariable(EnvironmentVariables.MySQLConnectionString);
+        //     }
+        //     return _config.GetConnectionString("MySQLConnection");
+        // }
 
         public string GetPostgresConnectionString()
         {
@@ -34,17 +34,30 @@ namespace Onion.CleanArchitecture.Infrastructure.Shared.Environments
             {
                 return Environment.GetEnvironmentVariable(EnvironmentVariables.PostgresConnectionString);
             }
-            return _config.GetConnectionString("PostgresConnection");
+            return _config.GetConnectionString("PostgresConnectionString");
         }
 
-        public string GetSQLServerConnectionString()
+        // public string GetSQLServerConnectionString()
+        // {
+        //     var isHasSQLServerConnectionString = EnvironmentVariables.HasSQLServerConnectionString();
+        //     if (_env.IsProduction() && isHasSQLServerConnectionString)
+        //     {
+        //         return Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
+        //     }
+        //     return _config.GetConnectionString("SQLServerConnection");
+        // }
+
+
+        public string GetIdentityConnectionString()
         {
-            var isHasSQLServerConnectionString = EnvironmentVariables.HasSQLServerConnectionString();
-            if (_env.IsProduction() && isHasSQLServerConnectionString)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.SQLServerConnectionString);
-            }
-            return _config.GetConnectionString("SQLServerConnection");
+            return _config.GetConnectionString("IdentityConnection");
         }
+
+        // 2. Hàm lấy chuỗi kết nối cho DB Nghiệp vụ
+        public string GetBusinessConnectionString()
+        {
+            return _config.GetConnectionString("BusinessConnection");
+        }
+
     }
 }

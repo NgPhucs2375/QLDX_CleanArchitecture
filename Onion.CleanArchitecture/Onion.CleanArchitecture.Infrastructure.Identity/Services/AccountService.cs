@@ -91,9 +91,11 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
             var user = new ApplicationUser
             {
                 Email = request.Email,
+                UserName = request.UserName,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.UserName
+                DepartmentId = request.DepartmentId,
+                IsActive = request.IsActive
             };
             var userWithSameEmail = await _userManager.FindByEmailAsync(request.Email);
             if (userWithSameEmail == null)

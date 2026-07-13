@@ -41,6 +41,42 @@ import {
   ShowProduct,
   ShowRole,
   ShowRoleClaim,
+  CreateCategory,
+  EditCategory,
+  ListCategory,
+  ShowCategory,
+  CreateDepartment,
+  EditDepartment,
+  ListDepartment,
+  ShowDepartment,
+  CreateProposalConfig,
+  EditProposalConfig,
+  ListProposalConfig,
+  ShowProposalConfig,
+  CreateConfigCategory,
+  EditConfigCategory,
+  ListConfigCategory,
+  ShowConfigCategory,
+  CreateConfigApprover,
+  EditConfigApprover,
+  ListConfigApprover,
+  ShowConfigApprover,
+  CreatePurchaseRequest,
+  EditPurchaseRequest,
+  ListPurchaseRequest,
+  ShowPurchaseRequest,
+  CreatePurchaseRequestCategory,
+  EditPurchaseRequestCategory,
+  ListPurchaseRequestCategory,
+  ShowPurchaseRequestCategory,
+  CreatePurchaseRequestItem,
+  EditPurchaseRequestItem,
+  ListPurchaseRequestItem,
+  ShowPurchaseRequestItem,
+  CreatePurchaseRequestLog,
+  EditPurchaseRequestLog,
+  ListPurchaseRequestLog,
+  ShowPurchaseRequestLog,
 } from "./routes";
 import { Unauthorized } from "@components/unauthorized";
 
@@ -69,7 +105,7 @@ const App: React.FC = () => {
                     fallback={<CatchAllNavigate to="/login" />}
                   >
                     <ThemedLayoutV2
-                      Title={({ collapsed }: any) => (
+                      Title={({ collapsed }: { collapsed: boolean }) => (
                         <ThemedTitleV2
                           collapsed={collapsed}
                           icon={
@@ -176,6 +212,456 @@ const App: React.FC = () => {
                         fallback={<Unauthorized />}
                       >
                         <ShowProduct />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="categories">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="categories"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="categories"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreateCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="categories"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="categories"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowCategory />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="departments">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="departments"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListDepartment />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="departments"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreateDepartment />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="departments"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditDepartment />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="departments"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowDepartment />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="proposal-configs">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="proposal-configs"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListProposalConfig />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="proposal-configs"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreateProposalConfig />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="proposal-configs"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditProposalConfig />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="proposal-configs"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowProposalConfig />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="config-categories">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="config-categories"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListConfigCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="config-categories"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreateConfigCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="config-categories"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditConfigCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="config-categories"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowConfigCategory />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="config-approvers">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="config-approvers"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListConfigApprover />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="config-approvers"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreateConfigApprover />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="config-approvers"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditConfigApprover />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="config-approvers"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowConfigApprover />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="purchase-requests">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="purchase-requests"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListPurchaseRequest />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="purchase-requests"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreatePurchaseRequest />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="purchase-requests"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditPurchaseRequest />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="purchase-requests"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowPurchaseRequest />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="purchase-request-categories">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="purchase-request-categories"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListPurchaseRequestCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-categories"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreatePurchaseRequestCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-categories"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditPurchaseRequestCategory />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-categories"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowPurchaseRequestCategory />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="purchase-request-items">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="purchase-request-items"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListPurchaseRequestItem />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-items"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreatePurchaseRequestItem />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-items"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditPurchaseRequestItem />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-items"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowPurchaseRequestItem />
+                      </CanAccess>
+                    }
+                  />
+                </Route>
+                <Route path="purchase-request-logs">
+                  <Route
+                    index
+                    element={
+                      <CanAccess
+                        resource="purchase-request-logs"
+                        action="list"
+                        fallback={<Unauthorized />}
+                      >
+                        <ListPurchaseRequestLog />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path="create"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-logs"
+                        action="create"
+                        fallback={<Unauthorized />}
+                      >
+                        <CreatePurchaseRequestLog />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id/edit"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-logs"
+                        action="edit"
+                        fallback={<Unauthorized />}
+                      >
+                        <EditPurchaseRequestLog />
+                      </CanAccess>
+                    }
+                  />
+                  <Route
+                    path=":id"
+                    element={
+                      <CanAccess
+                        resource="purchase-request-logs"
+                        action="show"
+                        fallback={<Unauthorized />}
+                      >
+                        <ShowPurchaseRequestLog />
                       </CanAccess>
                     }
                   />

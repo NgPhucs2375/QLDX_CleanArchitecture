@@ -1,10 +1,17 @@
-import { useForm, Edit } from "@refinedev/antd";
+import { useForm, Edit, useSelect } from "@refinedev/antd";
 import { IProduct } from "./types";
-import { Form, Input, InputNumber } from "antd";
+import { Form, Input, InputNumber, Select, Switch } from "antd";
 export const EditProduct = () => {
   const { formProps, saveButtonProps } = useForm<IProduct>({
     redirect: "show",
   });
+
+  const { selectProps: categorySelectProps } = useSelect({
+    resource: "categories",
+    optionLabel: "Name",
+    optionValue: "Id",
+  });
+
   return (
     <Edit saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
@@ -12,38 +19,48 @@ export const EditProduct = () => {
           <Input />
         </Form.Item>
         <Form.Item
-          label="Name"
-          name="Name"
+          label="Code"
+          name="Code"
           rules={[
-            { required: true, message: "Please input your product name!" },
-            {
-              min: 3,
-              message: "Product name must be at least 3 characters long!",
-            },
-            {
-              max: 255,
-              message: "Product name must be at most 255 characters long!",
-            },
+            { required: true, message: "Please input product code!" },
+            { max: 50, message: "Code must not exceed 50 characters!" },
           ]}
         >
           <Input />
         </Form.Item>
-        <Form.Item label="Barcode" name="Barcode">
+        <Form.Item
+          label="Name"
+          name="Name"
+          rules={[
+            { required: true, message: "Please input product name!" },
+            { max: 255, message: "Product name must not exceed 255 characters!" },
+          ]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="Description" name="Description">
-          <Input.TextArea rows={4} />
+        <Form.Item
+          label="Category"
+          name="CategoryId"
+          rules={[{ required: true, message: "Please select a category!" }]}
+        >
+          <Select {...categorySelectProps} />
         </Form.Item>
-        <Form.Item label="Rate" name="Rate">
-          <Input />
+        <Form.Item
+          label="Unit Price"
+          name="UnitPrice"
+          rules={[{ required: true, message: "Please input unit price!" }]}
+        >
+          <InputNumber style={{ width: "100%" }} min={0} />
         </Form.Item>
-        <Form.Item label="Price" name="Price">
-          <InputNumber
-            style={{ width: "100%" }}
-            accept="number"
-            defaultValue={0}
-            required={true}
-          />
+        <Form.Item
+          label="Unit"
+          name="Unit"
+          rules={[{ required: true, message: "Please input unit!" }]}
+        >
+          <Input placeholder="e.g. Cái, Chiếc, Hộp" />
+        </Form.Item>
+        <Form.Item label="Active" name="IsActive" valuePropName="checked">
+          <Switch />
         </Form.Item>
       </Form>
     </Edit>
