@@ -7,9 +7,9 @@ namespace Onion.CleanArchitecture.Domain.Entities
     public class ConfigApprover : AuditableBaseEntity
     {
         // --- NHÓM KHÓA NGOẠI ---
-        public Guid ProposalConfigId { get; set; }
-        public Guid DepartmentId { get; set; } // Đơn vị
-        public Guid ApproverId { get; set; } // Nhân sự xử lý (Trỏ về User)
+        public int ProposalConfigId { get; set; }
+        public int DepartmentId { get; set; }
+        public string ApproverId { get; set; } = string.Empty;
 
         // Enum Cấp phê duyệt
         public ApprovalLevel Level { get; set; } 

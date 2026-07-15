@@ -24,7 +24,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Models
         public string LastName { get; set; }
 
         // BỔ SUNG YÊU CẦU CỦA BẠN: Khóa ngoại trỏ về bảng Department (Đơn vị)
-        public Guid DepartmentId { get; set; } 
+        public int DepartmentId { get; set; } 
         
         // Trạng thái hoạt động
         public bool IsActive { get; set; } = true; 

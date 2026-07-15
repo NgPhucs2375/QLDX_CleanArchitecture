@@ -30,7 +30,7 @@ namespace Onion.CleanArchitecture.Application.DTOs.Account
 
         public bool IsActive { get; set; } = true;
         [Required]
-        public Guid DepartmentId { get; set; }
+        public int DepartmentId { get; set; }
         [Required]
         public string Role { get; set; }
     }

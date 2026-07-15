@@ -7,7 +7,7 @@ namespace Onion.CleanArchitecture.Application.Features.Departments.Queries.GetAl
         public int Id { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
-        public Guid? ManagerId { get; set; }
+        public string ManagerId { get; set; }
         public bool IsActive { get; set; }
     }
 }

@@ -1,6 +1,6 @@
-import { useShow, DateField } from "@refinedev/core";
+import { useShow } from "@refinedev/core";
 import { IProposalConfig } from "./types";
-import { Show, TextField } from "@refinedev/antd";
+import { Show, TextField, DateField } from "@refinedev/antd";
 import { Typography, Tag } from "antd";
 
 const statusMap: Record<number, { label: string; color: string }> = {

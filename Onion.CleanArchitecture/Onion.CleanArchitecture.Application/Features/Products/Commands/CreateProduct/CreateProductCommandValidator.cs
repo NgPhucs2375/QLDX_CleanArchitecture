@@ -26,8 +26,7 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.CreateP
                 .MaximumLength(50).WithMessage("{PropertyName} must not exceed 50 characters.");
 
             RuleFor(p => p.CategoryId)
-                .NotEmpty().WithMessage("{PropertyName} is required.")
-                .NotEqual(Guid.Empty).WithMessage("{PropertyName} must be a valid GUID.");
+                .GreaterThan(0).WithMessage("{PropertyName} must be a valid Category.");
 
             RuleFor(p => p.UnitPrice)
                 .NotEmpty().WithMessage("{PropertyName} is required.")

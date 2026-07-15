@@ -2,6 +2,7 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,18 +28,28 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Queries.GetAllPr
 
         public async Task<Response<object>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
         {
-            var validFilter = _mapper.Map<GetAllProductsParameter>(request);
-            var product = await _productRepository.GetPagedProductsAsync(validFilter);
-            return new Response<object>(true, new
+            try
             {
-                product._start,
-                product._end,
-                product._total,
-                product._hasNext,
-                product._hasPrevious,
-                product._pages,
-                _data = product
-            }, message: "Success");
+                var validFilter = _mapper.Map<GetAllProductsParameter>(request);
+                var product = await _productRepository.GetPagedProductsAsync(validFilter);
+                return new Response<object>(true, new
+                {
+                    product._start,
+                    product._end,
+                    product._total,
+                    product._hasNext,
+                    product._hasPrevious,
+                    product._pages,
+                    _data = product
+                }, message: "Success");
+            }
+            catch (Exception ex)
+            {
+                // Log to console for debugging
+                Console.WriteLine($"[ERROR] GetAllProductsQuery: {ex.Message}");
+                Console.WriteLine($"[STACK] {ex.StackTrace}");
+                throw;
+            }
         }
     }
 }

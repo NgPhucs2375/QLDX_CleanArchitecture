@@ -12,9 +12,9 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigApprovers.Commands.
     public class UpdateConfigApproverCommand : IRequest<Response<int>>
     {
         public int Id { get; set; }
-        public Guid ProposalConfigId { get; set; }
-        public Guid DepartmentId { get; set; }
-        public Guid ApproverId { get; set; }
+        public int ProposalConfigId { get; set; }
+        public int DepartmentId { get; set; }
+        public string ApproverId { get; set; } = string.Empty;
         public ApprovalLevel Level { get; set; }
 
         public class UpdateConfigApproverCommandHandler : IRequestHandler<UpdateConfigApproverCommand, Response<int>>

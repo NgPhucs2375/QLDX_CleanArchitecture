@@ -6,13 +6,13 @@ namespace Onion.CleanArchitecture.Domain.Entities
     public class PurchaseRequestLog : AuditableBaseEntity
     {
         // Khóa ngoại trỏ về Phiếu đề xuất đang bị tác động
-        public Guid PurchaseRequestId { get; set; } 
+        public int PurchaseRequestId { get; set; } 
 
         /// <summary>
         /// Người thao tác (Có thể dùng trực tiếp ID người dùng)
         /// Lưu ý: Thời gian thao tác đã được lưu tự động ở trường CreatedAt của BaseAuditableEntity
         /// </summary>
-        public Guid UserId { get; set; } 
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Hành động đã thực hiện (VD: "Tạo phiếu", "Duyệt Bước 1", "Từ chối", "Cập nhật số lượng")

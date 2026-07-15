@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,18 +29,32 @@ namespace Onion.CleanArchitecture.Application.Features.Departments.Queries.GetAl
 
         public async Task<Response<object>> Handle(GetAllDepartmentsQuery request, CancellationToken cancellationToken)
         {
-            var validFilter = _mapper.Map<GetAllDepartmentsParameter>(request);
-            var departments = await _departmentRepository.GetPagedDepartmentsAsync(validFilter);
-            return new Response<object>(true, new
+            try
             {
-                departments._start,
-                departments._end,
-                departments._total,
-                departments._hasNext,
-                departments._hasPrevious,
-                departments._pages,
-                _data = departments
-            }, message: "Success");
+                var validFilter = _mapper.Map<GetAllDepartmentsParameter>(request);
+                var departments = await _departmentRepository.GetPagedDepartmentsAsync(validFilter);
+                return new Response<object>(true, new
+                {
+                    departments._start,
+                    departments._end,
+                    departments._total,
+                    departments._hasNext,
+                    departments._hasPrevious,
+                    departments._pages,
+                    _data = departments
+                }, message: "Success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] GetAllDepartmentsQuery: {ex.Message}");
+                Console.WriteLine($"[STACK] {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[INNER] {ex.InnerException.Message}");
+                    Console.WriteLine($"[INNER STACK] {ex.InnerException.StackTrace}");
+                }
+                throw;
+            }
         }
     }
 }

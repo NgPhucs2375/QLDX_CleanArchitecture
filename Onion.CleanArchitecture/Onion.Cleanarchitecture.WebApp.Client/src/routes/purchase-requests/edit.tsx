@@ -19,7 +19,8 @@ export const EditPurchaseRequest = () => {
             { value: 5, label: "Approved" },
             { value: 6, label: "Pending Order Confirm" },
             { value: 7, label: "Completed" },
-            { value: 8, label: "Rejected" },
+            { value: 8, label: "Rejected by Dept" },
+            { value: 9, label: "Rejected by Control" },
           ]} />
         </Form.Item>
         <Form.Item label="Total Proposed Amount" name="TotalProposedAmount"><InputNumber style={{ width: "100%" }} /></Form.Item>

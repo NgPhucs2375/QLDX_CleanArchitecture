@@ -10,7 +10,7 @@ namespace Onion.CleanArchitecture.Domain.Entities
     {
         public string Code { get; set; } = string.Empty; // Mã sản phẩm
         public string Name { get; set; } = string.Empty; // Tên sản phẩm
-        public Guid CategoryId { get; set; } // Khóa ngoại liên kết với bảng Category
+        public int CategoryId { get; set; }
         public decimal UnitPrice { get; set; } // Giá đơn vị
         public string Unit { get; set; } = string.Empty; // Đơn vị tính
         public bool IsActive { get; set; } = true; // Trạng thái hoạt động của sản phẩm (mặc định là true)

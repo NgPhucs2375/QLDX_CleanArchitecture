@@ -1,19 +1,41 @@
-import { useForm, Edit } from "@refinedev/antd";
-import { IProposalConfig } from "./types";
-import { Form, Input, DatePicker, Select } from "antd";
+import { useForm, Edit, useSelect } from "@refinedev/antd";
+import { HttpError } from "@refinedev/core";
+import { useMemo } from "react";
 import dayjs from "dayjs";
+import type { IProposalConfig, ICategory, IDepartment, IProposalConfigPayload } from "./types";
+import { ProposalConfigForm } from "./form";
+
 export const EditProposalConfig = () => {
-  const { formProps, saveButtonProps, queryResult } = useForm<IProposalConfig>({ redirect: "show" });
-  const data = queryResult?.data?.data;
+  const { formProps, saveButtonProps, queryResult, onFinish } = useForm<
+    IProposalConfig,
+    HttpError,
+    IProposalConfigPayload
+  >({ redirect: "list" });
+
+  const initialData = queryResult?.data?.data;
+
+  // Sửa lại formProps để định dạng lại ngày tháng trước khi đưa vào Form
+  const editableFormProps = {
+    ...formProps,
+    initialValues: initialData ? { ...initialData, EffectiveDate: dayjs(initialData.EffectiveDate) } : {},
+  };
+
+  const { queryResult: categoryQueryResult } = useSelect<ICategory>({ resource: "categories", optionLabel: "Name", optionValue: "Id", pagination: { mode: "off" }, filters: [{ field: "IsActive", operator: "eq", value: true }] });
+  const { queryResult: deptQueryResult } = useSelect<IDepartment>({ resource: "departments", optionLabel: "Name", optionValue: "Id", pagination: { mode: "off" }, filters: [{ field: "IsActive", operator: "eq", value: true }] });
+
+  const categories = useMemo(() => categoryQueryResult.data?.data ?? [], [categoryQueryResult.data]);
+  const departments = useMemo(() => deptQueryResult.data?.data ?? [], [deptQueryResult.data]);
+
   return (
-    <Edit saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
-        <Form.Item label="ID" name="Id" hidden><Input /></Form.Item>
-        <Form.Item label="Code" name="Code" rules={[{ required: true }, { max: 50 }]}><Input /></Form.Item>
-        <Form.Item label="Name" name="Name" rules={[{ required: true }, { max: 200 }]}><Input /></Form.Item>
-        <Form.Item label="Effective Date" name="EffectiveDate" rules={[{ required: true }]} getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}><DatePicker style={{ width: "100%" }} /></Form.Item>
-        <Form.Item label="Status" name="Status"><Select options={[{ value: 1, label: "Draft" }, { value: 2, label: "Active" }, { value: 3, label: "Inactive" }]} /></Form.Item>
-      </Form>
+    <Edit title="Chỉnh sửa Cấu hình Đề xuất" saveButtonProps={saveButtonProps}>
+      <ProposalConfigForm
+        formProps={{ ...editableFormProps, onFinish }}
+        saveButtonProps={saveButtonProps}
+        categories={categories}
+        departments={departments}
+        initialData={initialData}
+        recordId={initialData?.Id}
+      />
     </Edit>
   );
 };

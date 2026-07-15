@@ -18,6 +18,7 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Services;
 using Onion.CleanArchitecture.Infrastructure.Shared.Environments;
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Text;
 
 namespace Onion.CleanArchitecture.Infrastructure.Identity
@@ -126,24 +127,39 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity
                         OnAuthenticationFailed = c =>
                         {
                             c.NoResult();
-                            c.Response.StatusCode = 500;
-                            c.Response.ContentType = "text/plain";
-                            return c.Response.WriteAsync(c.Exception.ToString());
+                            if (!c.Response.HasStarted)
+                            {
+                                c.Response.StatusCode = 500;
+                                c.Response.ContentType = "text/plain";
+                                return c.Response.WriteAsync(c.Exception.ToString());
+                            }
+                            return Task.CompletedTask;
                         },
                         OnChallenge = context =>
                         {
+                            // Skip default behavior
                             context.HandleResponse();
-                            context.Response.StatusCode = 401;
-                            context.Response.ContentType = "application/json";
-                            var result = JsonConvert.SerializeObject(new Response<string>("You are not Authorized"));
-                            return context.Response.WriteAsync(result);
+                            
+                            // Only set status code and write response if not already started
+                            if (!context.Response.HasStarted)
+                            {
+                                context.Response.StatusCode = 401;
+                                context.Response.ContentType = "application/json";
+                                var result = JsonConvert.SerializeObject(new Response<string>("You are not Authorized"));
+                                return context.Response.WriteAsync(result);
+                            }
+                            return Task.CompletedTask;
                         },
                         OnForbidden = context =>
                         {
-                            context.Response.StatusCode = 403;
-                            context.Response.ContentType = "application/json";
-                            var result = JsonConvert.SerializeObject(new Response<string>("You are not authorized to access this resource"));
-                            return context.Response.WriteAsync(result);
+                            if (!context.Response.HasStarted)
+                            {
+                                context.Response.StatusCode = 403;
+                                context.Response.ContentType = "application/json";
+                                var result = JsonConvert.SerializeObject(new Response<string>("You are not authorized to access this resource"));
+                                return context.Response.WriteAsync(result);
+                            }
+                            return Task.CompletedTask;
                         },
                     };
                 });

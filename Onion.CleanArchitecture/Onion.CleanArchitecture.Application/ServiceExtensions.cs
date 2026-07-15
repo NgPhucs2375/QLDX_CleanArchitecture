@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Onion.CleanArchitecture.Application.Behaviours;
+using Onion.CleanArchitecture.Application.Interfaces;
+using Onion.CleanArchitecture.Application.Services;
 using System.Reflection;
 
 namespace Onion.CleanArchitecture.Application
@@ -15,7 +17,8 @@ namespace Onion.CleanArchitecture.Application
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
+            services.AddTransient<RecalculateTotalsService>();
+            services.AddTransient<IApprovalRecordService, ApprovalRecordService>();
         }
     }
 }

@@ -6,9 +6,9 @@ namespace Onion.CleanArchitecture.Domain.Entities
     public class ConfigCategory : AuditableBaseEntity
     {
         // --- NHÓM KHÓA NGOẠI ---
-        public Guid ProposalConfigId { get; set; } // Trỏ về Cấu hình chung
-        public Guid CategoryId { get; set; } // Trỏ về Danh mục sản phẩm Master Data
-        public Guid DepartmentId { get; set; } // Đơn vị áp dụng
+        public int ProposalConfigId { get; set; }
+        public int CategoryId { get; set; }
+        public int DepartmentId { get; set; }
 
         // --- DỮ LIỆU ĐỊNH MỨC ---
         public decimal AllowedQuota { get; set; } // Định mức cho phép

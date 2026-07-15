@@ -16,7 +16,8 @@ const statusMap: Record<number, { label: string; color: string }> = {
   5: { label: "Approved", color: "green" },
   6: { label: "Pending Order", color: "purple" },
   7: { label: "Completed", color: "cyan" },
-  8: { label: "Rejected", color: "red" },
+  8: { label: "Rejected by Dept", color: "red" },
+  9: { label: "Rejected by Control", color: "red" },
 };
 
 export const ListPurchaseRequest = () => {

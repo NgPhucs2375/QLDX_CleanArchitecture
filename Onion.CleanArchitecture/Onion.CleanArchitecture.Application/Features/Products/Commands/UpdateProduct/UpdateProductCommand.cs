@@ -29,7 +29,7 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.UpdateP
         public int Id { get; set; } // Khóa chính
         public string Code { get; set; } // Mã sản phẩm
         public string Name { get; set; } // Tên sản phẩm
-        public Guid CategoryId { get; set; } // Khóa ngoại liên kết với bảng Category
+        public int CategoryId { get; set; }
         public decimal UnitPrice { get; set; } // Giá sản phẩm
         public string Unit { get; set; } // Đơn vị tính
         public bool IsActive { get; set; } // Trạng thái hoạt động của sản phẩm

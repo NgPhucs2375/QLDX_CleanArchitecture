@@ -1,8 +1,8 @@
 import {
   useTable, List, ShowButton, EditButton, DeleteButton,
-  getDefaultSortOrder, FilterDropdown,
+  getDefaultSortOrder, FilterDropdown, NumberField,
 } from "@refinedev/antd";
-import { Table, Space, Input, Button, NumberField } from "antd";
+import { Table, Space, Input, Button } from "antd";
 import { IConfigCategory } from "./types";
 import { getDefaultFilter, useNavigation, useDeleteMany, CanAccess } from "@refinedev/core";
 import React from "react";

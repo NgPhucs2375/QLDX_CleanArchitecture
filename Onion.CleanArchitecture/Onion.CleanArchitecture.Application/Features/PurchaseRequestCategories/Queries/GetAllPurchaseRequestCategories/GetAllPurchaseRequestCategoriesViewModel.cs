@@ -5,8 +5,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
     public class GetAllPurchaseRequestCategoriesViewModel
     {
         public int Id { get; set; }
-        public Guid PurchaseRequestId { get; set; }
-        public Guid CategoryId { get; set; }
+        public int PurchaseRequestId { get; set; }
+        public int CategoryId { get; set; }
         public decimal AllowedQuota { get; set; }
         public decimal TotalProposedAmount { get; set; }
         public decimal Difference { get; set; }

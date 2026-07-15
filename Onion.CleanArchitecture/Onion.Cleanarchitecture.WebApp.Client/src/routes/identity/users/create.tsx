@@ -32,9 +32,9 @@ export const CreateUser = () => {
       const username = formProps.form?.getFieldValue("UserName");
       const userLdap = await dataProvider.getUserLdap(username);
       const ldap = userLdap.data as IUserLdapInfo;
-      let names = ldap.DisplayName.split(" ");
-      let firstName = names[0];
-      let lastName = names.length > 1 ? names.slice(1).join(" ") : "";
+      const names = ldap.DisplayName.split(" ");
+      const firstName = names[0];
+      const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
       setUrlAvatar(ldap.EmailAddress);
       formProps.form?.setFieldsValue({
         FirstName: firstName,
@@ -72,7 +72,7 @@ export const CreateUser = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please input your FirstName!",
+                  message: "Please input your Username!",
                 },
               ]}
             >
@@ -113,7 +113,7 @@ export const CreateUser = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please input your FirstName!",
+                  message: "Please input your LastName!",
                 },
               ]}
             >

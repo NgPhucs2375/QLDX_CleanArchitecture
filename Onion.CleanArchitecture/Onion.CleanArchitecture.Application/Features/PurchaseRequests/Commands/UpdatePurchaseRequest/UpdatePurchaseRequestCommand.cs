@@ -13,8 +13,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
     {
         public int Id { get; set; }
         public string Code { get; set; }
-        public Guid DepartmentId { get; set; }
-        public Guid PurchaseConfigId { get; set; }
+        public int DepartmentId { get; set; }
+        public int ProposalConfigId { get; set; }
         public PurchaseRequestStatus Status { get; set; }
         public decimal TotalProposedAmount { get; set; }
         public decimal TotalActualAmount { get; set; }
@@ -37,7 +37,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                 {
                     entity.Code = command.Code;
                     entity.DepartmentId = command.DepartmentId;
-                    entity.PurchaseConfigId = command.PurchaseConfigId;
+                    entity.ProposalConfigId = command.ProposalConfigId;
                     entity.Status = command.Status;
                     entity.TotalProposedAmount = command.TotalProposedAmount;
                     entity.TotalActualAmount = command.TotalActualAmount;

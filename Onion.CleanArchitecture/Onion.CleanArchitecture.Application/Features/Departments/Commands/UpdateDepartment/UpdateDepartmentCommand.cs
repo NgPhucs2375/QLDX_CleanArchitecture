@@ -13,7 +13,7 @@ namespace Onion.CleanArchitecture.Application.Features.Departments.Commands.Upda
         public int Id { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
-        public Guid? ManagerId { get; set; }
+        public string ManagerId { get; set; }
         public bool IsActive { get; set; }
 
         public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCommand, Response<int>>

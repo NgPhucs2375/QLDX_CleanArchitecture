@@ -53,7 +53,6 @@ namespace Onion.CleanArchitecture.Application.Mappings
             CreateMap<GetAllConfigApproversQuery, GetAllConfigApproversParameter>();
 
             CreateMap<PurchaseRequest, GetAllPurchaseRequestsViewModel>().ReverseMap();
-            CreateMap<CreatePurchaseRequestCommand, PurchaseRequest>();
             CreateMap<GetAllPurchaseRequestsQuery, GetAllPurchaseRequestsParameter>();
 
             CreateMap<PurchaseRequestCategory, GetAllPurchaseRequestCategoriesViewModel>().ReverseMap();

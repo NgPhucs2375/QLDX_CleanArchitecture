@@ -1,6 +1,5 @@
 import { AccessControlProvider } from "@refinedev/core";
 import { authProvider } from "./auth-provider";
-import { Roles } from "./types";
 
 export const accessControlProvider: AccessControlProvider = {
   can: async ({ resource, action }) => {
@@ -10,27 +9,32 @@ export const accessControlProvider: AccessControlProvider = {
         reason: "AuthProvider or getPermissions is undefined",
       };
     }
-    const roles = JSON.parse(
-      (await authProvider.getPermissions()) as string
-    ) as Roles;
 
-    const { permissions } = roles;
+    const raw = await authProvider.getPermissions();
 
-    // if (role === "SuperAdmin") return { can: true };
+    // TH1: raw là JSON string chứa mảng permission (từ JWT claim "roles")
+    if (typeof raw === "string" && raw.length > 0) {
+      try {
+        const parsed = JSON.parse(raw);
+        const permissions = Array.isArray(parsed) ? parsed : (parsed?.permissions ?? []);
+        for (const p of permissions) {
+          if (p.resource === resource && p.action.includes(action)) {
+            return { can: true };
+          }
+        }
+      } catch {
+        // không phải JSON hợp lệ → fall sang TH2
+      }
+    }
 
-    for (const permission of permissions) {
-      if (
-        permission.resource === resource &&
-        permission.action.includes(action)
-      ) {
+    // TH2: raw là mảng tên role (vd ["Admin", "SuperAdmin"])
+    if (Array.isArray(raw)) {
+      if (raw.includes("SuperAdmin") || raw.includes("Admin")) {
         return { can: true };
       }
     }
 
-    return {
-      can: false,
-      reason: "Unauthorized",
-    };
+    return { can: false, reason: "Unauthorized" };
   },
   options: {
     buttons: {

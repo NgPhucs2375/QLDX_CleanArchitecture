@@ -5,8 +5,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestLogs.Queri
     public class GetAllPurchaseRequestLogsViewModel
     {
         public int Id { get; set; }
-        public Guid PurchaseRequestId { get; set; }
-        public Guid UserId { get; set; }
+        public int PurchaseRequestId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public string Action { get; set; }
         public string Note { get; set; }
     }

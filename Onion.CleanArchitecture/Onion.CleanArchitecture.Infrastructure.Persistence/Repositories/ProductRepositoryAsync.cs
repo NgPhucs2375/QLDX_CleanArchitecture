@@ -34,6 +34,22 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
             return products.Count;
         }
 
+        public async Task<List<Product>> GetByIdsAsync(List<int> ids)
+        {
+            return await _products
+                .Where(p => ids.Contains(p.Id))
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<List<Product>> GetByCategoryIdAsync(int categoryId)
+        {
+            return await _products
+                .Where(p => p.CategoryId == categoryId)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<PagedList<Product>> GetPagedProductsAsync(GetAllProductsParameter request)
         {
             var productQuery = _products.AsQueryable();

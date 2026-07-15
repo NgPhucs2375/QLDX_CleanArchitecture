@@ -38,8 +38,13 @@ namespace Onion.CleanArchitecture.Domain.Enums
         Completed = 7,
 
         /// <summary>
-        /// Từ chối: Phiếu bị từ chối
+        /// Từ chối bởi Trưởng đơn vị
         /// </summary>
-        Rejected = 8
+        RejectedByDepartment = 8,
+
+        /// <summary>
+        /// Từ chối bởi Kiểm soát
+        /// </summary>
+        RejectedByControl = 9
     }
 }

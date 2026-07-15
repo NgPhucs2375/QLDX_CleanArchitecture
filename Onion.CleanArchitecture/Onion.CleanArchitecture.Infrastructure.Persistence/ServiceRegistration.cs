@@ -131,6 +131,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence
             services.AddTransient<IPurchaseRequestCategoryRepositoryAsync, PurchaseRequestCategoryRepositoryAsync>();
             services.AddTransient<IPurchaseRequestItemRepositoryAsync, PurchaseRequestItemRepositoryAsync>();
             services.AddTransient<IPurchaseRequestLogRepositoryAsync, PurchaseRequestLogRepositoryAsync>();
+            services.AddTransient<IPurchaseRequestApprovalRepositoryAsync, PurchaseRequestApprovalRepositoryAsync>();
+            services.AddTransient<IPurchaseRequestApproverRepositoryAsync, PurchaseRequestApproverRepositoryAsync>();
             #endregion
         }
     }

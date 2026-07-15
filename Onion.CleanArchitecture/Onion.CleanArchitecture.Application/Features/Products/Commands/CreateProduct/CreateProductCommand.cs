@@ -13,7 +13,7 @@ namespace Onion.CleanArchitecture.Application.Features.Products.Commands.CreateP
     {
         public string Name { get; set; }
         public string Code { get; set; }
-        public Guid CategoryId { get; set; }
+        public int CategoryId { get; set; }
         public string Unit { get; set; }
         public decimal UnitPrice { get; set; }
         public bool IsActive { get; set; }

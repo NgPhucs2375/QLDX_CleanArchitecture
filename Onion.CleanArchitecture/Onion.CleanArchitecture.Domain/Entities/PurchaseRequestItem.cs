@@ -6,8 +6,8 @@ namespace Onion.CleanArchitecture.Domain.Entities
     public class PurchaseRequestItem : AuditableBaseEntity
     {
         // --- NHÓM KHÓA NGOẠI ---
-        public Guid PurchaseRequestCategoryId { get; set; } // Trỏ về Danh mục của Phiếu
-        public Guid ProductId { get; set; } // Trỏ về Sản phẩm
+        public int PurchaseRequestCategoryId { get; set; } // Trỏ về Danh mục của Phiếu
+        public int ProductId { get; set; } // Trỏ về Sản phẩm
 
         public decimal UnitPrice { get; set; } // Đơn giá (Snapshot copy từ Product sang)
 

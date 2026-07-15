@@ -6,6 +6,7 @@ using Onion.CleanArchitecture.Domain.Entities;
 using Onion.CleanArchitecture.Infrastructure.Persistence.Contexts;
 using Onion.CleanArchitecture.Infrastructure.Persistence.Repository;
 using Onion.CleanArchitecture.Infrastructure.Shared.Extensions;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,6 +33,15 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 query.OrderByDynamic(request._sort, request._order).AsNoTracking(),
                 request._start,
                 request._end);
+        }
+
+        public async Task<List<ConfigApprover>> GetByConfigAndDepartmentAsync(int proposalConfigId, int departmentId)
+        {
+            return await _configApprovers
+                .Where(ca => ca.ProposalConfigId == proposalConfigId
+                          && ca.DepartmentId == departmentId)
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

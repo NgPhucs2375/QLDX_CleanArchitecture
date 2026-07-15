@@ -8,8 +8,8 @@ namespace Onion.CleanArchitecture.Domain.Entities
     public class PurchaseRequestCategory : AuditableBaseEntity
     {
          // --- NHÓM KHÓA NGOẠI ---
-        public Guid PurchaseRequestId { get; set; } // Trỏ về Phiếu đề xuất (Tầng 1)
-        public Guid CategoryId { get; set; } // Trỏ về Danh mục (Master Data)
+        public int PurchaseRequestId { get; set; } // Trỏ về Phiếu đề xuất (Tầng 1)
+        public int CategoryId { get; set; } // Trỏ về Danh mục (Master Data)
 
         // --- DỮ LIỆU SNAPSHOT (Lưu cứng định mức theo Bước 4 URD) ---
         /// <summary>

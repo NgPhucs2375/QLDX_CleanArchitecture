@@ -11,5 +11,7 @@ namespace Onion.CleanArchitecture.Application.Interfaces.Repositories
         Task<bool> IsUniqueCodeAsync(string Code);
         Task<int> DeleteRangeAsync(List<int> ids);
         Task<PagedList<Product>> GetPagedProductsAsync(GetAllProductsParameter parameter);
+        Task<List<Product>> GetByCategoryIdAsync(int categoryId);
+        Task<List<Product>> GetByIdsAsync(List<int> ids);
     }
 }

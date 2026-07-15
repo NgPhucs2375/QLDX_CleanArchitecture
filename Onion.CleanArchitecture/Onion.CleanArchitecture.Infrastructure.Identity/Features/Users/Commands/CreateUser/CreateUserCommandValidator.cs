@@ -31,6 +31,20 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity
                 .NotEmpty().WithMessage("{PropertyName} is required.")
                 .NotNull()
                 .MaximumLength(50).WithMessage("{PropertyName} must not exceed 50 characters.");
+
+            RuleFor(p => p.Password)
+                .NotEmpty().WithMessage("{PropertyName} is required.")
+                .NotNull()
+                .MinimumLength(8).WithMessage("{PropertyName} must be at least 8 characters.")
+                .Matches("[A-Z]").WithMessage("{PropertyName} must contain at least one uppercase letter.")
+                .Matches("[a-z]").WithMessage("{PropertyName} must contain at least one lowercase letter.")
+                .Matches("[0-9]").WithMessage("{PropertyName} must contain at least one digit.")
+                .Matches("[^a-zA-Z0-9]").WithMessage("{PropertyName} must contain at least one special character.");
+
+            RuleFor(p => p.ConfirmPassword)
+                .NotEmpty().WithMessage("{PropertyName} is required.")
+                .NotNull()
+                .Equal(p => p.Password).WithMessage("Passwords do not match.");
         }
     }
 }

@@ -77,7 +77,7 @@ export const EditUser = () => {
                 },
               ]}
             >
-              <Input readOnly disabled />
+              <Input />
             </Form.Item>
             <Form.Item
               label="Tên"
@@ -89,7 +89,7 @@ export const EditUser = () => {
                 },
               ]}
             >
-              <Input readOnly disabled />
+              <Input />
             </Form.Item>
 
             <Form.Item
@@ -106,7 +106,7 @@ export const EditUser = () => {
                 },
               ]}
             >
-              <Input readOnly disabled />
+              <Input />
             </Form.Item>
           </Col>
           <Col span={12}>

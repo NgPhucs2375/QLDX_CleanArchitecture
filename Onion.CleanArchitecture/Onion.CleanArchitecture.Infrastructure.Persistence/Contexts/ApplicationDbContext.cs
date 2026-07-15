@@ -55,6 +55,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Contexts
         public DbSet<PurchaseRequestCategory> PurchaseRequestCategories { get; set; }
         public DbSet<PurchaseRequestItem> PurchaseRequestItems { get; set; }
         public DbSet<PurchaseRequestLog> PurchaseRequestLogs { get; set; }
+        public DbSet<PurchaseRequestApproval> PurchaseRequestApprovals { get; set; }
+        public DbSet<PurchaseRequestApprover> PurchaseRequestApprovers { get; set; }
 
 
 
@@ -78,11 +80,11 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Contexts
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entry.Entity.Created = _dateTime.Now;
+                        entry.Entity.Created = _dateTime.NowUtc;
                         entry.Entity.CreatedBy = _authenticatedUser.UserId;
                         break;
                     case EntityState.Modified:
-                        entry.Entity.LastModified = _dateTime.Now;
+                        entry.Entity.LastModified = _dateTime.NowUtc;
                         entry.Entity.LastModifiedBy = _authenticatedUser.UserId;
                         break;
                 }

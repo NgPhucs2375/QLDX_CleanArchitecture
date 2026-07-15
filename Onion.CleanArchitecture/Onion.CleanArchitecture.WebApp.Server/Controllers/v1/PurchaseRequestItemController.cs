@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.CreatePurchaseRequestItem;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.DeletePurchaseRequestItemById;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.UpdatePurchaseRequestItem;
+using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.UpdateActualQuantity;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetAllPurchaseRequestItems;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetPurchaseRequestItemById;
 
@@ -68,6 +69,17 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
             return await EnforcePermissionAndExecute("purchase-request-items", "delete", async () =>
             {
                 return Ok(await Mediator.Send(new DeletePurchaseRequestItemByIdCommand { Id = id }));
+            });
+        }
+
+        [HttpPut("{id}/update-actual-quantity")]
+        public async Task<IActionResult> UpdateActualQuantity(int id,UpdateActualQuantityCommand command)
+        {
+            // tra ve promise de xu ly async, neu khong tra ve promise se bi loi 500
+            // check permission gom : string resource, string action, Func<Task<IActionResult>> execute
+            return await EnforcePermissionAndExecute("purchase-request-items","update-actual-quantity",async () => {
+                if(id != command.Id) return BadRequest();
+                return Ok(await Mediator.Send(command));
             });
         }
     }

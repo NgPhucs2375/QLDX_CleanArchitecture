@@ -9,8 +9,8 @@ namespace Onion.CleanArchitecture.Domain.Entities
     {
         public string Code { get; set;}  = string.Empty;
         // Reference Key : Department and PurchaseConfig
-        public Guid DepartmentId { get; set; }
-        public Guid PurchaseConfigId { get; set; }
+        public int DepartmentId { get; set; }
+        public int ProposalConfigId { get; set; }
 
         // Enums Status 
         public PurchaseRequestStatus Status { get; set; } = PurchaseRequestStatus.Draft;
@@ -20,6 +20,8 @@ namespace Onion.CleanArchitecture.Domain.Entities
         // Navigation
 
         public virtual ICollection<PurchaseRequestCategory> RequestCategories { get; set; } = new List<PurchaseRequestCategory>();
+        public virtual ICollection<PurchaseRequestApproval> Approvals { get; set; } = new List<PurchaseRequestApproval>();
+        public virtual ICollection<PurchaseRequestApprover> Approvers { get; set; } = new List<PurchaseRequestApprover>();
 
     }
 }

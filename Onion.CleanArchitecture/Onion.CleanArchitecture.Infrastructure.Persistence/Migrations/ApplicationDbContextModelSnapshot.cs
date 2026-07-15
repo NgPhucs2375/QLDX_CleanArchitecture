@@ -22,62 +22,6 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.Budget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("DepartmentId1")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("RemainingAmount")
-                        .HasColumnType("decimal(18,6)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("TotalQuota")
-                        .HasColumnType("decimal(18,6)");
-
-                    b.Property<decimal>("UsedAmount")
-                        .HasColumnType("decimal(18,6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId1");
-
-                    b.HasIndex("DepartmentId1");
-
-                    b.ToTable("Budgets");
-                });
-
             modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -120,8 +64,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("ApproverId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ApproverId")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
@@ -129,10 +73,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("DepartmentId1")
+                    b.Property<int>("DepartmentId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastModified")
@@ -144,17 +85,14 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("ProposalConfigId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("ProposalConfigId1")
+                    b.Property<int>("ProposalConfigId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId1");
+                    b.HasIndex("DepartmentId");
 
-                    b.HasIndex("ProposalConfigId1");
+                    b.HasIndex("ProposalConfigId");
 
                     b.ToTable("ConfigApprovers");
                 });
@@ -170,10 +108,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AllowedQuota")
                         .HasColumnType("decimal(18,6)");
 
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("CategoryId1")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Created")
@@ -182,10 +117,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("DepartmentId1")
+                    b.Property<int>("DepartmentId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastModified")
@@ -194,19 +126,22 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("ProposalConfigId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("ProposalConfigId1")
+                    b.Property<int>("ProposalConfigId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("RemainingAmount")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<decimal>("UsedAmount")
+                        .HasColumnType("decimal(18,6)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId1");
+                    b.HasIndex("CategoryId");
 
-                    b.HasIndex("DepartmentId1");
+                    b.HasIndex("DepartmentId");
 
-                    b.HasIndex("ProposalConfigId1");
+                    b.HasIndex("ProposalConfigId");
 
                     b.ToTable("ConfigCategories");
                 });
@@ -237,8 +172,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("ManagerId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ManagerId")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -256,10 +191,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("CategoryId1")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Code")
@@ -291,7 +223,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId1");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
                 });
@@ -350,8 +282,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastModified")
                         .HasColumnType("timestamp with time zone");
@@ -359,8 +291,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("PurchaseConfigId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ProposalConfigId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -374,6 +306,96 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PurchaseRequests");
+                });
+
+            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestApproval", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApproverId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApproverName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FromStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PurchaseRequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ToStatus")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseRequestId");
+
+                    b.ToTable("PurchaseRequestApprovals");
+                });
+
+            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestApprover", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApproverId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApproverName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PurchaseRequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("text");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseRequestId");
+
+                    b.ToTable("PurchaseRequestApprovers");
                 });
 
             modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestCategory", b =>
@@ -393,8 +415,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AllowedQuota")
                         .HasColumnType("decimal(18,6)");
 
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
@@ -411,10 +433,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("PurchaseRequestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("PurchaseRequestId1")
+                    b.Property<int>("PurchaseRequestId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalProposedAmount")
@@ -422,7 +441,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PurchaseRequestId1");
+                    b.HasIndex("PurchaseRequestId");
 
                     b.ToTable("PurchaseRequestCategories");
                 });
@@ -453,19 +472,13 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("ProductId1")
+                    b.Property<int>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<int>("ProposedQuantity")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("PurchaseRequestCategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("RequestCategoryId")
+                    b.Property<int>("PurchaseRequestCategoryId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
@@ -476,9 +489,9 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId1");
+                    b.HasIndex("ProductId");
 
-                    b.HasIndex("RequestCategoryId");
+                    b.HasIndex("PurchaseRequestCategoryId");
 
                     b.ToTable("PurchaseRequestItems");
                 });
@@ -509,46 +522,32 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("PurchaseRequestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("PurchaseRequestId1")
+                    b.Property<int>("PurchaseRequestId")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PurchaseRequestId1");
+                    b.HasIndex("PurchaseRequestId");
 
                     b.ToTable("PurchaseRequestLogs");
-                });
-
-            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.Budget", b =>
-                {
-                    b.HasOne("Onion.CleanArchitecture.Domain.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId1");
-
-                    b.HasOne("Onion.CleanArchitecture.Domain.Entities.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId1");
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.ConfigApprover", b =>
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.Department", "Department")
                         .WithMany()
-                        .HasForeignKey("DepartmentId1");
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.ProposalConfig", "ProposalConfig")
                         .WithMany("ConfigApprovers")
-                        .HasForeignKey("ProposalConfigId1");
+                        .HasForeignKey("ProposalConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Department");
 
@@ -559,15 +558,21 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.Category", "Category")
                         .WithMany()
-                        .HasForeignKey("CategoryId1");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.Department", "Department")
                         .WithMany()
-                        .HasForeignKey("DepartmentId1");
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.ProposalConfig", "ProposalConfig")
                         .WithMany("ConfigCategories")
-                        .HasForeignKey("ProposalConfigId1");
+                        .HasForeignKey("ProposalConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
 
@@ -580,16 +585,42 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.Category", "Category")
                         .WithMany("Products")
-                        .HasForeignKey("CategoryId1");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestApproval", b =>
+                {
+                    b.HasOne("Onion.CleanArchitecture.Domain.Entities.PurchaseRequest", "PurchaseRequest")
+                        .WithMany("Approvals")
+                        .HasForeignKey("PurchaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseRequest");
+                });
+
+            modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestApprover", b =>
+                {
+                    b.HasOne("Onion.CleanArchitecture.Domain.Entities.PurchaseRequest", "PurchaseRequest")
+                        .WithMany("Approvers")
+                        .HasForeignKey("PurchaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseRequest");
                 });
 
             modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestCategory", b =>
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.PurchaseRequest", "PurchaseRequest")
                         .WithMany("RequestCategories")
-                        .HasForeignKey("PurchaseRequestId1");
+                        .HasForeignKey("PurchaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PurchaseRequest");
                 });
@@ -598,11 +629,15 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId1");
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.PurchaseRequestCategory", "RequestCategory")
                         .WithMany("RequestItems")
-                        .HasForeignKey("RequestCategoryId");
+                        .HasForeignKey("PurchaseRequestCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
 
@@ -613,7 +648,9 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Onion.CleanArchitecture.Domain.Entities.PurchaseRequest", "PurchaseRequest")
                         .WithMany()
-                        .HasForeignKey("PurchaseRequestId1");
+                        .HasForeignKey("PurchaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PurchaseRequest");
                 });
@@ -632,6 +669,10 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Onion.CleanArchitecture.Domain.Entities.PurchaseRequest", b =>
                 {
+                    b.Navigation("Approvals");
+
+                    b.Navigation("Approvers");
+
                     b.Navigation("RequestCategories");
                 });
 

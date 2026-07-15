@@ -7,8 +7,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
     {
         public int Id { get; set; }
         public string Code { get; set; }
-        public Guid DepartmentId { get; set; }
-        public Guid PurchaseConfigId { get; set; }
+        public int DepartmentId { get; set; }
+        public int PurchaseConfigId { get; set; }
         public PurchaseRequestStatus Status { get; set; }
         public decimal TotalProposedAmount { get; set; }
         public decimal TotalActualAmount { get; set; }

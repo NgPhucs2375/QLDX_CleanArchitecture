@@ -22,7 +22,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             RuleFor(p => p.DepartmentId)
                 .NotEmpty().WithMessage("{PropertyName} is required.");
 
-            RuleFor(p => p.PurchaseConfigId)
+            RuleFor(p => p.ProposalConfigId)
                 .NotEmpty().WithMessage("{PropertyName} is required.");
         }
 

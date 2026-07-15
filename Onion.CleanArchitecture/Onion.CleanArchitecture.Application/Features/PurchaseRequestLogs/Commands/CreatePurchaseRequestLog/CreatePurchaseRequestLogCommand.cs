@@ -11,8 +11,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestLogs.Comma
 {
     public class CreatePurchaseRequestLogCommand : IRequest<Response<int>>
     {
-        public Guid PurchaseRequestId { get; set; }
-        public Guid UserId { get; set; }
+        public int PurchaseRequestId { get; set; }
+        public string UserId { get; set; } = string.Empty;
         public string Action { get; set; }
         public string Note { get; set; }
     }

@@ -2,7 +2,7 @@ import {
   useTable, List, ShowButton, EditButton, DeleteButton,
   getDefaultSortOrder, DateField, FilterDropdown,
 } from "@refinedev/antd";
-import { Table, Space, Input, Button, DatePicker, Tag } from "antd";
+import { Table, Space, Input, Button, Tag } from "antd";
 import { IProposalConfig } from "./types";
 import { getDefaultFilter, useNavigation, useDeleteMany, CanAccess } from "@refinedev/core";
 import React from "react";

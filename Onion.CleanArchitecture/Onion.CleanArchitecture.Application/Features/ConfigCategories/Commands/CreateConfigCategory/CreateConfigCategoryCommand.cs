@@ -11,9 +11,9 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigCategories.Commands
 {
     public class CreateConfigCategoryCommand : IRequest<Response<int>>
     {
-        public Guid ProposalConfigId { get; set; }
-        public Guid CategoryId { get; set; }
-        public Guid DepartmentId { get; set; }
+        public int ProposalConfigId { get; set; }
+        public int CategoryId { get; set; }
+        public int DepartmentId { get; set; }
         public decimal AllowedQuota { get; set; }
         public decimal UsedAmount { get; set; }
         public decimal RemainingAmount { get; set; }
@@ -31,6 +31,8 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigCategories.Commands
         public async Task<Response<int>> Handle(CreateConfigCategoryCommand request, CancellationToken cancellationToken)
         {
             var configCategory = _mapper.Map<ConfigCategory>(request);
+            configCategory.UsedAmount = 0;
+            configCategory.RemainingAmount = request.AllowedQuota; // Thiết lập số tiền còn lại bằng định mức ban đầu
             await _configCategoryRepository.AddAsync(configCategory);
             return new Response<int>(configCategory.Id);
         }

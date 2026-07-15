@@ -1,4 +1,4 @@
-import { DataProvider as BaseDataProvider, HttpError } from "@refinedev/core";
+import { DataProvider as BaseDataProvider, BaseRecord, CustomResponse, HttpError } from "@refinedev/core";
 import { ResponseManyRoot, ResponseRoot } from "./types";
 
 const API_URL = "/api";
@@ -41,6 +41,15 @@ export interface DataProvider extends BaseDataProvider {
   getApiUrl(): string;
   deleteFile(publicId: string): void;
   getUserLdap(username: string): any;
+  custom<TData extends BaseRecord = BaseRecord, TQuery = unknown, TPayload = unknown>(params: {
+    url: string;
+    method: "get" | "delete" | "head" | "options" | "post" | "put" | "patch";
+    sort?: any;
+    filters?: any;
+    payload?: TPayload;
+    query?: TQuery;
+    headers?: HeadersInit;
+  }): Promise<CustomResponse<TData>>;
 }
 
 export const dataProvider: DataProvider = {
@@ -270,7 +279,7 @@ export const dataProvider: DataProvider = {
     return { data: data.Data as any };
   },
   getApiUrl: function (): string {
-    throw new Error("Function not implemented.");
+    return API_URL;
   },
   deleteFile: async (publicId): Promise<boolean> => {
     const response = await fetcher(`${API_URL}/file?publicId=${publicId}`, {
@@ -308,5 +317,48 @@ export const dataProvider: DataProvider = {
     }
     const data = (await response.json()) as ResponseRoot;
     return { data: data.Data as any };
+  },
+  custom: async ({ url, method, payload, query, headers }) => {
+    let requestUrl = `${url}`;
+
+    // Xử lý gắn thêm query params vào URL (nếu có)
+    if (query) {
+      // Vì query giờ là kiểu TQuery (unknown), ta ép kiểu nó về Record an toàn trước khi dùng
+      const safeQuery = query as Record<string, string | number | boolean>;
+      const queryParams = new URLSearchParams();
+      
+      for (const key in safeQuery) {
+        if (safeQuery[key] !== undefined && safeQuery[key] !== null) {
+          queryParams.append(key, String(safeQuery[key]));
+        }
+      }
+
+      const separator = requestUrl.includes("?") ? "&" : "?";
+      requestUrl = `${requestUrl}${separator}${queryParams.toString()}`;
+    }
+
+    const response = await fetcher(requestUrl, {
+      method: method.toUpperCase(),
+      body: payload ? JSON.stringify(payload) : undefined,
+      headers: {
+        "Content-Type": "application/json",
+        ...(headers as Record<string, string>), // Ép kiểu headers về Record để tránh lỗi
+      },
+    });
+
+    if (response.status === 401) {
+      return processErrorResponse(response);
+    }
+
+    if (!response.ok) {
+      const errorResponse = (await response.json()) as ResponseRoot;
+      return handleErrorResponse(errorResponse);
+    }
+
+    const data = await response.json();
+    
+    // Tùy thuộc vào việc API của bạn trả về data.Data hay trả về trực tiếp, 
+    // bạn chỉnh lại chỗ này cho khớp với cấu trúc ResponseRoot nhé.
+    return { data: (data.Data ?? data) as any }; 
   },
 };

@@ -55,7 +55,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries
                 var userWithSameEmail = await _userManager.FindByEmailAsync(request.Email);
                 if (userWithSameEmail == null)
                 {
-                    var result = await _userManager.CreateAsync(user, "123Pa$$word!");
+                    var result = await _userManager.CreateAsync(user, request.Password);
                     if (result.Succeeded)
                     {
                         var role = await _roleManager.FindByIdAsync(request.RoleId);

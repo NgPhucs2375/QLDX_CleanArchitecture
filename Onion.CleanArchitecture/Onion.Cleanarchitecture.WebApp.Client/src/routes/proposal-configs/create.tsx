@@ -1,16 +1,54 @@
-import { useForm, Create } from "@refinedev/antd";
-import { Form, Input, DatePicker, Select } from "antd";
-import { IProposalConfig } from "./types";
+import { useForm, Create, useSelect } from "@refinedev/antd";
+import { HttpError } from "@refinedev/core";
+import { useMemo } from "react";
+import type { IProposalConfig, ICategory, IDepartment, IProposalConfigPayload } from "./types";
+import { ProposalConfigForm } from "./form";
+
 export const CreateProposalConfig = () => {
-  const { formProps, saveButtonProps } = useForm<IProposalConfig>({ redirect: "edit" });
+  // KHẮC PHỤC 3: Rút trích hàm `onFinish` trực tiếp từ useForm và cấp Type Payload cho nó
+  const { formProps, saveButtonProps, onFinish } = useForm<
+    IProposalConfig, 
+    HttpError, 
+    IProposalConfigPayload // Báo cho Refine biết tôi sẽ gửi lên cục dữ liệu dạng này
+  >({ 
+    resource: "proposal-configs",
+    action: "create",
+    redirect: "edit" });
+
+  const { queryResult: categoryQueryResult } = useSelect<ICategory>({
+    resource: "categories",
+    optionLabel: "Name",
+    optionValue: "Id",
+    pagination: { mode: "off" },
+    filters: [{ field: "IsActive", operator: "eq", value: true }],
+  });
+
+  const { queryResult: deptQueryResult } = useSelect<IDepartment>({
+    resource: "departments",
+    optionLabel: "Name",
+    optionValue: "Id",
+    pagination: { mode: "off" },
+    filters: [{ field: "IsActive", operator: "eq", value: true }],
+  });
+
+  const categories = useMemo(
+    () => categoryQueryResult.data?.data ?? [],
+    [categoryQueryResult.data]
+  );
+
+  const departments = useMemo(
+    () => deptQueryResult.data?.data ?? [],
+    [deptQueryResult.data]
+  );
+
   return (
-    <Create saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
-        <Form.Item label="Code" name="Code" rules={[{ required: true, message: "Please input config code!" }, { max: 50 }]}><Input /></Form.Item>
-        <Form.Item label="Name" name="Name" rules={[{ required: true, message: "Please input config name!" }, { max: 200 }]}><Input /></Form.Item>
-        <Form.Item label="Effective Date" name="EffectiveDate" rules={[{ required: true, message: "Please select effective date!" }]}><DatePicker style={{ width: "100%" }} /></Form.Item>
-        <Form.Item label="Status" name="Status" initialValue={1}><Select options={[{ value: 1, label: "Draft" }, { value: 2, label: "Active" }, { value: 3, label: "Inactive" }]} /></Form.Item>
-      </Form>
+    <Create title="Tạo Cấu Hình Đề Xuất" saveButtonProps={{ ...saveButtonProps, children: "Lưu Cấu Hình" }}>
+      <ProposalConfigForm
+        formProps={{ ...formProps, onFinish }}
+        saveButtonProps={saveButtonProps}
+        categories={categories}
+        departments={departments}
+      />
     </Create>
   );
 };

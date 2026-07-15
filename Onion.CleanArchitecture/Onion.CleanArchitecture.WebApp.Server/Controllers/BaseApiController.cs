@@ -25,19 +25,24 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers
         }
 
         protected async Task<IActionResult> EnforcePermissionAndExecute(string resource, string action, Func<Task<IActionResult>> func)
+{
+    if (HttpContext.User.Identity is ClaimsIdentity identity)
+    {
+        var userPermission = identity.FindFirst("permission")?.Value;
+        Console.WriteLine($"[CASBIN] UserPermission: {userPermission}, Resource: {resource}, Action: {action}");
+        
+        var enforcer = await _enforcer.EnforceAsync(userPermission, resource, action);
+        Console.WriteLine($"[CASBIN] Result: {enforcer}");
+        
+        if (!enforcer)
         {
-            if (HttpContext.User.Identity is ClaimsIdentity identity)
-            {
-                var userPermission = identity.FindFirst("permission")?.Value;
-
-                var enforcer = await _enforcer.EnforceAsync(userPermission, resource, action);
-                if (!enforcer)
-                {
-                    throw new ApiException("You do not have permission to perform this action.", 403);
-                }
-                return await func();
-            }
-            throw new ApiException("You are not Authorized", 401);
+            throw new ApiException("You do not have permission to perform this action.", 403);
         }
+        return await func();
+    }
+    throw new ApiException("You are not Authorized", 401);
+}
+
+        
     }
 }

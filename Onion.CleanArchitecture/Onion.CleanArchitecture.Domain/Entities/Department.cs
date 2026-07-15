@@ -11,7 +11,7 @@ namespace Onion.CleanArchitecture.Domain.Entities
         /// <summary>
         /// Khóa ngoại trỏ về bảng User (Identity) để biết ai là Trưởng đơn vị phụ trách
         /// </summary>
-        public Guid? ManagerId { get; set; } 
+        public string? ManagerId { get; set; }
         
         public bool IsActive { get; set; } = true; // Trạng thái
     }

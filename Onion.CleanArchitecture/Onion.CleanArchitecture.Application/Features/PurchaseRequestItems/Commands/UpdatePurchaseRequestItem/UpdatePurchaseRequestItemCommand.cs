@@ -11,8 +11,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
     public class UpdatePurchaseRequestItemCommand : IRequest<Response<int>>
     {
         public int Id { get; set; }
-        public Guid PurchaseRequestCategoryId { get; set; }
-        public Guid ProductId { get; set; }
+        public int PurchaseRequestCategoryId { get; set; }
+        public int ProductId { get; set; }
         public decimal UnitPrice { get; set; }
         public int ProposedQuantity { get; set; }
         public decimal TotalAmount { get; set; }
