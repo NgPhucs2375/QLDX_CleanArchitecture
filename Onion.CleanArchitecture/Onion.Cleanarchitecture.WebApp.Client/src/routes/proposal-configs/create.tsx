@@ -3,17 +3,19 @@ import { HttpError } from "@refinedev/core";
 import { useMemo } from "react";
 import type { IProposalConfig, ICategory, IDepartment, IProposalConfigPayload } from "./types";
 import { ProposalConfigForm } from "./form";
+import { Typography } from "antd";
+const { Title } = Typography; // 2. Lấy component Title
 
 export const CreateProposalConfig = () => {
-  // KHẮC PHỤC 3: Rút trích hàm `onFinish` trực tiếp từ useForm và cấp Type Payload cho nó
   const { formProps, saveButtonProps, onFinish } = useForm<
-    IProposalConfig, 
-    HttpError, 
-    IProposalConfigPayload // Báo cho Refine biết tôi sẽ gửi lên cục dữ liệu dạng này
-  >({ 
+    IProposalConfig,
+    HttpError,
+    IProposalConfigPayload
+  >({
     resource: "proposal-configs",
     action: "create",
-    redirect: "edit" });
+    redirect: "edit",
+  });
 
   const { queryResult: categoryQueryResult } = useSelect<ICategory>({
     resource: "categories",
@@ -42,7 +44,9 @@ export const CreateProposalConfig = () => {
   );
 
   return (
-    <Create title="Tạo Cấu Hình Đề Xuất" saveButtonProps={{ ...saveButtonProps, children: "Lưu Cấu Hình" }}>
+    <Create 
+    title={<Title level={3} style={{ margin: 0 }}>Tạo Cấu Hình Đề Xuất</Title>}
+    saveButtonProps={{ ...saveButtonProps, children: "Lưu Cấu Hình" }}>
       <ProposalConfigForm
         formProps={{ ...formProps, onFinish }}
         saveButtonProps={saveButtonProps}

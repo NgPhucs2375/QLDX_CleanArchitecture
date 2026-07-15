@@ -2,9 +2,10 @@ import { useForm, Edit, useSelect } from "@refinedev/antd";
 import { HttpError } from "@refinedev/core";
 import { useMemo } from "react";
 import dayjs from "dayjs";
+import { Typography } from "antd";
 import type { IProposalConfig, ICategory, IDepartment, IProposalConfigPayload } from "./types";
 import { ProposalConfigForm } from "./form";
-
+const { Title } = Typography;
 export const EditProposalConfig = () => {
   const { formProps, saveButtonProps, queryResult, onFinish } = useForm<
     IProposalConfig,
@@ -27,7 +28,9 @@ export const EditProposalConfig = () => {
   const departments = useMemo(() => deptQueryResult.data?.data ?? [], [deptQueryResult.data]);
 
   return (
-    <Edit title="Chỉnh sửa Cấu hình Đề xuất" saveButtonProps={saveButtonProps}>
+    <Edit 
+    title={<Title level={3} style={{ margin: 0 }}>Chỉnh sửa Cấu hình Đề xuất</Title>}
+    saveButtonProps={{ ...saveButtonProps, children: "Lưu Chỉnh Sửa" }}>
       <ProposalConfigForm
         formProps={{ ...editableFormProps, onFinish }}
         saveButtonProps={saveButtonProps}

@@ -1,12 +1,59 @@
 import { useSelect } from "@refinedev/antd";
 import { Form, Input, DatePicker, Select, Button, Space, Typography, Table, InputNumber, Row, Col, Popconfirm } from "antd";
-import { PlusOutlined, CheckOutlined, CloseOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, CheckOutlined, CloseOutlined, EditOutlined, DeleteOutlined, SettingOutlined, TeamOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useState, useEffect, useMemo } from "react";
 import type { FormProps } from "antd";
 import type { SaveButtonProps } from "@refinedev/antd";
-import type { IProposalConfig, ICategory, IDepartment, IConfigCategoryItem, IConfigApproverItem, IUser } from "./types";
+import type { IProposalConfig, ICategory, IDepartment, IConfigCategoryItem, IConfigApproverItem, IUser, IProposalConfigPayload } from "./types";
 
 const { Text } = Typography;
+
+const STYLES = `
+  .pc-form { max-width: 1200px; margin: 0 auto; padding: 0; }
+  .pc-form .ant-form-item-label > label { font-size: 14px; font-weight: 500; }
+  .pc-form .ant-input, .pc-form .ant-select, .pc-form .ant-picker, .pc-form .ant-input-number { font-size: 14px; }
+  .pc-card {
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .pc-card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 2px solid #e8e8e8;
+  }
+  .pc-card-header h3 { font-size: 17px; font-weight: 600; margin: 0; color: #1a1a1a; }
+  .pc-card-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .pc-card-icon.blue { background: #e6f4ff; color: #1677ff; }
+  .pc-card-icon.green { background: #f6ffed; color: #52c41a; }
+  .pc-card-icon.orange { background: #fff7e6; color: #fa8c16; }
+  .pc-empty-state {
+    padding: 36px 24px; text-align: center;
+    background: #fafafa;
+    border: 1px dashed #d9d9d9;
+    border-radius: 8px;
+  }
+  .pc-empty-state p { margin: 0 0 14px; color: rgba(0,0,0,0.45); font-size: 15px; }
+  .pc-add-row {
+    display: flex; gap: 10px; align-items: center; padding: 10px 0;
+    flex-wrap: wrap;
+  }
+  .pc-add-row .ant-select, .pc-add-row .ant-input, .pc-add-row .ant-input-number { font-size: 14px; }
+  .pc-table-wrapper .ant-table { font-size: 15px; }
+  .pc-table-wrapper .ant-table-thead > tr > th {
+    font-weight: 600; font-size: 15px;
+    border-bottom: 2px solid #d9d9d9 !important;
+  }
+  .pc-table-wrapper .ant-table-tbody > tr > td { padding: 14px 16px !important; }
+  .pc-table-wrapper .ant-table-bordered .ant-table-cell { border-color: #d9d9d9 !important; }
+`;
 
 const vnd = (n: number) => n.toLocaleString("vi-VN") + " VND";
 
@@ -20,16 +67,6 @@ const PERIOD_TYPES = [
   { value: 2, label: "Quý" },
   { value: 3, label: "Năm" },
 ];
-
-interface IProposalConfigPayload {
-  Id?: number;
-  Code: string;
-  Name: string;
-  EffectiveDate: string;
-  Status: number;
-  Categories: { CategoryId: number; DepartmentId: number; AllowedQuota: number }[];
-  Approves: { DepartmentId: number; ApproverId: string; Level: number }[];
-}
 
 interface ICustomDate {
   toISOString: () => string;
@@ -83,13 +120,11 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
   const [configCategories, setConfigCategories] = useState<IConfigCategoryItem[]>([]);
   const [configApprovers, setConfigApprovers] = useState<IConfigApproverItem[]>([]);
 
-  // --- Category inline states ---
   const [catAdding, setCatAdding] = useState(false);
   const [catNew, setCatNew] = useState<Partial<IConfigCategoryItem>>({});
   const [catEditKey, setCatEditKey] = useState<string | null>(null);
   const [catEditValues, setCatEditValues] = useState<Partial<IConfigCategoryItem>>({});
 
-  // --- Approver inline states ---
   const [apprAdding, setApprAdding] = useState(false);
   const [apprNew, setApprNew] = useState<Partial<IConfigApproverItem>>({});
   const [apprEditKey, setApprEditKey] = useState<string | null>(null);
@@ -133,7 +168,6 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     }
   }, [initialData, categories, departments]);
 
-  // --- Category handlers ---
   const addCategory = (values: Partial<IConfigCategoryItem>) => {
     if (values.categoryId == null || values.departmentId == null) return;
     const exists = configCategories.some(
@@ -198,7 +232,6 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     setCatEditValues({});
   };
 
-  // --- Approver handlers ---
   const addApprover = (values: Partial<IConfigApproverItem>) => {
     if (values.departmentId == null || values.approverId == null || values.level == null) return;
     const exists = configApprovers.some(
@@ -312,7 +345,6 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Danh mục",
       dataIndex: "categoryName",
-      width: 160,
       render: (text: string, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
@@ -339,19 +371,18 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Mã danh mục",
       dataIndex: "categoryCode",
-      width: 120,
+      width: 110,
       render: (text: string, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
           return <Input value={catEditValues.categoryCode} disabled style={FIELD_STYLE} />;
         }
-        return text;
+        return <Text code>{text}</Text>;
       },
     },
     {
       title: "Đơn vị áp dụng",
       dataIndex: "departmentName",
-      width: 160,
       render: (text: string, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
@@ -376,15 +407,15 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
       },
     },
     {
-      title: "Mã đơn vị",
+      title: "Mã ĐV",
       dataIndex: "departmentCode",
-      width: 120,
+      width: 160,
       render: (text: string, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
           return <Input value={catEditValues.departmentCode} disabled style={FIELD_STYLE} />;
         }
-        return text;
+        return <Text code>{text}</Text>;
       },
     },
     {
@@ -409,7 +440,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Định mức cho phép",
       dataIndex: "allowedQuota",
-      width: 180,
+      width: 170,
       render: (v: number, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
@@ -419,15 +450,17 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
               onChange={(val) => setCatEditValues(prev => ({ ...prev, allowedQuota: val ?? 0 }))}
               min={0}
               style={FIELD_STYLE}
+              formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(val) => Number(val?.replace(/,/g, "") || 0)}
             />
           );
         }
-        return <Text strong>{vnd(v)}</Text>;
+        return <Text strong style={{ fontVariantNumeric: 'tabular-nums', color: '#1677ff' }}>{vnd(v)}</Text>;
       },
     },
     {
       title: "",
-      width: 100,
+      width: 80,
       render: (_text: unknown, record: IConfigCategoryItem) => {
         const key = `${record.categoryId}-${record.departmentId}`;
         if (catEditKey === key) {
@@ -451,7 +484,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
   ];
 
   const catFooter = () => catAdding ? (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0', flexWrap: 'wrap' }}>
+    <div className="pc-add-row">
       <Select
         placeholder="Chọn danh mục"
         value={catNew.categoryId}
@@ -462,7 +495,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
         options={categories.map(c => ({ label: c.Name, value: c.Id }))}
         style={{ width: 160 }}
       />
-      <Input value={catNew.categoryCode} disabled placeholder="Mã DM" style={{ width: 120 }} />
+      <Input value={catNew.categoryCode} disabled placeholder="Mã DM" style={{ width: 110 }} />
       <Select
         placeholder="Chọn đơn vị"
         value={catNew.departmentId}
@@ -473,20 +506,22 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
         options={departments.map(d => ({ label: d.Name, value: d.Id }))}
         style={{ width: 160 }}
       />
-      <Input value={catNew.departmentCode} disabled placeholder="Mã ĐV" style={{ width: 120 }} />
+      <Input value={catNew.departmentCode} disabled placeholder="Mã ĐV" style={{ width: 110 }} />
       <Select
         placeholder="Loại kỳ"
         value={catNew.periodType}
         onChange={(val) => setCatNew(prev => ({ ...prev, periodType: val }))}
         options={PERIOD_TYPES}
-        style={{ width: 100 }}
+        style={{ width: 110 }}
       />
       <InputNumber
         placeholder="Định mức"
         value={catNew.allowedQuota}
         onChange={(val) => setCatNew(prev => ({ ...prev, allowedQuota: val ?? 0 }))}
         min={0}
-        style={{ width: 160 }}
+        style={{ width: 150 }}
+        formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+        parser={(val) => Number(val?.replace(/,/g, "") || 0)}
       />
       <Button type="primary" size="small" icon={<CheckOutlined />} onClick={() => addCategory(catNew)} />
       <Button size="small" icon={<CloseOutlined />} onClick={() => { setCatAdding(false); setCatNew({}); }} />
@@ -501,7 +536,6 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Đơn vị",
       dataIndex: "departmentName",
-      width: 140,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
@@ -521,21 +555,20 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
       },
     },
     {
-      title: "Mã đơn vị",
+      title: "Mã ĐV",
       dataIndex: "departmentCode",
-      width: 100,
+      width: 160,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
           return <Input value={apprEditValues.departmentCode} disabled style={FIELD_STYLE} />;
         }
-        return text;
+        return <Text code>{text}</Text>;
       },
     },
     {
       title: "Người duyệt",
       dataIndex: "approverName",
-      width: 140,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
@@ -565,19 +598,18 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Email",
       dataIndex: "email",
-      width: 180,
+      width: 200,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
           return <Input value={apprEditValues.email} disabled style={FIELD_STYLE} />;
         }
-        return text;
+        return <Text style={{ color: 'rgba(0,0,0,0.45)' }}>{text}</Text>;
       },
     },
     {
       title: "Tên",
       dataIndex: "name",
-      width: 140,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
@@ -589,7 +621,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     {
       title: "Cấp duyệt",
       dataIndex: "levelLabel",
-      width: 160,
+      width: 190,
       render: (text: string, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
@@ -607,7 +639,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
     },
     {
       title: "",
-      width: 100,
+      width: 80,
       render: (_text: unknown, record: IConfigApproverItem) => {
         const key = `${record.departmentId}-${record.approverId}-${record.level}`;
         if (apprEditKey === key) {
@@ -631,7 +663,7 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
   ];
 
   const apprFooter = () => apprAdding ? (
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0', flexWrap: 'wrap' }}>
+    <div className="pc-add-row">
       <Select
         placeholder="Chọn đơn vị"
         value={apprNew.departmentId}
@@ -680,106 +712,115 @@ export const ProposalConfigForm = ({ formProps, categories, departments, initial
   );
 
   return (
-    <Form {...formProps} layout="vertical" style={{ maxWidth: 1080, margin: "0 auto", padding: 20 }} onFinish={handleSubmit}>
-      <div style={{ marginBottom: 16, background: "#fff", border: "1px solid #f0f0f0", borderRadius: 6, padding: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Thông tin chung</h3>
+    <>
+      <style>{STYLES}</style>
+      <Form {...formProps} layout="vertical" className="pc-form" onFinish={handleSubmit}>
+        <div className="pc-card">
+          <div className="pc-card-header">
+            <div className="pc-card-icon blue"><InfoCircleOutlined /></div>
+            <h3>Thông tin chung</h3>
+          </div>
+          <Row gutter={[24, 0]}>
+            <Col xs={24} sm={12} lg={6}>
+              <Form.Item name="Code" label="Mã cấu hình" rules={[{ required: true, message: "Vui lòng nhập mã!" }, { max: 50 }]}>
+                <Input placeholder="VD: CFG-2024-Q3" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Form.Item name="Name" label="Tên cấu hình" rules={[{ required: true, message: "Vui lòng nhập tên!" }, { max: 200 }]}>
+                <Input placeholder="VD: Đề xuất mua VPP & CNTT quý 3/2026" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Form.Item name="EffectiveDate" label="Ngày hiệu lực" rules={[{ required: true, message: "Vui lòng chọn ngày!" }]}>
+                <DatePicker style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Form.Item name="Status" label="Trạng thái" initialValue={1}>
+                <Select
+                  options={[
+                    { value: 1, label: "Nháp" },
+                    { value: 2, label: "Đang áp dụng" },
+                    { value: 3, label: "Ngưng áp dụng" },
+                  ]}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
         </div>
-        <Row gutter={[16, 8]}>
-          <Col xs={24} sm={12} lg={6}>
-            <Form.Item name="Code" label="Mã cấu hình" rules={[{ required: true, message: "Vui lòng nhập mã!" }, { max: 50 }]}>
-              <Input placeholder="VD: CFG-2024-Q3" />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Form.Item name="Name" label="Tên cấu hình" rules={[{ required: true, message: "Vui lòng nhập tên!" }, { max: 200 }]}>
-              <Input placeholder="VD: Đề xuất mua VPP & CNTT quý 3/2026" />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Form.Item name="EffectiveDate" label="Ngày hiệu lực" rules={[{ required: true, message: "Vui lòng chọn ngày!" }]}>
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Form.Item name="Status" label="Trạng thái" initialValue={1}>
-              <Select
-                options={[
-                  { value: 1, label: "Nháp" },
-                  { value: 2, label: "Đang áp dụng" },
-                  { value: 3, label: "Ngưng áp dụng" },
-                ]}
-                style={{ width: "100%" }}
+
+        <div className="pc-card">
+          <div className="pc-card-header">
+            <div className="pc-card-icon green"><SettingOutlined /></div>
+            <h3>Danh mục & Định mức</h3>
+          </div>
+
+          {configCategories.length === 0 && !catAdding && (
+            <div className="pc-empty-state">
+              <p>Chưa có danh mục nào được cấu hình.</p>
+              <Button type="dashed" icon={<PlusOutlined />} onClick={() => setCatAdding(true)}>
+                Thêm danh mục
+              </Button>
+            </div>
+          )}
+
+          {configCategories.length > 0 && (
+            <div className="pc-table-wrapper">
+              <Table
+                dataSource={configCategories}
+                rowKey={(r) => `${r.categoryId}-${r.departmentId}`}
+                pagination={false}
+                bordered
+                columns={catColumns}
+                footer={catFooter}
               />
-            </Form.Item>
-          </Col>
-        </Row>
-      </div>
-      <div style={{ marginBottom: 16, background: "#fff", border: "1px solid #f0f0f0", borderRadius: 6, padding: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Danh mục & Định mức</h3>
+            </div>
+          )}
+
+          {configCategories.length === 0 && catAdding && (
+            <div style={{ border: "1px solid #f0f0f0", borderRadius: 6, padding: 16, marginBottom: 12 }}>
+              {catFooter()}
+            </div>
+          )}
         </div>
 
-        {configCategories.length === 0 && !catAdding && (
-          <div style={{ padding: "48px 24px", textAlign: "center", background: "#fff", border: "1px dashed #d9d9d9", borderRadius: 6, marginBottom: 16 }}>
-            <p style={{ margin: "0 0 8px", color: "rgba(0,0,0,0.45)" }}>Chưa có danh mục nào được cấu hình.</p>
-            <Button type="dashed" icon={<PlusOutlined />} onClick={() => setCatAdding(true)}>
-              Thêm danh mục
-            </Button>
+        <div className="pc-card">
+          <div className="pc-card-header">
+            <div className="pc-card-icon orange"><TeamOutlined /></div>
+            <h3>Nhân sự phê duyệt</h3>
           </div>
-        )}
 
-        {configCategories.length > 0 && (
-          <Table
-            dataSource={configCategories}
-            rowKey={(r) => `${r.categoryId}-${r.departmentId}`}
-            pagination={false}
-            bordered
-            columns={catColumns}
-            footer={catFooter}
-            style={{ marginBottom: 16 }}
-          />
-        )}
+          {configApprovers.length === 0 && !apprAdding && (
+            <div className="pc-empty-state">
+              <p>Chưa có nhân sự nào được cấu hình.</p>
+              <Button type="dashed" icon={<PlusOutlined />} onClick={() => setApprAdding(true)}>
+                Thêm người duyệt
+              </Button>
+            </div>
+          )}
 
-        {configCategories.length === 0 && catAdding && (
-          <div style={{ border: "1px solid #f0f0f0", borderRadius: 6, padding: 16, marginBottom: 16 }}>
-            {catFooter()}
-          </div>
-        )}
-      </div>
+          {configApprovers.length > 0 && (
+            <div className="pc-table-wrapper">
+              <Table
+                dataSource={configApprovers}
+                rowKey={(r) => `${r.departmentId}-${r.approverId}-${r.level}`}
+                pagination={false}
+                bordered
+                columns={apprColumns}
+                footer={apprFooter}
+              />
+            </div>
+          )}
 
-      <div style={{ marginBottom: 16, background: "#fff", border: "1px solid #f0f0f0", borderRadius: 6, padding: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Nhân sự phê duyệt</h3>
+          {configApprovers.length === 0 && apprAdding && (
+            <div style={{ border: "1px solid #f0f0f0", borderRadius: 6, padding: 16, marginBottom: 12 }}>
+              {apprFooter()}
+            </div>
+          )}
         </div>
-
-        {configApprovers.length === 0 && !apprAdding && (
-          <div style={{ padding: "48px 24px", textAlign: "center", background: "#fff", border: "1px dashed #d9d9d9", borderRadius: 6, marginBottom: 16 }}>
-            <p style={{ margin: "0 0 8px", color: "rgba(0,0,0,0.45)" }}>Chưa có nhân sự nào được cấu hình.</p>
-            <Button type="dashed" icon={<PlusOutlined />} onClick={() => setApprAdding(true)}>
-              Thêm người duyệt
-            </Button>
-          </div>
-        )}
-
-        {configApprovers.length > 0 && (
-          <Table
-            dataSource={configApprovers}
-            rowKey={(r) => `${r.departmentId}-${r.approverId}-${r.level}`}
-            pagination={false}
-            bordered
-            columns={apprColumns}
-            footer={apprFooter}
-            style={{ marginBottom: 16 }}
-          />
-        )}
-
-        {configApprovers.length === 0 && apprAdding && (
-          <div style={{ border: "1px solid #f0f0f0", borderRadius: 6, padding: 16, marginBottom: 16 }}>
-            {apprFooter()}
-          </div>
-        )}
-      </div>
-    </Form>
+      </Form>
+    </>
   );
 };
