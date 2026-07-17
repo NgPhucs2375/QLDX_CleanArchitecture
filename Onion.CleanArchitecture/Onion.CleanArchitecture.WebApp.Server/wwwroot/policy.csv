@@ -54,13 +54,12 @@ p, Quản trị viên hệ thống, products, create
 p, Quản trị viên hệ thống, products, show
 p, Quản trị viên hệ thống, products, edit
 p, Quản trị viên hệ thống, products, delete
-p, Quản trị viên hệ thống, purchase-request-items, list
-p, Quản trị viên hệ thống, purchase-request-items, create
-p, Quản trị viên hệ thống, purchase-request-items, show
-p, Quản trị viên hệ thống, purchase-request-items, edit
-p, Quản trị viên hệ thống, purchase-request-items, delete
 p, Quản trị viên hệ thống, purchase-request-logs, list
 p, Quản trị viên hệ thống, purchase-request-logs, create
 p, Quản trị viên hệ thống, purchase-request-logs, show
 p, Quản trị viên hệ thống, purchase-request-logs, edit
 p, Quản trị viên hệ thống, purchase-request-logs, delete
+p, Người tạo đề xuất, purchase-requests, list
+p, Người tạo đề xuất, purchase-requests, create
+p, Người tạo đề xuất, purchase-requests, show
+p, Người tạo đề xuất, purchase-requests, edit

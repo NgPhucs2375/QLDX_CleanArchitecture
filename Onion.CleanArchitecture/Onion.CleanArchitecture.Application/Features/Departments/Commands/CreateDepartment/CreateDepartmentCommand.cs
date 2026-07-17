@@ -13,7 +13,7 @@ namespace Onion.CleanArchitecture.Application.Features.Departments.Commands.Crea
     {
         public string Code { get; set; }
         public string Name { get; set; }
-        public string? ManagerId { get; set; }
+        public string ManagerId { get; set; }
         public bool IsActive { get; set; }
     }
     public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCommand, Response<int>>

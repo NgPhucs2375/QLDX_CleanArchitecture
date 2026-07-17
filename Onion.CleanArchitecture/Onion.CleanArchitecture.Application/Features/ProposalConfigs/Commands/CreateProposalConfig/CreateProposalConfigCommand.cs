@@ -58,10 +58,8 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.
                     CategoryId = cat.CategoryId,
                     DepartmentId = cat.DepartmentId,
                     AllowedQuota = cat.AllowedQuota,
-                    UsedAmount = 0,
-                    RemainingAmount = cat.AllowedQuota,
-                });
-            }
+                 });
+            };
 
             foreach (var appr in request.Approvers)
             {

@@ -50,6 +50,22 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<ProductSnapshot>> GetSnapshotsAsync(List<int> ids)
+        {
+            return await _products
+                .Where(p => ids.Contains(p.Id))
+                .Select(p => new ProductSnapshot
+                {
+                    Id = p.Id,
+                    Code = p.Code,
+                    Name = p.Name,
+                    Unit = p.Unit,
+                    UnitPrice = p.UnitPrice,
+                })
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<PagedList<Product>> GetPagedProductsAsync(GetAllProductsParameter request)
         {
             var productQuery = _products.AsQueryable();

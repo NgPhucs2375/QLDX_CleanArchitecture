@@ -10,9 +10,12 @@ namespace Onion.CleanArchitecture.Application.Services
 {
     public class ApprovalRecordService : IApprovalRecordService
     {
+        // Bơm repository vào 
         private readonly IPurchaseRequestApprovalRepositoryAsync _approvalRepository;
         private readonly IAuthenticatedUserService _authenticatedUser;
 
+        // set cứng các trigger với nhãn hành động tương ứng để Record có thể nhận dạng 
+        // với 1 Từ điểm gồm 2 tham số là các trigger và 1 string nhãn thành đông
         private static readonly Dictionary<PurchaseRequestTrigger, string> ActionLabels = new()
         {
             { PurchaseRequestTrigger.Submit, "Gửi phiếu" },
@@ -21,9 +24,9 @@ namespace Onion.CleanArchitecture.Application.Services
             { PurchaseRequestTrigger.Reject, "Từ chối" },
             { PurchaseRequestTrigger.ReturnForEdit, "Trả chỉnh sửa" },
             { PurchaseRequestTrigger.ConfirmOrder, "Xác nhận đơn hàng" },
-            { PurchaseRequestTrigger.Complete, "Hoàn thành" },
         };
 
+        // Constructor của ApprovalRecordService nhận vào 2 tham số: approvalRepository và authenticatedUser
         public ApprovalRecordService(
             IPurchaseRequestApprovalRepositoryAsync approvalRepository,
             IAuthenticatedUserService authenticatedUser)
@@ -31,23 +34,14 @@ namespace Onion.CleanArchitecture.Application.Services
             _approvalRepository = approvalRepository;
             _authenticatedUser = authenticatedUser;
         }
-
-        public async Task RecordAsync(PurchaseRequest entity, PurchaseRequestTrigger trigger, string note, CancellationToken ct)
+        // 
+        public async Task RecordAsync(PurchaseRequest entity,PurchaseRequestStatus statusBefore, PurchaseRequestTrigger trigger, string note, CancellationToken ct)
         {
-            var statusBefore = entity.Status;
-            var statusAfter = trigger switch
-            {
-                PurchaseRequestTrigger.Submit => PurchaseRequestStatus.PendingDepartment,
-                PurchaseRequestTrigger.ApproveDepartment => PurchaseRequestStatus.PendingControl,
-                PurchaseRequestTrigger.Approve => PurchaseRequestStatus.Approved,
-                PurchaseRequestTrigger.Reject => statusBefore == PurchaseRequestStatus.PendingDepartment
-                    ? PurchaseRequestStatus.RejectedByDepartment
-                    : PurchaseRequestStatus.RejectedByControl,
-                PurchaseRequestTrigger.ReturnForEdit => PurchaseRequestStatus.ReturnedForEdit,
-                PurchaseRequestTrigger.ConfirmOrder => PurchaseRequestStatus.PendingOrderConfirm,
-                PurchaseRequestTrigger.Complete => PurchaseRequestStatus.Completed,
-                _ => statusBefore,
-            };
+            // statusBfore : Trạng thái trước khi thực hiện trigger
+
+            // Xác định trạng thái sau khi thực hiện trigger
+            var statusAfter = entity.Status;
+         
 
             var approval = new PurchaseRequestApproval
             {

@@ -1,6 +1,8 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
+using Onion.CleanArchitecture.Application.Services;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
 using Onion.CleanArchitecture.Domain.Enums;
@@ -28,6 +30,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         public string Code { get; set; } = string.Empty;
         public int DepartmentId { get; set; }
         public int ProposalConfigId { get; set; }
+        public string ApproverId { get; set; } = string.Empty;
         public List<CreatePurchaseRequestCategoryDto> Categories { get; set; } = new();
     }
 
@@ -38,44 +41,70 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         private readonly IProductRepositoryAsync _productRepo;
         private readonly IConfigApproverRepositoryAsync _configApproverRepo;
         private readonly IDepartmentRepositoryAsync _departmentRepo;
+        private readonly IUserLookupService _userLookup;
+        private readonly IPurchaseRequestWorkflowService  _workflowService;
+        private readonly IAuthenticatedUserService _authenticatesUser;
+        private readonly IApprovalRecordService _approvalRecordService;
+
+
 
         public CreatePurchaseRequestCommandHandler(
             IPurchaseRequestRepositoryAsync purchaseRequestRepo,
             IConfigCategoryRepositoryAsync configCategoryRepo,
             IProductRepositoryAsync productRepo,
             IConfigApproverRepositoryAsync configApproverRepo,
-            IDepartmentRepositoryAsync departmentRepo)
+            IDepartmentRepositoryAsync departmentRepo,
+            IUserLookupService userLookup,
+            IPurchaseRequestWorkflowService workflowService,
+            IAuthenticatedUserService authenticatesUser,
+            IApprovalRecordService approvalRecordService
+            )
         {
             _purchaseRequestRepo = purchaseRequestRepo;
             _configCategoryRepo = configCategoryRepo;
             _productRepo = productRepo;
             _configApproverRepo = configApproverRepo;
             _departmentRepo = departmentRepo;
+            _userLookup = userLookup;
+            _workflowService = workflowService;
+            _authenticatesUser = authenticatesUser;
+            _approvalRecordService = approvalRecordService;  
         }
 
         public async Task<Response<int>> Handle(CreatePurchaseRequestCommand request, CancellationToken ct)
         {
-            // 1. Load config categories for validation + quota snapshot
+            // 1. Validate department tồn tại
+            var department = await _departmentRepo.GetByIdAsync(request.DepartmentId);
+            if (department == null)
+                throw new ApiException($"Department {request.DepartmentId} không tồn tại");
+
+            // 2. Load & validate config categories — phải có dữ liệu
             var configCategories = await _configCategoryRepo.GetByConfigAndDepartmentAsync(
                 request.ProposalConfigId, request.DepartmentId);
+            if (configCategories == null || configCategories.Count == 0)
+                throw new ApiException($"Không tìm thấy cấu hình danh mục cho ProposalConfigId={request.ProposalConfigId}, DepartmentId={request.DepartmentId}");
 
-            // 2. Load all products referenced in the request
+            // 3. Validate + snapshot thông tin sản phẩm (1 query duy nhất)
             var allProductIds = request.Categories
                 .SelectMany(c => c.Items)
                 .Select(i => i.ProductId)
                 .Distinct()
                 .ToList();
 
-            var products = await _productRepo.GetByIdsAsync(allProductIds);
-            var productMap = products.ToDictionary(p => p.Id);
+            var productSnapshots = await _productRepo.GetSnapshotsAsync(allProductIds);
+            var snapshotMap = productSnapshots.ToDictionary(p => p.Id);
 
-            // 3. Load approver config for snapshot
+            var missingIds = allProductIds.Where(id => !snapshotMap.ContainsKey(id)).ToList();
+            if (missingIds.Any())
+                throw new ApiException($"Sản phẩm không tồn tại: {string.Join(", ", missingIds)}");
+
+
+            // 4. Load cấu hình người duyệt từ DB
             var configApprovers = await _configApproverRepo.GetByConfigAndDepartmentAsync(
-                request.ProposalConfigId, request.DepartmentId);
+    request.ProposalConfigId, request.DepartmentId);
 
-            var department = await _departmentRepo.GetByIdAsync(request.DepartmentId);
 
-            // 4. Build the PurchaseRequest graph
+            // 5. Build PurchaseRequest graph
             var entity = new PurchaseRequest
             {
                 Code = request.Code,
@@ -86,77 +115,111 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                 TotalActualAmount = 0,
             };
 
-            decimal overallProposed = 0;
-
             foreach (var catDto in request.Categories)
             {
-                var configCat = configCategories.FirstOrDefault(cc => cc.CategoryId == catDto.CategoryId);
-                var quota = configCat?.AllowedQuota ?? 0;
+                var configCat = configCategories.FirstOrDefault(cc => cc.CategoryId == catDto.CategoryId)
+                    ?? throw new ApiException($"CategoryId {catDto.CategoryId} không có trong cấu hình danh mục");
 
                 var requestCategory = new PurchaseRequestCategory
                 {
                     CategoryId = catDto.CategoryId,
-                    AllowedQuota = quota,
+                    AllowedQuota = configCat.AllowedQuota,
                     TotalProposedAmount = 0,
-                    Difference = 0,
+                    Difference = configCat.AllowedQuota,
                     ActualTotalAmount = 0,
                     ActualDifference = 0,
                 };
 
                 foreach (var itemDto in catDto.Items)
                 {
-                    if (!productMap.TryGetValue(itemDto.ProductId, out var product))
-                        throw new ApiException($"Product {itemDto.ProductId} not found");
-
-                    var totalAmount = product.UnitPrice * itemDto.ProposedQuantity;
+                    var snapshot = snapshotMap.GetValueOrDefault(itemDto.ProductId);
+                    var snapPrice = snapshot?.UnitPrice ?? 0;
+                    var lineTotal = snapPrice * itemDto.ProposedQuantity;
 
                     requestCategory.RequestItems.Add(new PurchaseRequestItem
                     {
                         ProductId = itemDto.ProductId,
-                        UnitPrice = product.UnitPrice,
+                        ProductCode = snapshot?.Code ?? string.Empty,
+                        ProductName = snapshot?.Name ?? string.Empty,
+                        ProductUnit = snapshot?.Unit ?? string.Empty,
+                        UnitPrice = snapPrice,
                         ProposedQuantity = itemDto.ProposedQuantity,
-                        TotalAmount = totalAmount,
+                        TotalAmount = lineTotal,
                         ActualQuantity = 0,
                         ActualTotalAmount = 0,
                     });
 
-                    requestCategory.TotalProposedAmount += totalAmount;
+                    requestCategory.TotalProposedAmount += lineTotal;
                 }
 
                 requestCategory.Difference = requestCategory.AllowedQuota - requestCategory.TotalProposedAmount;
-                overallProposed += requestCategory.TotalProposedAmount;
+                entity.TotalProposedAmount += requestCategory.TotalProposedAmount;
                 entity.RequestCategories.Add(requestCategory);
             }
 
-            entity.TotalProposedAmount = overallProposed;
-
-            // 5. Snapshot approvers
-            // Department head (step 1)
-            if (department?.ManagerId != null)
+            // 6. Thêm Trưởng đơn vị làm người phê duyệt đầu tiên
+            //    Nếu request có ApproverId thì dùng, fallback về department.ManagerId
+            //    Kiểm soát (ControlLevel) sẽ được thêm ở bước duyệt sau
+            //    Người tạo phiếu được ghi nhận qua AuditableBaseEntity.CreatedBy
+            var deptHeadId = !string.IsNullOrEmpty(request.ApproverId) ? request.ApproverId : department.ManagerId;
+            if (!string.IsNullOrEmpty(deptHeadId))
             {
+                var deptHeadName = await _userLookup.GetDisplayNameAsync(deptHeadId);
                 entity.Approvers.Add(new PurchaseRequestApprover
                 {
-                    ApproverId = department.ManagerId ?? string.Empty,
-                    ApproverName = string.Empty,
-                    Role = "Trưởng đơn vị",
-                    StepOrder = 1,
+                    ApproverId = deptHeadId,
+                    ApproverName = deptHeadName,
+                    Role = PDXROLE.TruongDonVi,
+                    StepOrder = (int)ApprovalLevel.DepartmentLevel,
                 });
             }
 
-            // Config approvers (step 2+)
-            foreach (var ca in configApprovers)
+            // --- BƯỚC 6.2: Khảm cấp Kiểm soát (Step 2) ---
+            // Lọc ra những người thuộc cấp Kiểm soát trong cấu hình
+            var controlApprovers = configApprovers
+                .Where(ca => ca.Level == ApprovalLevel.ControlLevel)
+                .ToList();
+
+            foreach (var ca in controlApprovers)
             {
+                // Snapshot tên cho từng người kiểm soát
+                var controlName = await _userLookup.GetDisplayNameAsync(ca.ApproverId);
+                
                 entity.Approvers.Add(new PurchaseRequestApprover
                 {
                     ApproverId = ca.ApproverId,
-                    ApproverName = string.Empty,
-                    Role = ca.Level == ApprovalLevel.ControlLevel ? "Kiểm soát" : "Trưởng đơn vị",
-                    StepOrder = ca.Level == ApprovalLevel.ControlLevel ? 2 : 1,
+                    ApproverName = controlName, // Snapshot 
+                    Role = PDXROLE.KiemSoat,
+                    StepOrder = (int)ApprovalLevel.ControlLevel, 
                 });
             }
 
-            // 6. Save — EF Core cascade saves all children
+            // --- BƯỚC 6.3: Khảm cấp Người tạo phiếu (Step 3) ---
+            entity.CreatedBy = _authenticatesUser.UserId;
+            if (!string.IsNullOrEmpty(entity.CreatedBy))
+            {   
+                var creatorName = await _userLookup.GetDisplayNameAsync(entity.CreatedBy);
+                entity.Approvers.Add(new PurchaseRequestApprover
+                {
+                    ApproverId = entity.CreatedBy,
+                    ApproverName = creatorName,
+                    Role = PDXROLE.NguoiTaoPDX,
+                    StepOrder = (int)ApprovalLevel.CreatorLevel,
+                }); 
+            }
+
+            // 
+            var machine = new PurchaseRequestStateMachine(_workflowService, entity);
+            await machine.FireAsync(PurchaseRequestTrigger.Submit);
+            // 7. Save
             await _purchaseRequestRepo.AddAsync(entity);
+            await _approvalRecordService.RecordAsync(
+                entity, // dl 
+                PurchaseRequestStatus.Draft, // status before
+                PurchaseRequestTrigger.Submit, // trigger
+                "Khởi tạo và trình duyệt phiếu", // Bạn có thể truyền Note từ request.Note
+                ct //cancellationToken
+            );  
 
             return new Response<int>(entity.Id);
         }

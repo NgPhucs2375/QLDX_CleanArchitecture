@@ -13,12 +13,15 @@ namespace Onion.CleanArchitecture.Application
     {
         public static void AddApplicationLayer(this IServiceCollection services)
         {
+            // services này bảo MediatR "Quét all Assembly Application, tìm class nào implement IRequestHandler<TRequest,TResponse> thì tự đăng ký nó vào DI. " 
+            // nó tìm thấy TriggerPurchaseRequestCommandHandler 
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             services.AddTransient<RecalculateTotalsService>();
             services.AddTransient<IApprovalRecordService, ApprovalRecordService>();
+            services.AddTransient<IPurchaseRequestWorkflowService, PurchaseRequestWorkflowService>();
         }
     }
 }

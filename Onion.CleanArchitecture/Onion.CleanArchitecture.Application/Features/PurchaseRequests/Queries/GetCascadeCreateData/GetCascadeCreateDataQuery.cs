@@ -1,4 +1,5 @@
 using MediatR;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -32,10 +33,17 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
         public int StepOrder { get; set; }
     }
 
+    public class CascadeDepartmentHeadDto
+    {
+        public string ApproverId { get; set; }
+        public string ApproverName { get; set; }
+    }
+
     public class CascadeCreateDataDto
     {
         public List<CascadeCategoryDto> Categories { get; set; }
         public List<CascadeApproverDto> Approvers { get; set; }
+        public List<CascadeDepartmentHeadDto> DepartmentHeads { get; set; }
         public string DepartmentManagerId { get; set; }
     }
 
@@ -44,15 +52,18 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
         private readonly IConfigCategoryRepositoryAsync _configCategoryRepo;
         private readonly IConfigApproverRepositoryAsync _configApproverRepo;
         private readonly IDepartmentRepositoryAsync _departmentRepo;
+        private readonly IUserLookupService _userLookup;
 
         public GetCascadeCreateDataQueryHandler(
             IConfigCategoryRepositoryAsync configCategoryRepo,
             IConfigApproverRepositoryAsync configApproverRepo,
-            IDepartmentRepositoryAsync departmentRepo)
+            IDepartmentRepositoryAsync departmentRepo,
+            IUserLookupService userLookup)
         {
             _configCategoryRepo = configCategoryRepo;
             _configApproverRepo = configApproverRepo;
             _departmentRepo = departmentRepo;
+            _userLookup = userLookup;
         }
 
         public async Task<Response<CascadeCreateDataDto>> Handle(GetCascadeCreateDataQuery request, CancellationToken ct)
@@ -73,7 +84,6 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
                     CategoryId = cc.CategoryId,
                     CategoryName = cc.Category?.Name ?? string.Empty,
                     AllowedQuota = cc.AllowedQuota,
-                    RemainingAmount = cc.RemainingAmount,
                 }).ToList(),
 
                 Approvers = configApprovers.Select(ca => new CascadeApproverDto
@@ -83,8 +93,19 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
                     StepOrder = ca.Level == ApprovalLevel.ControlLevel ? 2 : 1,
                 }).ToList(),
 
+                DepartmentHeads = new List<CascadeDepartmentHeadDto>(),
+
                 DepartmentManagerId = department?.ManagerId ?? string.Empty,
             };
+
+            foreach (var ca in configApprovers.Where(x => x.Level == ApprovalLevel.DepartmentLevel))
+            {
+                dto.DepartmentHeads.Add(new CascadeDepartmentHeadDto
+                {
+                    ApproverId = ca.ApproverId,
+                    ApproverName = await _userLookup.GetDisplayNameAsync(ca.ApproverId),
+                });
+            }
 
             return new Response<CascadeCreateDataDto>(dto);
         }

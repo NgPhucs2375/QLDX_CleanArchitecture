@@ -22,29 +22,26 @@ namespace Onion.CleanArchitecture.Domain.Enums
         /// </summary>
         ReturnedForEdit = 4,
 
-        /// <summary>
-        /// Đã duyệt: Hoàn tất phê duyệt
-        /// </summary>
-        Approved = 5,
+
 
         /// <summary>
         /// Chờ xác nhận đơn hàng: Người tạo xác nhận
         /// </summary>
-        PendingOrderConfirm = 6,
+        PendingOrderConfirm = 5,
 
         /// <summary>
         /// Hoàn thành: Đã nhập số lượng thực tế
         /// </summary>
-        Completed = 7,
+        Completed = 6,
 
         /// <summary>
         /// Từ chối bởi Trưởng đơn vị
         /// </summary>
-        RejectedByDepartment = 8,
+        RejectedByDepartment = 7,
 
         /// <summary>
         /// Từ chối bởi Kiểm soát
         /// </summary>
-        RejectedByControl = 9
+        RejectedByControl = 8
     }
 }

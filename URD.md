@@ -231,10 +231,10 @@ Hiển thị:
 | Chờ trưởng đơn vị duyệt | Chờ cấp đơn vị xử lý |
 | Chờ kiểm soát | Chờ cấp kiểm soát xử lý |
 | Trả chỉnh sửa | Phiếu bị trả về |
-|  |  |
 | Chờ xác nhận đơn hàng | Người tạo xác nhận |
 | Hoàn thành | Đã nhập số lượng thực tế |
-| Từ chối | Phiếu bị từ chối |
+| Trưởng đơn vị Từ chối | Phiếu bị Trưởng đơn vị từ chối |
+| Kiểm soát Từ chối | Phiếu bị Kiểm soát  từ chối |
 
 ---
 

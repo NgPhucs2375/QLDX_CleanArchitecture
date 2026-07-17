@@ -15,8 +15,7 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigCategories.Commands
         public int CategoryId { get; set; }
         public int DepartmentId { get; set; }
         public decimal AllowedQuota { get; set; }
-        public decimal UsedAmount { get; set; }
-        public decimal RemainingAmount { get; set; }
+
 
         public class UpdateConfigCategoryCommandHandler : IRequestHandler<UpdateConfigCategoryCommand, Response<int>>
         {
@@ -38,8 +37,6 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigCategories.Commands
                     configCategory.CategoryId = command.CategoryId;
                     configCategory.DepartmentId = command.DepartmentId;
                     configCategory.AllowedQuota = command.AllowedQuota;
-                    configCategory.UsedAmount = command.UsedAmount;
-                    configCategory.RemainingAmount = command.RemainingAmount;
                     await _configCategoryRepository.UpdateAsync(configCategory);
                     return new Response<int>(configCategory.Id);
                 }

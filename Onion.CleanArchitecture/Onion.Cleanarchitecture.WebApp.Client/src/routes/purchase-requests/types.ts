@@ -26,9 +26,15 @@ export interface ICascadeApprover {
   stepOrder: number;
 }
 
+export interface ICascadeDepartmentHead {
+  approverId: string;
+  approverName: string;
+}
+
 export interface ICascadeCreateData {
   categories: ICascadeCategory[];
   approvers: ICascadeApprover[];
+  departmentHeads: ICascadeDepartmentHead[];
   departmentManagerId: string;
 }
 
@@ -54,6 +60,7 @@ export interface ICreatePayload {
   code: string;
   departmentId: number;
   proposalConfigId: number;
+  approverId: string;
   categories: ICreateCategory[];
 }
 

@@ -1,14 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.ApproveDepartmentPurchaseRequest;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.ApprovePurchaseRequest;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.CompletePurchaseRequest;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.ConfirmOrderPurchaseRequest;
+
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.CreatePurchaseRequest;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.DeletePurchaseRequestById;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.RejectPurchaseRequest;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.ReturnForEditPurchaseRequest;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.SubmitPurchaseRequest;
+
+using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.TriggerPurchaseRequest;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.UpdatePurchaseRequest;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetAllPurchaseRequests;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetCascadeCreateData;
@@ -88,68 +84,6 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
             });
         }
 
-        [HttpPost("{id}/submit")]
-        public async Task<IActionResult> Submit(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "submit", async () =>
-            {
-                return Ok(await Mediator.Send(new SubmitPurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/approve-department")]
-        public async Task<IActionResult> ApproveDepartment(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "approve-department", async () =>
-            {
-                return Ok(await Mediator.Send(new ApproveDepartmentPurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/reject")]
-        public async Task<IActionResult> Reject(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "reject", async () =>
-            {
-                return Ok(await Mediator.Send(new RejectPurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/return-for-edit")]
-        public async Task<IActionResult> ReturnForEdit(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "return-for-edit", async () =>
-            {
-                return Ok(await Mediator.Send(new ReturnForEditPurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/approve")]
-        public async Task<IActionResult> Approve(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "approve", async () =>
-            {
-                return Ok(await Mediator.Send(new ApprovePurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/confirm-order")]
-        public async Task<IActionResult> ConfirmOrder(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "confirm-order", async () =>
-            {
-                return Ok(await Mediator.Send(new ConfirmOrderPurchaseRequestCommand { Id = id }));
-            });
-        }
-
-        [HttpPost("{id}/complete")]
-        public async Task<IActionResult> Complete(int id)
-        {
-            return await EnforcePermissionAndExecute("purchase-requests", "complete", async () =>
-            {
-                return Ok(await Mediator.Send(new CompletePurchaseRequestCommand { Id = id }));
-            });
-        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -158,6 +92,23 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
             {
                 return Ok(await Mediator.Send(new DeletePurchaseRequestByIdCommand { Id = id }));
             });
+        }
+
+        //Attribute dung de router
+        [HttpPost("{id}/trigger")]
+        // IActionResult : kết quả phải trả về se là 1 mã trạng thhasi HTTP(vd: 200 OK, 400 EROR, 403 FORBIDDEN, 404 NOT FOUND, 500 INTERNAL SERVER ERROR)
+        public async Task<IActionResult> Trigger(int id,TriggerPurchaseRequestCommand command)
+        {
+            // nếu id của url không giống id của tờ giấy ghhi thhif trả về 400 - Yêu cầu khhoong hhopj lệ
+            if(id != command.Id) return BadRequest();
+            // Lớp thuhws nhhast: Phhana quyền (ÈnorcePermissionAndExecute) thhy vì 1 mớ code lộn xộn bằng các vòn lặp if/else để
+            // check xem người dùng hiện tại có quyên thuhwjc hhienej hhanfh động "trigger" trên module"pủchhae-request" hay khhoong . toàn bộ logic đó đã đã dược gói gọn vào 1 hà dùng chuhng
+
+            // Lớp thuhws hai : Giao việc (async () => OK(await Mediator.Send(command))) nếu bước kiêm tra permission thhnahfh côngg :
+            // Mediator.Send(command): lễ tân khohong tụ tay xử lý nghhieepj cụ mà đưa "order" chho quản lý MediatR. Từ đây MediatR se tự biết tìm đếnn đúng TriggerurchahseRequeestCommaHandler (Người đâu bếp) dể xử lý
+            // OK(): Khi đầu bếp cook và trả về kết quả (Response<int>)hàm OK(sẽ đóng gói kết quả đó vào 1gois quà mang mã tragnj tháo HHTTP 200 dể trả về chho kahshc)
+            return await EnforcePermissionAndExecute("purchase-requests","trigger",async () =>
+            Ok(await Mediator.Send(command)));
         }
     }
 }

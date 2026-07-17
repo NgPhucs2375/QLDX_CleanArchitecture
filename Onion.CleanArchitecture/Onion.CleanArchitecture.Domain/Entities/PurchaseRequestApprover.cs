@@ -1,4 +1,5 @@
 using Onion.CleanArchitecture.Domain.Common;
+using Onion.CleanArchitecture.Domain.Enums;
 
 namespace Onion.CleanArchitecture.Domain.Entities
 {
@@ -7,7 +8,7 @@ namespace Onion.CleanArchitecture.Domain.Entities
         public int PurchaseRequestId { get; set; }
         public string ApproverId { get; set; } = string.Empty;
         public string ApproverName { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        public PDXROLE Role { get; set; } 
         public int StepOrder { get; set; }
 
         public virtual PurchaseRequest PurchaseRequest { get; set; } = null!;
