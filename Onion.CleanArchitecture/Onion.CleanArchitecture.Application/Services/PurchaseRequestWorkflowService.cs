@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
@@ -11,16 +13,16 @@ namespace Onion.CleanArchitecture.Application.Services
 {
     public interface IPurchaseRequestWorkflowService
     {
-        // Ham chuyen dung cho nguo tao phieu
-        Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity,string note,CancellationToken ct);
-        // 
-        Task<PurchaseRequest> ApproveByDepartmentAsync(PurchaseRequest entity,string note, CancellationToken ct);
-        //
-        Task<PurchaseRequest> RejectedByDepartmentAsync(PurchaseRequest entity,string note, CancellationToken ct);
-        Task<PurchaseRequest> ApproveByControlAsync(PurchaseRequest entity,string note, CancellationToken ct);
-        Task<PurchaseRequest> RejectedByControlAsync(PurchaseRequest entity,string note, CancellationToken ct);
-        Task<PurchaseRequest> ReturnForEditByControlAsync(PurchaseRequest entity,string note, CancellationToken ct);
-        Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity,string note, CancellationToken ct);
+        Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> ApproveByDepartmentAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> RejectedByDepartmentAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> ApproveByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> RejectedByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> ReturnForEditByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity, string note, CancellationToken ct);
+
+        // Guards — được state machine gọi TRƯỚC khi fire trigger
+        Task ValidateApproverForCurrentStep(PurchaseRequest entity);
     }
     public class PurchaseRequestWorkflowService :IPurchaseRequestWorkflowService
     {
@@ -28,6 +30,9 @@ namespace Onion.CleanArchitecture.Application.Services
         private readonly IConfigCategoryRepositoryAsync _configCategoryRepo;
         private readonly IAuthenticatedUserService _authenticatedUser;
         private readonly IProductRepositoryAsync _productRepository;
+        private readonly ILogger<PurchaseRequestWorkflowService> _logger;
+        private readonly IDepartmentRepositoryAsync _departmentRepo;
+        private readonly IUserLookupService _userLookup;
 
 
 
@@ -35,12 +40,18 @@ namespace Onion.CleanArchitecture.Application.Services
             IPurchaseRequestRepositoryAsync repository,
             IConfigCategoryRepositoryAsync configCategoryRepo,
             IAuthenticatedUserService authenticatedUser,
-            IProductRepositoryAsync productRepository)
+            IProductRepositoryAsync productRepository,
+            ILogger<PurchaseRequestWorkflowService> logger,
+            IDepartmentRepositoryAsync departmentRepo,
+            IUserLookupService userLookup)
         {
             _repository = repository;
             _configCategoryRepo = configCategoryRepo;
             _authenticatedUser = authenticatedUser;
             _productRepository = productRepository;
+            _logger = logger;
+            _departmentRepo = departmentRepo;
+            _userLookup = userLookup;
         }
 
     // +++++++++++++++++++=++++++++++ Cac Ham validate du lieu truoc khi submit, approve, reject ++++++++++++++++++++++++++++
@@ -73,32 +84,63 @@ namespace Onion.CleanArchitecture.Application.Services
         }
 
         public async Task ValidateApproverForCurrentStep(PurchaseRequest entity)
+{
+    var currentUserId = _authenticatedUser.UserId;
+    if (string.IsNullOrEmpty(currentUserId))
+        throw new ApiException("Không xác định được người dùng hiện tại.");
+
+    if (string.Equals(currentUserId, entity.CreatedBy, StringComparison.OrdinalIgnoreCase))
+        throw new ApiException("Người tạo phiếu không được phép thực hiện thao tác trên chính phiếu mình tạo !");
+
+    int requiredStep = entity.Status switch
+    {
+        PurchaseRequestStatus.PendingDepartment => 1,
+        PurchaseRequestStatus.PendingControl => 2,
+        _ => throw new ApiException($"Không có bước phê duyệt cho trạng thái {entity.Status}")
+    };
+
+    // Normalize to Guid for consistent comparison
+    Guid.TryParse(currentUserId?.Trim(), out var userGuid);
+
+    _logger.LogInformation(
+        "ValidateApproverForCurrentStep DEBUG - CurrentUserId: '{UserId}' (len={Len}), Step: {Step}, ApproverCount: {Count}",
+        currentUserId, currentUserId?.Length, requiredStep, entity.Approvers?.Count);
+    foreach (var a in entity.Approvers.Where(x => x.StepOrder == requiredStep))
+    {
+        _logger.LogInformation(
+            "  Approver[Step={Step}]: Id='{ApproverId}' (len={Len}), IsGuid={IsGuid}",
+            a.StepOrder, a.ApproverId, a.ApproverId?.Length, Guid.TryParse(a.ApproverId?.Trim(), out _));
+    }
+
+    var isApprover = entity.Approvers.Any(a =>
+        a.StepOrder == requiredStep &&
+        (
+            string.Equals(a.ApproverId?.Trim(), currentUserId?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            (userGuid != Guid.Empty && Guid.TryParse(a.ApproverId?.Trim(), out var approverGuid) && approverGuid == userGuid)
+        )
+    );
+
+    // 2. Fallback: CHỈ ÁP DỤNG CHO BƯỚC 1 (Trưởng đơn vị)
+    if (!isApprover && requiredStep == 1) 
+    {
+        var department = await _departmentRepo.GetByIdAsync(entity.DepartmentId);
+        if (department != null)
         {
-            // Lấy ID người dùng hiện tại từ dịch vụ xác thực
-            var currentUserId = _authenticatedUser.UserId;
-            if (string.IsNullOrEmpty(currentUserId))
-                throw new ApiException("Không xác định được người dùng hiện tại.");
-
-            // Nếu ID người login == ID người tạo phiếu -> Không được phép phê duyệt phiếu
-            if(currentUserId == entity.CreatedBy)
-            {
-                throw new ApiException("Người tạo phiếu không được phép thực hiện thao tác trên chính phiếu mình tạo !");
-            }
-
-            // Quyền duyệt (Đúng StepOrder)
-            int requiredStep = entity.Status switch
-            {
-                PurchaseRequestStatus.PendingDepartment => 1, // tuong duong (int)ApprovalLevel.DepartmentLevel
-                PurchaseRequestStatus.PendingControl => 2, // tuong duong (int)ApprovalLevel.ControlLevel
-                _ => throw new ApiException($"Không có bước phê duyệt cho trạng thái {entity.Status}")
-            };
-
-            var isApprover = entity.Approvers.Any(a => a.StepOrder == requiredStep && a.ApproverId == currentUserId);
-            if (!isApprover)
-                throw new ApiException("Bạn không phải là người phê duyệt cho bước này.");
+            isApprover = string.Equals(department.ManagerId?.Trim(), currentUserId?.Trim(), StringComparison.OrdinalIgnoreCase);
         }
+    }
 
-        public async Task ValidateDataOnSubmitAsync(PurchaseRequest entity)
+    if (!isApprover)
+    {
+        _logger.LogWarning(
+            "ValidateApproverForCurrentStep FAILED - UserId: {UserId}, Status: {Status}, RequiredStep: {Step}, Approvers: {Approvers}",
+            currentUserId, entity.Status, requiredStep,
+            entity.Approvers?.Select(a => new { a.StepOrder, a.ApproverId }));
+        throw new ApiException("Bạn không phải là người phê duyệt cho bước này.");
+    }
+}       
+
+ public async Task ValidateDataOnSubmitAsync(PurchaseRequest entity)
         {
             if (entity.RequestCategories == null || !entity.RequestCategories.Any())
             {
@@ -195,15 +237,26 @@ namespace Onion.CleanArchitecture.Application.Services
         // RejectedByControlAsync: Dùng cho cấp kiểm soát từ chối
         // ReturnForEditByControlAsync: Dùng cho cấp kiểm soát yêu cầu sửa đổi
         // ConfirmOrderAsync: Dùng cho người tạo phiếu xác nhận đơn hàng và nhập số lượng thực tế
-    public async Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, string note, CancellationToken ct)
+    private void UpdateApproverStatus(PurchaseRequest entity, int stepOrderFrom, int stepOrderTo, ApproverStatus newStatus)
+    {
+        foreach (var approver in entity.Approvers)
         {
-            await ValidateDataOnSubmitAsync(entity);
-            await ValidateQuotaOnSubmitAsync(entity, ct);
-            return entity;
+            if (approver.StepOrder == stepOrderFrom)
+                approver.Status = newStatus;
+            if (approver.StepOrder == stepOrderTo)
+                approver.Status = ApproverStatus.Pending;
         }
+    }
+
+    public async Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, string note, CancellationToken ct)
+    {
+        await ValidateQuotaOnSubmitAsync(entity, ct);
+        UpdateApproverStatus(entity, (int)ApprovalLevel.CreatorLevel, (int)ApprovalLevel.DepartmentLevel, ApproverStatus.Approved);
+        return entity;
+    }
     public async Task<PurchaseRequest> ApproveByDepartmentAsync(PurchaseRequest entity,string note, CancellationToken ct){
-            await ValidateApproverForCurrentStep(entity);          
-            return entity;
+        UpdateApproverStatus(entity, (int)ApprovalLevel.DepartmentLevel, (int)ApprovalLevel.ControlLevel, ApproverStatus.Approved);
+        return entity;
         }
     public async Task<PurchaseRequest> RejectedByDepartmentAsync(PurchaseRequest entity,string note,CancellationToken ct)
         {
@@ -211,12 +264,14 @@ namespace Onion.CleanArchitecture.Application.Services
             {
                 throw new ApiException("Lý do từ chối không được để trống.");
             }
-            await ValidateApproverForCurrentStep(entity);
+            foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.DepartmentLevel))
+                approver.Status = ApproverStatus.Rejected;
             return entity;
         }
     public async Task<PurchaseRequest> ApproveByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
     {
-        await ValidateApproverForCurrentStep(entity);
+        foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
+            approver.Status = ApproverStatus.Approved;
         return entity;
         }    
     public async Task<PurchaseRequest> RejectedByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
@@ -225,7 +280,8 @@ namespace Onion.CleanArchitecture.Application.Services
             {
                 throw new ApiException("Lý do từ chối không được để trống.");
             }
-            await ValidateApproverForCurrentStep(entity);
+            foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
+                approver.Status = ApproverStatus.Rejected;
             return entity;
         }
     public async Task<PurchaseRequest> ReturnForEditByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
@@ -234,7 +290,8 @@ namespace Onion.CleanArchitecture.Application.Services
             {
                 throw new ApiException("Lý do từ chối không được để trống.");
             }
-            await ValidateApproverForCurrentStep(entity);
+            foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
+                approver.Status = ApproverStatus.Bypassed;
             return entity;
         }
     public async Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity,string note,CancellationToken ct)

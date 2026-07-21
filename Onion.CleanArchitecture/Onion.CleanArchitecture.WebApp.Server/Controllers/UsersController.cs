@@ -4,6 +4,7 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries.Get
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries.GetUserById;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
 {
@@ -12,8 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
     [Route("api/users")]
     public class UsersController : BaseApiController
     {
-        [Obsolete]
-        public UsersController(Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public UsersController(Enforcer enforcer) : base(enforcer)
         {
         }
         // GET: api/users?_start=0&_end=10&_order=asc&_sort=Id

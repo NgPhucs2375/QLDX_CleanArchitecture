@@ -59,7 +59,7 @@ export const authProvider: AuthProvider = {
     }
     return data.Data as any;
   },
-  login: async ({ email, password }) => {
+login: async ({ email, password }) => {
     const response = await fetch("/api/account/authenticate", {
       method: "POST",
       body: JSON.stringify({ Email: email, Password: password }),
@@ -69,11 +69,18 @@ export const authProvider: AuthProvider = {
     });
 
     const data = (await response.json()) as ResponseAuthen;
-    console.log(data);
+    console.log("Login Response Data:", data);
+
     if (data.Succeeded) {
-      if (data.Data.JWToken) {
-        localStorage.setItem("access_token", data.Data.JWToken);
-        // localStorage.setItem("refresh_token", data.Data.RefreshToken);
+      // Tìm Token ở mọi định dạng có thể trả về từ Backend
+      const token = data.Data?.JWToken || data.Data?.jwToken || data.Data?.token || data.Data?.AccessToken;
+      const refreshToken = data.Data?.RefreshToken || data.Data?.refreshToken;
+
+      if (token) {
+        localStorage.setItem("access_token", token);
+        if (refreshToken) {
+           localStorage.setItem("refresh_token", refreshToken);
+        }
         return {
           success: true,
           successNotification: {
@@ -81,6 +88,14 @@ export const authProvider: AuthProvider = {
             description: "You have been successfully logged in.",
           },
           redirectTo: "/dashboard",
+        };
+      } else {
+        return {
+          success: false,
+          error: {
+            name: "Token Missing",
+            message: "Đăng nhập thành công nhưng không tìm thấy Token trong phản hồi từ API.",
+          },
         };
       }
     }

@@ -1,8 +1,10 @@
 using AutoMapper;
 using MediatR;
+using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
+using Onion.CleanArchitecture.Domain.Enums;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,16 +25,36 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
     {
         private readonly IPurchaseRequestCategoryRepositoryAsync _repository;
         private readonly IMapper _mapper;
-        public CreatePurchaseRequestCategoryCommandHandler(IPurchaseRequestCategoryRepositoryAsync repository, IMapper mapper)
+        private readonly IRecalculateTotalsService _recalculateTotalsService;
+        private readonly IPurchaseRequestRepositoryAsync _purchaseRequestRepository;
+
+        public CreatePurchaseRequestCategoryCommandHandler(IPurchaseRequestCategoryRepositoryAsync repository, IMapper mapper, IRecalculateTotalsService recalculateTotalsService, IPurchaseRequestRepositoryAsync purchaseRequestRepository)
         {
             _repository = repository;
             _mapper = mapper;
+            _recalculateTotalsService = recalculateTotalsService;
+            _purchaseRequestRepository = purchaseRequestRepository;
         }
+
+    
 
         public async Task<Response<int>> Handle(CreatePurchaseRequestCategoryCommand request, CancellationToken cancellationToken)
         {
+            // 1. Kiểm tra trạng thái phiếu cha
+            var parentRequest = await _purchaseRequestRepository.GetByIdAsync(request.PurchaseRequestId);
+            if (parentRequest == null)
+                throw new ApiException($"Không tìm thấy Phiếu đề xuất với ID: {request.PurchaseRequestId}");
+
+            if (parentRequest.Status != PurchaseRequestStatus.Draft && parentRequest.Status != PurchaseRequestStatus.ReturnedForEdit)
+                throw new ApiException($"Không thể thêm danh mục khi phiếu đang ở trạng thái {parentRequest.Status}. Chỉ thao tác được khi phiếu lưu nháp hoặc bị trả về.");
+
+            // 2. Thực hiện thêm mới
             var entity = _mapper.Map<PurchaseRequestCategory>(request);
             await _repository.AddAsync(entity);
+
+            // 3. Tính toán lại tổng tiền phiếu cha
+            await _recalculateTotalsService.RecalculateFromCategoryAsync(entity.Id);
+
             return new Response<int>(entity.Id);
         }
     }

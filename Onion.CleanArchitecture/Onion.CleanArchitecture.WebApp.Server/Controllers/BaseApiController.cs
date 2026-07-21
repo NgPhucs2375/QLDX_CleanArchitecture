@@ -15,13 +15,10 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers
         protected IMediator Mediator => _mediator ??= HttpContext.RequestServices.GetService<IMediator>();
 
         protected readonly Enforcer _enforcer;
-        protected readonly string _webRootPath;
 
-        [Obsolete]
-        public BaseApiController(Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment)
+        public BaseApiController(Enforcer enforcer)
         {
-            _webRootPath = hostingEnvironment.WebRootPath;
-            _enforcer = new Enforcer(Path.Combine(_webRootPath, "model.conf"), Path.Combine(_webRootPath, "policy.csv"));
+            _enforcer = enforcer;
         }
 
         protected async Task<IActionResult> EnforcePermissionAndExecute(string resource, string action, Func<Task<IActionResult>> func)

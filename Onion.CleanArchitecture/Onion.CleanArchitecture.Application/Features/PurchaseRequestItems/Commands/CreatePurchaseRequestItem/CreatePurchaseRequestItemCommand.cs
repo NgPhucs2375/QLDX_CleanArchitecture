@@ -2,15 +2,16 @@ using AutoMapper;
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
+using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
+using Onion.CleanArchitecture.Domain.Enums; // Thêm enum status
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.CreatePurchaseRequestItem
 {
-    // các field cần thiết
     public class CreatePurchaseRequestItemCommand : IRequest<Response<int>>
     {
         public int PurchaseRequestCategoryId { get; set; }
@@ -18,23 +19,41 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
         public int ProposedQuantity { get; set; }
     }
 
-    // DI cấp công cụ
     public class CreatePurchaseRequestItemCommandHandler : IRequestHandler<CreatePurchaseRequestItemCommand, Response<int>>
     {
-        // Lấy cấu hình của PRItem
         private readonly IPurchaseRequestItemRepositoryAsync _PRItemsRepository;
-        // Chỉ đọc cấu hình của products
         private readonly IProductRepositoryAsync _ProductRepository;
-        public CreatePurchaseRequestItemCommandHandler(IPurchaseRequestItemRepositoryAsync PRItemsRepository, IProductRepositoryAsync ProductRepository)
+        private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
+        private readonly IPurchaseRequestRepositoryAsync _requestRepo;
+        private readonly IRecalculateTotalsService _recalculateService;
+
+        public CreatePurchaseRequestItemCommandHandler(
+            IPurchaseRequestItemRepositoryAsync PRItemsRepository, 
+            IProductRepositoryAsync ProductRepository,
+            IPurchaseRequestCategoryRepositoryAsync categoryRepo,
+            IPurchaseRequestRepositoryAsync requestRepo,
+            IRecalculateTotalsService recalculateService)
         {
             _PRItemsRepository = PRItemsRepository;
             _ProductRepository = ProductRepository;
+            _categoryRepo = categoryRepo;
+            _requestRepo = requestRepo;
+            _recalculateService = recalculateService;
         }
 
-
-        // COOK
         public async Task<Response<int>> Handle(CreatePurchaseRequestItemCommand request, CancellationToken cancellationToken)
         {
+            // 1. Kiểm tra trạng thái phiếu cha
+            var category = await _categoryRepo.GetByIdAsync(request.PurchaseRequestCategoryId);
+            if (category == null) throw new ApiException("Không tìm thấy Category cha.");
+
+            var parentRequest = await _requestRepo.GetByIdAsync(category.PurchaseRequestId);
+            if (parentRequest == null) throw new ApiException("Không tìm thấy Phiếu đề xuất cha.");
+
+            if (parentRequest.Status != PurchaseRequestStatus.Draft && parentRequest.Status != PurchaseRequestStatus.ReturnedForEdit)
+                throw new ApiException($"Không thể thêm Item khi phiếu đang ở trạng thái {parentRequest.Status}.");
+
+            // 2. Validate Product
             var product = await _ProductRepository.GetByIdAsync(request.ProductId);
             if (product == null)
                throw new ApiException($"Sản phẩm với ID {request.ProductId} không tồn tại!");
@@ -47,8 +66,6 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
             {
                 PurchaseRequestCategoryId = request.PurchaseRequestCategoryId,
                 ProductId = request.ProductId,
-
-                //  
                 ProductCode = product.Code,
                 ProductName = product.Name,
                 ProductUnit = product.Unit,
@@ -59,8 +76,10 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
                 ActualTotalAmount = 0
             };
 
-            // Save
+            // 3. Save & Recalculate
             await _PRItemsRepository.AddAsync(entity);
+            await _recalculateService.RecalculateFromItemAsync(entity.Id);
+
             return new Response<int>(entity.Id);
         }
     }

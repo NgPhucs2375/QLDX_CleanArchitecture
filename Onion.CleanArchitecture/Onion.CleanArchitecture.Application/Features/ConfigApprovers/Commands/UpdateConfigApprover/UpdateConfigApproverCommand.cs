@@ -26,6 +26,10 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigApprovers.Commands.
             }
             public async Task<Response<int>> Handle(UpdateConfigApproverCommand command, CancellationToken cancellationToken)
             {
+                if (!Guid.TryParse(command.ApproverId, out _))
+        {
+            throw new ApiException($"Giá trị ApproverId '{command.ApproverId}' không hợp lệ. Không thể cập nhật thành dữ liệu rác.");
+        }
                 var configApprover = await _configApproverRepository.GetByIdAsync(command.Id);
                 if (configApprover == null)
                 {

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Onion.CleanArchitecture.Domain.Common;
 using Onion.CleanArchitecture.Domain.Enums;
 
@@ -13,6 +14,7 @@ namespace Onion.CleanArchitecture.Domain.Entities
         public string Action { get; set; } = string.Empty;
         public string Note { get; set; } = string.Empty;
 
+        [JsonIgnore]
         public virtual PurchaseRequest PurchaseRequest { get; set; } = null!;
     }
 }

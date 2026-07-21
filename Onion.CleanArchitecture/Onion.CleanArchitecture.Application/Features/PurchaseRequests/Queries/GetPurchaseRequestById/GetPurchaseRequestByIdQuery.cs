@@ -20,7 +20,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
             }
             public async Task<Response<PurchaseRequest>> Handle(GetPurchaseRequestByIdQuery query, CancellationToken cancellationToken)
             {
-                var entity = await _purchaseRequestRepository.GetByIdAsync(query.Id);
+                var entity = await _purchaseRequestRepository.GetByIdWithDetailsAsync(query.Id);
                 if (entity == null) throw new ApiException($"PurchaseRequest Not Found.");
                 return new Response<PurchaseRequest>(entity);
             }

@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -22,7 +23,6 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.
     {
         public int DepartmentId { get; set; }
         public string ApproverId { get; set; } = string.Empty;
-        public ApprovalLevel Level { get; set; }
     }
 
     public class CreateProposalConfigCommand : IRequest<Response<int>>
@@ -63,11 +63,14 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.
 
             foreach (var appr in request.Approvers)
             {
+                if (!Guid.TryParse(appr.ApproverId, out _))
+                    throw new ApiException($"ApproverId '{appr.ApproverId}' không hợp lệ. Phải là GUID của người dùng.");
+
                 proposalConfig.ConfigApprovers.Add(new ConfigApprover
                 {
                     DepartmentId = appr.DepartmentId,
                     ApproverId = appr.ApproverId,
-                    Level = appr.Level,
+                    Level = ApprovalLevel.ControlLevel,
                 });
             }
 

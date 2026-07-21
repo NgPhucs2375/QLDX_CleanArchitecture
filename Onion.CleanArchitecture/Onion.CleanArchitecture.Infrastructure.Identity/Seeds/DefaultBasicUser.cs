@@ -13,7 +13,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Seeds
             //Seed Default User
             var defaultUser = new ApplicationUser
             {
-                UserName = "basicuser",
+                UserName = "BasicUser",
                 Email = "basicuser@gmail.com",
                 FirstName = "John",
                 LastName = "Doe",
@@ -26,7 +26,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Seeds
                 if (user == null)
                 {
                     await userManager.CreateAsync(defaultUser, "123Pa$$word!");
-                    await userManager.AddToRoleAsync(defaultUser, "Người tạo đề xuất");
+                    await userManager.AddToRoleAsync(defaultUser, Roles.Basic.ToString());
                 }
 
             }

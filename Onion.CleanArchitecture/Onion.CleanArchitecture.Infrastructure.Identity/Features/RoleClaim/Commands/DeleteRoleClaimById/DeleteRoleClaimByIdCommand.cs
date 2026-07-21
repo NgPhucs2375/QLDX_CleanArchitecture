@@ -6,8 +6,6 @@ using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Infrastructure.Identity.Contexts;
 using Microsoft.AspNetCore.Identity;
 using Casbin;
-using Microsoft.AspNetCore.Hosting;
-using System.IO;
 
 namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.RoleClaim.Commands.DeleteRoleClaimById
 {
@@ -18,17 +16,14 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.RoleClaim.Com
         public class DeleteRoleClaimByIdCommandHandler : IRequestHandler<DeleteRoleClaimByIdCommand, Response<IdentityRoleClaim<string>>>
         {
             private readonly Enforcer _enforcer;
-            private readonly string _webRootPath;
             private readonly IdentityContext _context;
 
-            [Obsolete]
             public DeleteRoleClaimByIdCommandHandler(
-                IdentityContext context,
-                IHostingEnvironment hostingEnvironment)
+                Enforcer enforcer,
+                IdentityContext context)
             {
-                _webRootPath = hostingEnvironment.WebRootPath;
+                _enforcer = enforcer;
                 _context = context;
-                _enforcer = new Enforcer(Path.Combine(_webRootPath, "model.conf"), Path.Combine(_webRootPath, "policy.csv"));
             }
             public async Task<Response<IdentityRoleClaim<string>>> Handle(DeleteRoleClaimByIdCommand request, CancellationToken cancellationToken)
             {

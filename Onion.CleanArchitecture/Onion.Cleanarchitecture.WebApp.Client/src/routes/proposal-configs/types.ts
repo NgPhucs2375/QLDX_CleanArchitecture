@@ -9,7 +9,7 @@ export interface IProposalConfig {
   LastModifiedBy: string;
   LastModified: string;
   Categories: { CategoryId: number; DepartmentId: number; AllowedQuota: number }[];
-  Approves: { DepartmentId: number; ApproverId: string; Level: number }[];
+  Approves: { DepartmentId: number; ApproverId: string; Level?: number }[];
 }
 
 export interface ICategory {
@@ -74,5 +74,5 @@ export interface IProposalConfigPayload {
   EffectiveDate: string;
   Status: number;
   Categories: { CategoryId: number; DepartmentId: number; AllowedQuota: number }[];
-  Approves: { DepartmentId: number; ApproverId: string; Level: number }[];
+  Approves: { DepartmentId: number; ApproverId: string }[];
 }

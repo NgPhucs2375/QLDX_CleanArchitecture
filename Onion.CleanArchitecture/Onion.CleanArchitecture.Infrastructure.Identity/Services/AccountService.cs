@@ -170,7 +170,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("uid", user.Id),
                 new Claim("ip", ipAddress),
-                new Claim("permission",roles.FirstOrDefault())
+                new Claim("permission",roles.FirstOrDefault() ?? string.Empty)
             }
             .Union(userClaims)
             .Union(roleClaims);

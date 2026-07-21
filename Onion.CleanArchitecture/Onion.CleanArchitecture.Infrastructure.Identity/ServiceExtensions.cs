@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Casbin;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +18,7 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Models;
 using Onion.CleanArchitecture.Infrastructure.Identity.Services;
 using Onion.CleanArchitecture.Infrastructure.Shared.Environments;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Text;
@@ -101,6 +103,14 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity
             #region Services
             services.AddTransient<IAccountService, AccountService>();
             services.AddTransient<IUserLookupService, UserLookupService>();
+            services.AddTransient<PermissionSyncService>();
+            services.AddSingleton<Enforcer>(sp =>
+            {
+                var env = sp.GetRequiredService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
+                return new Enforcer(
+                    Path.Combine(env.WebRootPath, "model.conf"),
+                    Path.Combine(env.WebRootPath, "policy.csv"));
+            });
             #endregion
             services.Configure<JWTSettings>(configuration.GetSection("JWTSettings"));
             services.AddAuthentication(options =>

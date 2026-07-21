@@ -76,6 +76,15 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
 
             var department = await _departmentRepo.GetByIdAsync(request.DepartmentId);
 
+            // Chỉ ControlLevel từ ConfigApprover
+            var controlApprovers = configApprovers.Where(ca => ca.Level == ApprovalLevel.ControlLevel).ToList();
+
+            // DepartmentHead = Department.ManagerId
+            string managerId = department?.ManagerId;
+            string managerName = null;
+            if (!string.IsNullOrEmpty(managerId))
+                managerName = await _userLookup.GetDisplayNameAsync(managerId);
+
             var dto = new CascadeCreateDataDto
             {
                 Categories = configCategories.Select(cc => new CascadeCategoryDto
@@ -86,26 +95,26 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
                     AllowedQuota = cc.AllowedQuota,
                 }).ToList(),
 
-                Approvers = configApprovers.Select(ca => new CascadeApproverDto
+                Approvers = controlApprovers.Select(ca => new CascadeApproverDto
                 {
                     ApproverId = ca.ApproverId,
-                    Role = ca.Level == ApprovalLevel.ControlLevel ? "Kiểm soát" : "Trưởng đơn vị",
-                    StepOrder = ca.Level == ApprovalLevel.ControlLevel ? 2 : 1,
+                    Role = "Kiểm soát",
+                    StepOrder = 2,
                 }).ToList(),
 
-                DepartmentHeads = new List<CascadeDepartmentHeadDto>(),
+                DepartmentHeads = string.IsNullOrEmpty(managerId)
+                    ? new List<CascadeDepartmentHeadDto>()
+                    : new List<CascadeDepartmentHeadDto>
+                    {
+                        new CascadeDepartmentHeadDto
+                        {
+                            ApproverId = managerId,
+                            ApproverName = managerName ?? managerId,
+                        }
+                    },
 
-                DepartmentManagerId = department?.ManagerId ?? string.Empty,
+                DepartmentManagerId = managerId,
             };
-
-            foreach (var ca in configApprovers.Where(x => x.Level == ApprovalLevel.DepartmentLevel))
-            {
-                dto.DepartmentHeads.Add(new CascadeDepartmentHeadDto
-                {
-                    ApproverId = ca.ApproverId,
-                    ApproverName = await _userLookup.GetDisplayNameAsync(ca.ApproverId),
-                });
-            }
 
             return new Response<CascadeCreateDataDto>(dto);
         }

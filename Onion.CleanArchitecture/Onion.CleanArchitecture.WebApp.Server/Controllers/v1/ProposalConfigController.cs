@@ -5,6 +5,7 @@ using Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.Dele
 using Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.UpdateProposalConfig;
 using Onion.CleanArchitecture.Application.Features.ProposalConfigs.Queries.GetAllProposalConfigs;
 using Onion.CleanArchitecture.Application.Features.ProposalConfigs.Queries.GetProposalConfigById;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
 {
@@ -12,9 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/proposal-configs")]
     public class ProposalConfigController : BaseApiController
     {
-        [Obsolete]
-        public ProposalConfigController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public ProposalConfigController(Enforcer enforcer) : base(enforcer)
         {
         }
 

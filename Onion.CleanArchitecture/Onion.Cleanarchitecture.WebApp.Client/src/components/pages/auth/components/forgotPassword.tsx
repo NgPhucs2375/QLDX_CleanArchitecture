@@ -1,54 +1,16 @@
 import React from "react";
 import {
-  ForgotPasswordPageProps,
-  ForgotPasswordFormTypes,
-  useRouterType,
-  useLink,
-  useTranslate,
-  useRouterContext,
-  useForgotPassword,
+  ForgotPasswordPageProps, ForgotPasswordFormTypes, useRouterType, useLink,
+  useTranslate, useRouterContext, useForgotPassword,
 } from "@refinedev/core";
-import { ThemedTitleV2 } from "@refinedev/antd";
-import {
-  layoutStyles,
-  containerStyles,
-  titleStyles,
-  headStyles,
-  bodyStyles,
-} from "./styles";
-import {
-  Row,
-  Col,
-  Layout,
-  Card,
-  Typography,
-  Form,
-  Input,
-  Button,
-  LayoutProps,
-  CardProps,
-  FormProps,
-  theme,
-} from "antd";
+import { bodyStyles, containerStyles, headStyles, layoutStyles, titleStyles } from "./styles";
+import { Row, Col, Layout, Card, Typography, Form, Input, Button, LayoutProps, CardProps, FormProps, theme } from "antd";
+import { MailOutlined } from "@ant-design/icons";
 
-type ResetPassworProps = ForgotPasswordPageProps<
-  LayoutProps,
-  CardProps,
-  FormProps
->;
+type ResetPassworProps = ForgotPasswordPageProps<LayoutProps, CardProps, FormProps>;
 
-/**
- * **refine** has forgot password page form which is served on `/forgot-password` route when the `authProvider` configuration is provided.
- *
- * @see {@link https://refine.dev/docs/ui-frameworks/antd/components/antd-auth-page/#forgot-password} for more details.
- */
 export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
-  loginLink,
-  wrapperProps,
-  contentProps,
-  renderContent,
-  formProps,
-  title,
+  loginLink, wrapperProps, contentProps, formProps,
 }) => {
   const { token } = theme.useToken();
   const [form] = Form.useForm<ForgotPasswordFormTypes>();
@@ -56,48 +18,27 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
   const routerType = useRouterType();
   const Link = useLink();
   const { Link: LegacyLink } = useRouterContext();
-
   const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
-  const { mutate: forgotPassword, isLoading } =
-    useForgotPassword<ForgotPasswordFormTypes>();
+  const { mutate: forgotPassword, isLoading } = useForgotPassword<ForgotPasswordFormTypes>();
 
-  const PageTitle =
-    title === false ? null : (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "32px",
-          fontSize: "20px",
-        }}
-      >
-        {title ?? <ThemedTitleV2 collapsed={false} />}
-      </div>
-    );
-
-  const CardTitle = (
-    <Typography.Title
-      level={3}
-      style={{
-        color: token.colorPrimaryTextHover,
-        ...titleStyles,
-      }}
-    >
-      {translate("pages.forgotPassword.title", "Forgot your password?")}
-    </Typography.Title>
-  );
   const CardContent = (
     <Card
-      title={CardTitle}
       headStyle={headStyles}
       bodyStyle={bodyStyles}
-      style={{
-        ...containerStyles,
-        backgroundColor: token.colorBgElevated,
-      }}
+      style={{ ...containerStyles, backgroundColor: token.colorBgElevated }}
       {...(contentProps ?? {})}
     >
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <img src="https://static.vietbank.com.vn/web/vietbank-logo.png" alt="Vietbank Logo" style={{ width: 64, height: 64, marginBottom: 16 }} />
+        <Typography.Title level={3} style={titleStyles}>
+          {translate("pages.forgotPassword.title", "Quên Mật Khẩu?")}
+        </Typography.Title>
+        <Typography.Text type="secondary" style={{ color: "#6b7c93" }}>
+          Nhập email để nhận hướng dẫn khôi phục
+        </Typography.Text>
+      </div>
+
       <Form<ForgotPasswordFormTypes>
         layout="vertical"
         form={form}
@@ -107,105 +48,38 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
       >
         <Form.Item
           name="email"
-          label={translate("pages.forgotPassword.fields.email", "Email")}
           rules={[
-            {
-              required: true,
-              message: translate(
-                "pages.forgotPassword.errors.requiredEmail",
-                "Email is required"
-              ),
-            },
-            {
-              type: "email",
-              message: translate(
-                "pages.forgotPassword.errors.validEmail",
-                "Invalid email address"
-              ),
-            },
+            { required: true, message: translate("pages.forgotPassword.errors.requiredEmail", "Vui lòng nhập Email!") },
+            { type: "email", message: translate("pages.forgotPassword.errors.validEmail", "Địa chỉ email không hợp lệ!") },
           ]}
         >
-          <Input
-            type="email"
-            size="large"
-            placeholder={translate(
-              "pages.forgotPassword.fields.email",
-              "Email"
-            )}
-          />
+          <Input size="large" prefix={<MailOutlined style={{ color: token.colorTextQuaternary }} />} placeholder={translate("pages.forgotPassword.fields.email", "Email của bạn")} />
         </Form.Item>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
+        
+        <Form.Item style={{ marginTop: "24px", marginBottom: 16 }}>
+          <Button type="primary" size="large" htmlType="submit" loading={isLoading} block style={{ background: "#7a9dc1", borderColor: "#7a9dc1", fontWeight: 600, borderRadius: 6 }}>
+            {translate("pages.forgotPassword.buttons.submit", "Gửi Hướng Dẫn")}
+          </Button>
+        </Form.Item>
+
+        <div style={{ textAlign: "center" }}>
           {loginLink ?? (
-            <Typography.Text
-              style={{
-                fontSize: 12,
-                marginLeft: "auto",
-              }}
-            >
-              {translate(
-                "pages.register.buttons.haveAccount",
-                "Have an account? "
-              )}{" "}
-              <ActiveLink
-                style={{
-                  fontWeight: "bold",
-                  color: token.colorPrimaryTextHover,
-                }}
-                to="/login"
-              >
-                {translate("pages.login.signin", "Sign in")}
+            <Typography.Text style={{ fontSize: 14, color: "#6b7c93" }}>
+              {translate("pages.register.buttons.haveAccount", "Nhớ ra mật khẩu? ")}{" "}
+              <ActiveLink style={{ fontWeight: "bold", color: "#7a9dc1" }} to="/login">
+                {translate("pages.login.signin", "Đăng nhập")}
               </ActiveLink>
             </Typography.Text>
           )}
         </div>
-        <Form.Item
-          style={{
-            marginTop: "24px",
-            marginBottom: 0,
-          }}
-        >
-          <Button
-            type="primary"
-            size="large"
-            htmlType="submit"
-            loading={isLoading}
-            block
-          >
-            {translate(
-              "pages.forgotPassword.buttons.submit",
-              "Send reset instructions"
-            )}
-          </Button>
-        </Form.Item>
       </Form>
     </Card>
   );
 
   return (
     <Layout style={layoutStyles} {...(wrapperProps ?? {})}>
-      <Row
-        justify="center"
-        align="middle"
-        style={{
-          padding: "16px 0",
-          minHeight: "100dvh",
-        }}
-      >
-        <Col xs={22}>
-          {renderContent ? (
-            renderContent(CardContent, PageTitle)
-          ) : (
-            <>
-              {PageTitle}
-              {CardContent}
-            </>
-          )}
-        </Col>
+      <Row justify="center" align="middle" style={{ width: "100%" }}>
+        <Col>{CardContent}</Col>
       </Row>
     </Layout>
   );

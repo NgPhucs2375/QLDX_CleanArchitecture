@@ -6,6 +6,7 @@ using Onion.CleanArchitecture.Application.Features.Products.Commands.DeleteProdu
 using Onion.CleanArchitecture.Application.Features.Products.Commands.UpdateProduct;
 using Onion.CleanArchitecture.Application.Features.Products.Queries.GetAllProducts;
 using Onion.CleanArchitecture.Application.Features.Products.Queries.GetProductById;
+using Casbin;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,9 +16,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/products")]
     public class ProductController : BaseApiController
     {
-        [Obsolete]
-        public ProductController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public ProductController(Enforcer enforcer) : base(enforcer)
         {
         }
         // GET: api/<controller>

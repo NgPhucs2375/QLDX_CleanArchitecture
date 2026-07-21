@@ -55,7 +55,7 @@ export interface DataProvider extends BaseDataProvider {
 export const dataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters, sorters }) => {
     const params = new URLSearchParams();
-    if (pagination) {
+    if (pagination && pagination.mode !== "off" && pagination.current && pagination.pageSize) {
       params.append(
         "_start",
         (
@@ -67,6 +67,10 @@ export const dataProvider: DataProvider = {
         "_end",
         ((pagination?.current || 1) * (pagination?.pageSize ?? 0)).toString()
       );
+    }
+    if (pagination?.mode === "off") {
+      params.append("_start", "0");
+      params.append("_end", "200");
     }
 
     if (sorters && sorters.length > 0) {

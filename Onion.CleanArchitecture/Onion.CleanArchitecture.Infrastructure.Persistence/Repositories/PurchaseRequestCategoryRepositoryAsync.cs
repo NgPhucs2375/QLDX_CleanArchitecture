@@ -33,5 +33,18 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 request._start,
                 request._end);
         }
+        public async Task<decimal> GetTotalProposedAmountByRequestIdAsync(int purchaseRequestId)
+        {
+            return await _entities
+                .Where(x => x.PurchaseRequestId == purchaseRequestId)
+                .SumAsync(x => x.TotalProposedAmount); // Lấy từ PurchaseRequestCategory
+        }
+
+        public async Task<decimal> GetTotalActualAmountByRequestIdAsync(int purchaseRequestId)
+        {
+            return await _entities
+                .Where(x => x.PurchaseRequestId == purchaseRequestId)
+                .SumAsync(x => x.ActualTotalAmount); // Lấy từ PurchaseRequestCategory
+        }
     }
 }

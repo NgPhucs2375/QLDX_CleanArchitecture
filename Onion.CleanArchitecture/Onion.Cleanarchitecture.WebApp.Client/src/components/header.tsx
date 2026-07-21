@@ -1,11 +1,9 @@
-import { Layout, Space, theme } from "antd";
+import { Layout, Space } from "antd";
 import { CurrentUser } from "./current-user";
-const { useToken } = theme;
 
 export const Header = () => {
-  const { token } = useToken();
   const headerStyles: React.CSSProperties = {
-    backgroundColor: token.colorBgElevated,
+    backgroundColor: "#ffffff",
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center",
@@ -14,6 +12,8 @@ export const Header = () => {
     position: "sticky",
     top: 0,
     zIndex: 999,
+    borderBottom: "1px solid #e1e7ee",
+    boxShadow: "0 2px 8px rgba(122, 157, 193, 0.05)"
   };
 
   return (

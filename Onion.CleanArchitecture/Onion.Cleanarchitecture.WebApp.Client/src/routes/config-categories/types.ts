@@ -1,8 +1,8 @@
 export interface IConfigCategory {
   Id: number;
-  ProposalConfigId: string;
-  CategoryId: string;
-  DepartmentId: string;
+  ProposalConfigId: number;
+  CategoryId: number;
+  DepartmentId: number;
   AllowedQuota: number;
   UsedAmount: number;
   RemainingAmount: number;

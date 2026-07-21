@@ -1,98 +1,42 @@
 import React from "react";
 import {
-  UpdatePasswordPageProps,
-  UpdatePasswordFormTypes,
-  useActiveAuthProvider,
-  useTranslate,
-  useUpdatePassword,
+  UpdatePasswordPageProps, UpdatePasswordFormTypes, useActiveAuthProvider,
+  useTranslate, useUpdatePassword,
 } from "@refinedev/core";
-import { ThemedTitleV2 } from "@refinedev/antd";
-import {
-  layoutStyles,
-  containerStyles,
-  titleStyles,
-  headStyles,
-  bodyStyles,
-} from "./styles";
-import {
-  Row,
-  Col,
-  Layout,
-  Card,
-  Typography,
-  Form,
-  Input,
-  Button,
-  LayoutProps,
-  CardProps,
-  FormProps,
-  theme,
-} from "antd";
+import { bodyStyles, containerStyles, headStyles, layoutStyles, titleStyles } from "./styles";
+import { Row, Col, Layout, Card, Typography, Form, Input, Button, LayoutProps, CardProps, FormProps, theme } from "antd";
+import { LockOutlined } from "@ant-design/icons";
 
-type UpdatePasswordProps = UpdatePasswordPageProps<
-  LayoutProps,
-  CardProps,
-  FormProps
->;
+type UpdatePasswordProps = UpdatePasswordPageProps<LayoutProps, CardProps, FormProps>;
 
-/**
- * **refine** has update password page form which is served on `/update-password` route when the `authProvider` configuration is provided.
- *
- * @see {@link https://refine.dev/docs/ui-frameworks/antd/components/antd-auth-page/#update-password} for more details.
- */
 export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
-  wrapperProps,
-  contentProps,
-  renderContent,
-  formProps,
-  title,
+  wrapperProps, contentProps, formProps,
 }) => {
   const { token } = theme.useToken();
   const [form] = Form.useForm<UpdatePasswordFormTypes>();
   const translate = useTranslate();
   const authProvider = useActiveAuthProvider();
-  const { mutate: updatePassword, isLoading } =
-    useUpdatePassword<UpdatePasswordFormTypes>({
-      v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
-    });
-
-  const PageTitle =
-    title === false ? null : (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "32px",
-          fontSize: "20px",
-        }}
-      >
-        {title ?? <ThemedTitleV2 collapsed={false} />}
-      </div>
-    );
-
-  const CardTitle = (
-    <Typography.Title
-      level={3}
-      style={{
-        color: token.colorPrimaryTextHover,
-        ...titleStyles,
-      }}
-    >
-      {translate("pages.updatePassword.title", "Set New Password")}
-    </Typography.Title>
-  );
+  const { mutate: updatePassword, isLoading } = useUpdatePassword<UpdatePasswordFormTypes>({
+    v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+  });
 
   const CardContent = (
     <Card
-      title={CardTitle}
       headStyle={headStyles}
       bodyStyle={bodyStyles}
-      style={{
-        ...containerStyles,
-        backgroundColor: token.colorBgElevated,
-      }}
+      style={{ ...containerStyles, backgroundColor: token.colorBgElevated }}
       {...(contentProps ?? {})}
     >
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <img src="https://static.vietbank.com.vn/web/vietbank-logo.png" alt="Vietbank Logo" style={{ width: 64, height: 64, marginBottom: 16 }} />
+        <Typography.Title level={3} style={titleStyles}>
+          {translate("pages.updatePassword.title", "Thiết Lập Mật Khẩu Mới")}
+        </Typography.Title>
+        <Typography.Text type="secondary" style={{ color: "#6b7c93" }}>
+          Vui lòng nhập mật khẩu mới bảo mật
+        </Typography.Text>
+      </div>
+
       <Form<UpdatePasswordFormTypes>
         layout="vertical"
         form={form}
@@ -102,71 +46,34 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
       >
         <Form.Item
           name="password"
-          label={translate(
-            "pages.updatePassword.fields.password",
-            "New Password"
-          )}
-          rules={[
-            {
-              required: true,
-              message: translate(
-                "pages.updatePassword.errors.requiredPassword",
-                "Password is required"
-              ),
-            },
-          ]}
-          style={{ marginBottom: "12px" }}
+          rules={[{ required: true, message: translate("pages.updatePassword.errors.requiredPassword", "Vui lòng nhập mật khẩu mới!") }]}
+          style={{ marginBottom: "16px" }}
         >
-          <Input type="password" placeholder="●●●●●●●●" size="large" />
+          <Input.Password prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="Mật khẩu mới" size="large" />
         </Form.Item>
+
         <Form.Item
           name="confirmPassword"
-          label={translate(
-            "pages.updatePassword.fields.confirmPassword",
-            "Confirm New Password"
-          )}
           hasFeedback
           dependencies={["password"]}
           rules={[
-            {
-              required: true,
-              message: translate(
-                "pages.updatePassword.errors.requiredConfirmPassword",
-                "Confirm password is required"
-              ),
-            },
+            { required: true, message: translate("pages.updatePassword.errors.requiredConfirmPassword", "Vui lòng xác nhận lại mật khẩu!") },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue("password") === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(
-                  new Error(
-                    translate(
-                      "pages.updatePassword.errors.confirmPasswordNotMatch",
-                      "Passwords do not match"
-                    )
-                  )
-                );
+                return Promise.reject(new Error(translate("pages.updatePassword.errors.confirmPasswordNotMatch", "Mật khẩu không khớp!")));
               },
             }),
           ]}
         >
-          <Input type="password" placeholder="●●●●●●●●" size="large" />
+          <Input.Password prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="Xác nhận mật khẩu mới" size="large" />
         </Form.Item>
-        <Form.Item
-          style={{
-            marginBottom: 0,
-          }}
-        >
-          <Button
-            type="primary"
-            size="large"
-            htmlType="submit"
-            loading={isLoading}
-            block
-          >
-            {translate("pages.updatePassword.buttons.submit", "Update")}
+
+        <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+          <Button type="primary" size="large" htmlType="submit" loading={isLoading} block style={{ background: "#7a9dc1", borderColor: "#7a9dc1", fontWeight: 600, borderRadius: 6 }}>
+            {translate("pages.updatePassword.buttons.submit", "Cập Nhật Mật Khẩu")}
           </Button>
         </Form.Item>
       </Form>
@@ -175,24 +82,8 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
 
   return (
     <Layout style={layoutStyles} {...(wrapperProps ?? {})}>
-      <Row
-        justify="center"
-        align="middle"
-        style={{
-          padding: "16px 0",
-          minHeight: "100dvh",
-        }}
-      >
-        <Col xs={22}>
-          {renderContent ? (
-            renderContent(CardContent, PageTitle)
-          ) : (
-            <>
-              {PageTitle}
-              {CardContent}
-            </>
-          )}
-        </Col>
+      <Row justify="center" align="middle" style={{ width: "100%" }}>
+        <Col>{CardContent}</Col>
       </Row>
     </Layout>
   );

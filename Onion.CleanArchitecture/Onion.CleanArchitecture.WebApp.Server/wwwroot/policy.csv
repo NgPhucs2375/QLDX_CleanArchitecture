@@ -1,65 +1,101 @@
-p, Quản trị viên hệ thống, roleclaims, list
-p, Quản trị viên hệ thống, roleclaims, create
-p, Quản trị viên hệ thống, roleclaims, show
-p, Quản trị viên hệ thống, roleclaims, edit
-p, Quản trị viên hệ thống, roleclaims, delete
-p, Quản trị viên hệ thống, users, list
-p, Quản trị viên hệ thống, users, create
-p, Quản trị viên hệ thống, users, show
-p, Quản trị viên hệ thống, users, edit
-p, Quản trị viên hệ thống, users, delete
-p, Quản trị viên hệ thống, roles, list
-p, Quản trị viên hệ thống, roles, create
-p, Quản trị viên hệ thống, roles, edit
-p, Quản trị viên hệ thống, roles, delete
-p, Quản trị viên hệ thống, config-approvers, list
-p, Quản trị viên hệ thống, config-approvers, create
-p, Quản trị viên hệ thống, purchase-requests, list
-p, Quản trị viên hệ thống, purchase-requests, create
-p, Quản trị viên hệ thống, purchase-requests, show
-p, Quản trị viên hệ thống, purchase-requests, edit
-p, Quản trị viên hệ thống, purchase-requests, delete
-p, Quản trị viên hệ thống, departments, list
-p, Quản trị viên hệ thống, departments, create
-p, Quản trị viên hệ thống, departments, show
-p, Quản trị viên hệ thống, departments, edit
-p, Quản trị viên hệ thống, departments, delete
-p, Quản trị viên hệ thống, purchase-request-categories, list
-p, Quản trị viên hệ thống, purchase-request-categories, create
-p, Quản trị viên hệ thống, purchase-request-categories, show
-p, Quản trị viên hệ thống, purchase-request-categories, edit
-p, Quản trị viên hệ thống, purchase-request-categories, delete
-p, Quản trị viên hệ thống, proposal-configs, list
-p, Quản trị viên hệ thống, proposal-configs, create
-p, Quản trị viên hệ thống, proposal-configs, show
-p, Quản trị viên hệ thống, proposal-configs, edit
-p, Quản trị viên hệ thống, proposal-configs, delete
-p, Quản trị viên hệ thống, config-categories, list
-p, Quản trị viên hệ thống, config-categories, create
-p, Quản trị viên hệ thống, config-categories, show
-p, Quản trị viên hệ thống, config-categories, edit
-p, Quản trị viên hệ thống, config-categories, delete
-p, Quản trị viên hệ thống, purchase-request-items, list
-p, Quản trị viên hệ thống, purchase-request-items, create
-p, Quản trị viên hệ thống, purchase-request-items, show
-p, Quản trị viên hệ thống, purchase-request-items, edit
-p, Quản trị viên hệ thống, purchase-request-items, delete
-p, Quản trị viên hệ thống, categories, list
-p, Quản trị viên hệ thống, categories, create
-p, Quản trị viên hệ thống, categories, show
-p, Quản trị viên hệ thống, categories, edit
-p, Quản trị viên hệ thống, categories, delete
-p, Quản trị viên hệ thống, products, list
-p, Quản trị viên hệ thống, products, create
-p, Quản trị viên hệ thống, products, show
-p, Quản trị viên hệ thống, products, edit
-p, Quản trị viên hệ thống, products, delete
-p, Quản trị viên hệ thống, purchase-request-logs, list
-p, Quản trị viên hệ thống, purchase-request-logs, create
-p, Quản trị viên hệ thống, purchase-request-logs, show
-p, Quản trị viên hệ thống, purchase-request-logs, edit
-p, Quản trị viên hệ thống, purchase-request-logs, delete
-p, Người tạo đề xuất, purchase-requests, list
-p, Người tạo đề xuất, purchase-requests, create
-p, Người tạo đề xuất, purchase-requests, show
-p, Người tạo đề xuất, purchase-requests, edit
+p, SuperAdmin, roleclaims, list
+p, SuperAdmin, roleclaims, create
+p, SuperAdmin, roleclaims, show
+p, SuperAdmin, roleclaims, edit
+p, SuperAdmin, roleclaims, delete
+p, SuperAdmin, users, list
+p, SuperAdmin, users, create
+p, SuperAdmin, users, show
+p, SuperAdmin, users, edit
+p, SuperAdmin, users, delete
+p, SuperAdmin, roles, list
+p, SuperAdmin, roles, create
+p, SuperAdmin, roles, show
+p, SuperAdmin, roles, edit
+p, SuperAdmin, roles, delete
+p, SuperAdmin, categories, list
+p, SuperAdmin, categories, create
+p, SuperAdmin, categories, show
+p, SuperAdmin, categories, edit
+p, SuperAdmin, categories, delete
+p, SuperAdmin, products, list
+p, SuperAdmin, products, create
+p, SuperAdmin, products, show
+p, SuperAdmin, products, edit
+p, SuperAdmin, products, delete
+p, SuperAdmin, departments, list
+p, SuperAdmin, departments, create
+p, SuperAdmin, departments, show
+p, SuperAdmin, departments, edit
+p, SuperAdmin, departments, delete
+p, SuperAdmin, proposal-configs, list
+p, SuperAdmin, proposal-configs, create
+p, SuperAdmin, proposal-configs, show
+p, SuperAdmin, proposal-configs, edit
+p, SuperAdmin, proposal-configs, delete
+p, SuperAdmin, config-categories, list
+p, SuperAdmin, config-categories, create
+p, SuperAdmin, config-categories, show
+p, SuperAdmin, config-categories, edit
+p, SuperAdmin, config-categories, delete
+p, SuperAdmin, config-approvers, list
+p, SuperAdmin, config-approvers, create
+p, SuperAdmin, config-approvers, show
+p, SuperAdmin, config-approvers, edit
+p, SuperAdmin, config-approvers, delete
+p, SuperAdmin, purchase-requests, list
+p, SuperAdmin, purchase-requests, create
+p, SuperAdmin, purchase-requests, show
+p, SuperAdmin, purchase-requests, edit
+p, SuperAdmin, purchase-requests, delete
+p, SuperAdmin, purchase-requests, submit
+p, SuperAdmin, purchase-requests, approve-department
+p, SuperAdmin, purchase-requests, reject
+p, SuperAdmin, purchase-requests, return-for-edit
+p, SuperAdmin, purchase-requests, return
+p, SuperAdmin, purchase-requests, approve
+p, SuperAdmin, purchase-requests, confirm-order
+p, SuperAdmin, purchase-requests, confirm
+p, SuperAdmin, purchase-requests, complete
+p, SuperAdmin, purchase-request-categories, list
+p, SuperAdmin, purchase-request-categories, create
+p, SuperAdmin, purchase-request-categories, show
+p, SuperAdmin, purchase-request-categories, edit
+p, SuperAdmin, purchase-request-categories, delete
+p, SuperAdmin, purchase-request-items, list
+p, SuperAdmin, purchase-request-items, create
+p, SuperAdmin, purchase-request-items, show
+p, SuperAdmin, purchase-request-items, edit
+p, SuperAdmin, purchase-request-items, delete
+p, SuperAdmin, purchase-request-items, update-actual-quantity
+p, SuperAdmin, purchase-request-logs, list
+p, SuperAdmin, purchase-request-logs, create
+p, SuperAdmin, purchase-request-logs, show
+p, SuperAdmin, purchase-request-logs, edit
+p, SuperAdmin, purchase-request-logs, delete
+p, Basic, purchase-request-items, list
+p, Basic, purchase-request-items, show
+p, Basic, purchase-request-items, trigger
+p, Basic, purchase-request-logs, list
+p, Basic, purchase-request-logs, trigger
+p, Basic, categories, list
+p, Basic, categories, show
+p, Basic, proposal-configs, list
+p, Basic, proposal-configs, show
+p, Basic, departments, list
+p, Basic, departments, show
+p, Basic, purchase-requests, create
+p, Basic, purchase-requests, show
+p, Basic, purchase-requests, edit
+p, Basic, purchase-requests, submit
+p, Basic, purchase-requests, approve-department
+p, Basic, purchase-requests, reject
+p, Basic, purchase-requests, return-for-edit
+p, Basic, purchase-requests, return
+p, Basic, purchase-requests, approve
+p, Basic, purchase-requests, confirm-order
+p, Basic, purchase-requests, confirm
+p, Basic, purchase-requests, complete
+p, Basic, purchase-requests, trigger
+p, Basic, purchase-requests, list
+p, Basic, users, list

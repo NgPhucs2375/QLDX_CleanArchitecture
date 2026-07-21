@@ -5,6 +5,7 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Features.RoleClaim.Command
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.RoleClaim.Queries.GetPagingRoleClaim;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.RoleClaim.Queries.GetRoleClaimById;
 using Microsoft.AspNetCore.Mvc;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity;
 
@@ -12,8 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity;
 [ApiController]
 public class RoleClaimsController : BaseApiController
 {
-    [Obsolete]
-    public RoleClaimsController(Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+    public RoleClaimsController(Enforcer enforcer) : base(enforcer)
     {
     }
     // GET: api/roleclaims?_sort=Id&_order=asc&_start=0&_end=10

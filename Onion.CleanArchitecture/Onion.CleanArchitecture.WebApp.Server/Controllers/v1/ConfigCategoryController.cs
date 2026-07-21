@@ -1,3 +1,4 @@
+using Casbin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Onion.CleanArchitecture.Application.Features.ConfigCategories.Commands.CreateConfigCategory;
@@ -12,9 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/config-categories")]
     public class ConfigCategoryController : BaseApiController
     {
-        [Obsolete]
-        public ConfigCategoryController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public ConfigCategoryController(Enforcer enforcer) : base(enforcer)
         {
         }
 

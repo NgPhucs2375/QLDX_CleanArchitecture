@@ -9,6 +9,7 @@ export const CreateConfigCategory = () => {
     resource: "proposal-configs",
     optionLabel: "Name",
     optionValue: "Id",
+    pagination: { mode: "off" },
   });
 
   const { selectProps: categorySelectProps } = useSelect({

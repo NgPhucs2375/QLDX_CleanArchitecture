@@ -33,5 +33,19 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 request._start,
                 request._end);
         }
+            public async Task<decimal> GetTotalProposedAmountByCategoryIdAsync(int categoryId)
+        {
+            // Chạy query trực tiếp dưới DB: SELECT SUM(TotalAmount) FROM Items WHERE CategoryId = ...
+            return await _entities
+                .Where(x => x.PurchaseRequestCategoryId == categoryId)
+                .SumAsync(x => x.TotalAmount);
+        }
+
+        public async Task<decimal> GetActualTotalAmountByCategoryIdAsync(int categoryId)
+        {
+            return await _entities
+                .Where(x => x.PurchaseRequestCategoryId == categoryId)
+                .SumAsync(x => x.ActualTotalAmount);
+        }
     }
 }

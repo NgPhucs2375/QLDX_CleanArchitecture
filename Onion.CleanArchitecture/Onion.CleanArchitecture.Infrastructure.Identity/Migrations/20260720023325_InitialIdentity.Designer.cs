@@ -12,8 +12,8 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Contexts;
 namespace Onion.CleanArchitecture.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    [Migration("20260710071725_InitIdentity")]
-    partial class InitIdentity
+    [Migration("20260720023325_InitialIdentity")]
+    partial class InitialIdentity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -209,8 +209,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)

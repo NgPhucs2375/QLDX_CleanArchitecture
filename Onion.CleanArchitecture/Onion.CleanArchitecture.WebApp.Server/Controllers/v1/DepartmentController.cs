@@ -1,3 +1,4 @@
+using Casbin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Onion.CleanArchitecture.Application.Features.Departments.Commands.CreateDepartment;
@@ -12,9 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/departments")]
     public class DepartmentController : BaseApiController
     {
-        [Obsolete]
-        public DepartmentController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public DepartmentController(Enforcer enforcer) : base(enforcer)
         {
         }
 

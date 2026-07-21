@@ -15,9 +15,6 @@ using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Com
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Queries.GetAllPurchaseRequestCategories;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.CreatePurchaseRequestItem;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetAllPurchaseRequestItems;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequestLogs.Commands.CreatePurchaseRequestLog;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequestLogs.Commands.UpdatePurchaseRequestLog;
-using Onion.CleanArchitecture.Application.Features.PurchaseRequestLogs.Queries.GetAllPurchaseRequestLogs;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.CreatePurchaseRequest;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetAllPurchaseRequests;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -63,10 +60,6 @@ namespace Onion.CleanArchitecture.Application.Mappings
             CreateMap<CreatePurchaseRequestItemCommand, PurchaseRequestItem>();
             CreateMap<GetAllPurchaseRequestItemsQuery, GetAllPurchaseRequestItemsParameter>();
 
-            CreateMap<PurchaseRequestLog, GetAllPurchaseRequestLogsViewModel>().ReverseMap();
-            CreateMap<CreatePurchaseRequestLogCommand, PurchaseRequestLog>();
-            CreateMap<UpdatePurchaseRequestLogCommand, PurchaseRequestLog>();
-            CreateMap<GetAllPurchaseRequestLogsQuery, GetAllPurchaseRequestLogsParameter>();
         }
     }
 }

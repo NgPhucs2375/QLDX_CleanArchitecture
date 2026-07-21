@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Casbin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Onion.CleanArchitecture.Application.DTOs.Account;
@@ -14,8 +15,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers
     {
         private readonly IAccountService _accountService;
 
-        [Obsolete]
-        public AccountController(IAccountService accountService, Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public AccountController(IAccountService accountService, Enforcer enforcer) : base(enforcer)
         {
             _accountService = accountService;
         }

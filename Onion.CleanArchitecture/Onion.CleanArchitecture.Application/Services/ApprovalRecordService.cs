@@ -13,6 +13,7 @@ namespace Onion.CleanArchitecture.Application.Services
         // Bơm repository vào 
         private readonly IPurchaseRequestApprovalRepositoryAsync _approvalRepository;
         private readonly IAuthenticatedUserService _authenticatedUser;
+        private readonly IUserLookupService _userLookup;
 
         // set cứng các trigger với nhãn hành động tương ứng để Record có thể nhận dạng 
         // với 1 Từ điểm gồm 2 tham số là các trigger và 1 string nhãn thành đông
@@ -29,10 +30,12 @@ namespace Onion.CleanArchitecture.Application.Services
         // Constructor của ApprovalRecordService nhận vào 2 tham số: approvalRepository và authenticatedUser
         public ApprovalRecordService(
             IPurchaseRequestApprovalRepositoryAsync approvalRepository,
-            IAuthenticatedUserService authenticatedUser)
+            IAuthenticatedUserService authenticatedUser,
+            IUserLookupService userLookup)
         {
             _approvalRepository = approvalRepository;
             _authenticatedUser = authenticatedUser;
+            _userLookup = userLookup;
         }
         // 
         public async Task RecordAsync(PurchaseRequest entity,PurchaseRequestStatus statusBefore, PurchaseRequestTrigger trigger, string note, CancellationToken ct)
@@ -47,7 +50,7 @@ namespace Onion.CleanArchitecture.Application.Services
             {
                 PurchaseRequestId = entity.Id,
                 ApproverId = _authenticatedUser.UserId ?? string.Empty,
-                ApproverName = string.Empty,
+                ApproverName = await _userLookup.GetDisplayNameAsync(_authenticatedUser.UserId ?? string.Empty),
                 FromStatus = statusBefore,
                 ToStatus = statusAfter,
                 Action = ActionLabels.GetValueOrDefault(trigger, trigger.ToString()),
@@ -55,6 +58,19 @@ namespace Onion.CleanArchitecture.Application.Services
             };
 
             await _approvalRepository.AddAsync(approval);
+        }
+        public string GetDefaultNote(PurchaseRequestTrigger trigger)
+        {
+            return trigger switch
+            {
+                PurchaseRequestTrigger.Submit => "Khởi tạo và trình duyệt phiếu đề xuất",
+                PurchaseRequestTrigger.ApproveDepartment => "Trưởng đơn vị đã phê duyệt",
+                PurchaseRequestTrigger.Reject => "Đã từ chối phiếu đề xuất",
+                PurchaseRequestTrigger.Approve => "Cấp kiểm soát đã phê duyệt",
+                PurchaseRequestTrigger.ReturnForEdit => "Yêu cầu chỉnh sửa lại phiếu đề xuất",
+                PurchaseRequestTrigger.ConfirmOrder => "Đã xác nhận đơn hàng và nhập số lượng thực tế",
+                _ => "Hệ thống tự động ghi nhận hành động"
+            };
         }
     }
 }

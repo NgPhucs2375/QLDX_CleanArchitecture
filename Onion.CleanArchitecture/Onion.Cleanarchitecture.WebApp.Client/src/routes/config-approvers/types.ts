@@ -1,7 +1,7 @@
 export interface IConfigApprover {
   Id: number;
-  ProposalConfigId: string;
-  DepartmentId: string;
+  ProposalConfigId: number;
+  DepartmentId: number;
   ApproverId: string;
   Level: number;
   CreatedBy: string;

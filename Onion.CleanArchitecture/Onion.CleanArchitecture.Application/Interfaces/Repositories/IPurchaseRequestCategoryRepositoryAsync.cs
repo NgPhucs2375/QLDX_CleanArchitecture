@@ -8,6 +8,6 @@ namespace Onion.CleanArchitecture.Application.Interfaces.Repositories
     public interface IPurchaseRequestCategoryRepositoryAsync : IGenericRepositoryAsync<PurchaseRequestCategory>
     {
         Task<PagedList<PurchaseRequestCategory>> GetPagedPurchaseRequestCategoriesAsync(GetAllPurchaseRequestCategoriesParameter parameter);
-        // Task<IReadOnlyList<PurchaseRequestCategory>> GetAllByPurchaseRequestIdAsync(Guid requestId);
-    }
+        Task<decimal> GetTotalProposedAmountByRequestIdAsync(int purchaseRequestId);
+        Task<decimal> GetTotalActualAmountByRequestIdAsync(int purchaseRequestId);    }
 }

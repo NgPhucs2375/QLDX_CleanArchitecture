@@ -1,53 +1,16 @@
 import React from "react";
 import {
-  RegisterPageProps,
-  RegisterFormTypes,
-  useRouterType,
-  useLink,
-  useActiveAuthProvider,
-  useTranslate,
-  useRouterContext,
-  useRegister,
+  RegisterPageProps, RegisterFormTypes, useRouterType, useLink, useActiveAuthProvider,
+  useTranslate, useRouterContext, useRegister,
 } from "@refinedev/core";
-import { ThemedTitleV2 } from "@refinedev/antd";
-import {
-  layoutStyles,
-  containerStyles,
-  titleStyles,
-  headStyles,
-  bodyStyles,
-} from "./styles";
-import {
-  Row,
-  Col,
-  Layout,
-  Card,
-  Typography,
-  Form,
-  Input,
-  Button,
-  LayoutProps,
-  CardProps,
-  FormProps,
-  Divider,
-  theme,
-} from "antd";
+import { bodyStyles, containerStyles, headStyles, layoutStyles, titleStyles } from "./styles";
+import { Row, Col, Layout, Card, Typography, Form, Input, Button, LayoutProps, CardProps, FormProps, Divider, theme } from "antd";
+import { UserOutlined, LockOutlined } from "@ant-design/icons";
 
 type RegisterProps = RegisterPageProps<LayoutProps, CardProps, FormProps>;
-/**
- * **refine** has register page form which is served on `/register` route when the `authProvider` configuration is provided.
- *
- * @see {@link https://refine.dev/docs/ui-frameworks/antd/components/antd-auth-page/#register} for more details.
- */
+
 export const RegisterPage: React.FC<RegisterProps> = ({
-  providers,
-  loginLink,
-  wrapperProps,
-  contentProps,
-  renderContent,
-  formProps,
-  title,
-  hideForm,
+  providers, loginLink, wrapperProps, contentProps, formProps, hideForm,
 }) => {
   const { token } = theme.useToken();
   const [form] = Form.useForm<RegisterFormTypes>();
@@ -55,7 +18,6 @@ export const RegisterPage: React.FC<RegisterProps> = ({
   const routerType = useRouterType();
   const Link = useLink();
   const { Link: LegacyLink } = useRouterContext();
-
   const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
   const authProvider = useActiveAuthProvider();
@@ -63,70 +25,24 @@ export const RegisterPage: React.FC<RegisterProps> = ({
     v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
   });
 
-  const PageTitle =
-    title === false ? null : (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "32px",
-          fontSize: "20px",
-        }}
-      >
-        {title ?? <ThemedTitleV2 collapsed={false} />}
-      </div>
-    );
-
-  const CardTitle = (
-    <Typography.Title
-      level={3}
-      style={{
-        color: token.colorPrimaryTextHover,
-        ...titleStyles,
-      }}
-    >
-      {translate("pages.register.title", "Sign up for your account")}
-    </Typography.Title>
-  );
-
   const renderProviders = () => {
     if (providers && providers.length > 0) {
       return (
         <>
-          {providers.map((provider) => {
-            return (
-              <Button
-                key={provider.name}
-                type="default"
-                block
-                icon={provider.icon}
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
-                  marginBottom: "8px",
-                }}
-                onClick={() =>
-                  register({
-                    providerName: provider.name,
-                  })
-                }
-              >
-                {provider.label}
-              </Button>
-            );
-          })}
+          {providers.map((provider) => (
+            <Button
+              key={provider.name}
+              type="default"
+              block
+              icon={provider.icon}
+              style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", marginBottom: "8px" }}
+              onClick={() => register({ providerName: provider.name })}
+            >
+              {provider.label}
+            </Button>
+          ))}
           {!hideForm && (
-            <Divider>
-              <Typography.Text
-                style={{
-                  color: token.colorTextLabel,
-                }}
-              >
-                {translate("pages.login.divider", "or")}
-              </Typography.Text>
-            </Divider>
+            <Divider><Typography.Text style={{ color: token.colorTextLabel }}>{translate("pages.login.divider", "hoặc")}</Typography.Text></Divider>
           )}
         </>
       );
@@ -136,15 +52,17 @@ export const RegisterPage: React.FC<RegisterProps> = ({
 
   const CardContent = (
     <Card
-      title={CardTitle}
       headStyle={headStyles}
       bodyStyle={bodyStyles}
-      style={{
-        ...containerStyles,
-        backgroundColor: token.colorBgElevated,
-      }}
+      style={{ ...containerStyles, backgroundColor: token.colorBgElevated }}
       {...(contentProps ?? {})}
     >
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <img src="https://static.vietbank.com.vn/web/vietbank-logo.png" alt="Vietbank Logo" style={{ width: 64, height: 64, marginBottom: 16 }} />
+        <Typography.Title level={3} style={titleStyles}>Đăng Ký Tài Khoản</Typography.Title>
+        <Typography.Text type="secondary" style={{ color: "#6b7c93" }}>Tham gia hệ thống quản trị nội bộ</Typography.Text>
+      </div>
+
       {renderProviders()}
       {!hideForm && (
         <Form<RegisterFormTypes>
@@ -156,111 +74,33 @@ export const RegisterPage: React.FC<RegisterProps> = ({
         >
           <Form.Item
             name="email"
-            label={translate("pages.register.email", "Email")}
             rules={[
-              {
-                required: true,
-                message: translate(
-                  "pages.register.errors.requiredEmail",
-                  "Email is required"
-                ),
-              },
-              {
-                type: "email",
-                message: translate(
-                  "pages.register.errors.validEmail",
-                  "Invalid email address"
-                ),
-              },
+              { required: true, message: translate("pages.register.errors.requiredEmail", "Vui lòng nhập Email!") },
+              { type: "email", message: translate("pages.register.errors.validEmail", "Địa chỉ email không hợp lệ!") },
             ]}
           >
-            <Input
-              size="large"
-              placeholder={translate("pages.register.fields.email", "Email")}
-            />
+            <Input size="large" prefix={<UserOutlined style={{ color: token.colorTextQuaternary }} />} placeholder={translate("pages.register.fields.email", "Email")} />
           </Form.Item>
           <Form.Item
             name="password"
-            label={translate("pages.register.fields.password", "Password")}
-            rules={[
-              {
-                required: true,
-                message: translate(
-                  "pages.register.errors.requiredPassword",
-                  "Password is required"
-                ),
-              },
-            ]}
+            rules={[{ required: true, message: translate("pages.register.errors.requiredPassword", "Vui lòng nhập Mật khẩu!") }]}
           >
-            <Input type="password" placeholder="●●●●●●●●" size="large" />
+            <Input.Password prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="Mật khẩu" size="large" />
           </Form.Item>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "24px",
-            }}
-          >
-            {loginLink ?? (
-              <Typography.Text
-                style={{
-                  fontSize: 12,
-                  marginLeft: "auto",
-                }}
-              >
-                {translate(
-                  "pages.login.buttons.haveAccount",
-                  "Have an account?"
-                )}{" "}
-                <ActiveLink
-                  style={{
-                    fontWeight: "bold",
-                    color: token.colorPrimaryTextHover,
-                  }}
-                  to="/login"
-                >
-                  {translate("pages.login.signin", "Sign in")}
-                </ActiveLink>
-              </Typography.Text>
-            )}
-          </div>
-          <Form.Item
-            style={{
-              marginBottom: 0,
-            }}
-          >
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              loading={isLoading}
-              block
-            >
-              {translate("pages.register.buttons.submit", "Sign up")}
+          
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Button type="primary" size="large" htmlType="submit" loading={isLoading} block style={{ background: "#7a9dc1", borderColor: "#7a9dc1", fontWeight: 600, borderRadius: 6 }}>
+              {translate("pages.register.buttons.submit", "Đăng Ký")}
             </Button>
           </Form.Item>
         </Form>
       )}
-      {hideForm && loginLink !== false && (
-        <div
-          style={{
-            marginTop: hideForm ? 16 : 8,
-          }}
-        >
-          <Typography.Text
-            style={{
-              fontSize: 12,
-            }}
-          >
-            {translate("pages.login.buttons.haveAccount", "Have an account?")}{" "}
-            <ActiveLink
-              style={{
-                fontWeight: "bold",
-                color: token.colorPrimaryTextHover,
-              }}
-              to="/login"
-            >
-              {translate("pages.login.signin", "Sign in")}
+      {loginLink ?? (
+        <div style={{ marginTop: 16, textAlign: "center" }}>
+          <Typography.Text style={{ fontSize: 14, color: "#6b7c93" }}>
+            {translate("pages.login.buttons.haveAccount", "Đã có tài khoản?")}{" "}
+            <ActiveLink style={{ fontWeight: "bold", color: "#7a9dc1" }} to="/login">
+              {translate("pages.login.signin", "Đăng nhập ngay")}
             </ActiveLink>
           </Typography.Text>
         </div>
@@ -270,25 +110,8 @@ export const RegisterPage: React.FC<RegisterProps> = ({
 
   return (
     <Layout style={layoutStyles} {...(wrapperProps ?? {})}>
-      <Row
-        justify="center"
-        align={hideForm ? "top" : "middle"}
-        style={{
-          padding: "16px 0",
-          minHeight: "100dvh",
-          paddingTop: hideForm ? "15dvh" : "16px",
-        }}
-      >
-        <Col xs={22}>
-          {renderContent ? (
-            renderContent(CardContent, PageTitle)
-          ) : (
-            <>
-              {PageTitle}
-              {CardContent}
-            </>
-          )}
-        </Col>
+      <Row justify="center" align="middle" style={{ width: "100%" }}>
+        <Col>{CardContent}</Col>
       </Row>
     </Layout>
   );

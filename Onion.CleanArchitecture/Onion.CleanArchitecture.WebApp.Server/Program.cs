@@ -28,7 +28,34 @@ if (_env.IsDevelopment())
     _services.AddSwaggerExtension();
 }
 
-_services.AddControllers().AddJsonOptions(opts => opts.JsonSerializerOptions.PropertyNamingPolicy = null);
+_services.AddControllers().AddJsonOptions(opts =>
+{
+    opts.JsonSerializerOptions.PropertyNamingPolicy = null;
+    opts.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+})
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value != null && e.Value.Errors.Count > 0)
+                .Select(e => new
+                {
+                    Field = e.Key,
+                    Message = e.Value.Errors.First().ErrorMessage
+                }).ToList();
+
+            var problemDetails = new
+            {
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+                Title = "Dữ liệu gửi lên không đúng định dạng.",
+                Status = 400,
+                Errors = errors // Trả về chi tiết các trường bị sai
+            };
+
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problemDetails);
+        };
+    });
 _services.AddApiVersioningExtension();
 _services.AddHealthChecks();
 _services.AddScoped<IAuthenticatedUserService, AuthenticatedUserService>();

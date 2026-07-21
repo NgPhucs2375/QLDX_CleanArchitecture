@@ -9,6 +9,8 @@ using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands.Upd
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetAllPurchaseRequests;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetCascadeCreateData;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetPurchaseRequestById;
+using Onion.CleanArchitecture.Application.Features.TriggerPurchaseRequest.Commands.TriggerPurchaseRequestCommand;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
 {
@@ -16,9 +18,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/purchase-requests")]
     public class PurchaseRequestController : BaseApiController
     {
-        [Obsolete]
-        public PurchaseRequestController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public PurchaseRequestController(Enforcer enforcer) : base(enforcer)
         {
         }
 
@@ -97,18 +97,18 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
         //Attribute dung de router
         [HttpPost("{id}/trigger")]
         // IActionResult : kết quả phải trả về se là 1 mã trạng thhasi HTTP(vd: 200 OK, 400 EROR, 403 FORBIDDEN, 404 NOT FOUND, 500 INTERNAL SERVER ERROR)
+        [Authorize] // Yêu cầu người dùng phải đăng nhập mới có thể truy cập vào action này
         public async Task<IActionResult> Trigger(int id,TriggerPurchaseRequestCommand command)
         {
             // nếu id của url không giống id của tờ giấy ghhi thhif trả về 400 - Yêu cầu khhoong hhopj lệ
             if(id != command.Id) return BadRequest();
-            // Lớp thuhws nhhast: Phhana quyền (ÈnorcePermissionAndExecute) thhy vì 1 mớ code lộn xộn bằng các vòn lặp if/else để
-            // check xem người dùng hiện tại có quyên thuhwjc hhienej hhanfh động "trigger" trên module"pủchhae-request" hay khhoong . toàn bộ logic đó đã đã dược gói gọn vào 1 hà dùng chuhng
+            // EnforcePermissionAndExecute gọi Casbin để check xem Role của user có action "trigger" trong policy khô.
+            // Nhưng việc ai được trigger state transition phụ thuộv vào việc họ có tên trong PurchaseRequestApprover của phiếu đó hay không
+            // Chứ không phải Role hệ thống
 
-            // Lớp thuhws hai : Giao việc (async () => OK(await Mediator.Send(command))) nếu bước kiêm tra permission thhnahfh côngg :
-            // Mediator.Send(command): lễ tân khohong tụ tay xử lý nghhieepj cụ mà đưa "order" chho quản lý MediatR. Từ đây MediatR se tự biết tìm đếnn đúng TriggerurchahseRequeestCommaHandler (Người đâu bếp) dể xử lý
-            // OK(): Khi đầu bếp cook và trả về kết quả (Response<int>)hàm OK(sẽ đóng gói kết quả đó vào 1gois quà mang mã tragnj tháo HHTTP 200 dể trả về chho kahshc)
-            return await EnforcePermissionAndExecute("purchase-requests","trigger",async () =>
-            Ok(await Mediator.Send(command)));
+            // So bỏ Casbin enforce, chỉ giữ lại check authentication bth và để business logic ValidateApproverForCurrentSte quyết định
+
+            return Ok(await Mediator.Send(command));
         }
     }
 }

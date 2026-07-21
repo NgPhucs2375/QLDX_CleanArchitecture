@@ -6,6 +6,7 @@ using Onion.CleanArchitecture.Application.Services;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
 using Onion.CleanArchitecture.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -31,6 +32,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         public int DepartmentId { get; set; }
         public int ProposalConfigId { get; set; }
         public string ApproverId { get; set; } = string.Empty;
+        public string Note { get; set; } = string.Empty;
         public List<CreatePurchaseRequestCategoryDto> Categories { get; set; } = new();
     }
 
@@ -73,6 +75,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
 
         public async Task<Response<int>> Handle(CreatePurchaseRequestCommand request, CancellationToken ct)
         {
+
+
             // 1. Validate department tồn tại
             var department = await _departmentRepo.GetByIdAsync(request.DepartmentId);
             if (department == null)
@@ -102,6 +106,11 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             // 4. Load cấu hình người duyệt từ DB
             var configApprovers = await _configApproverRepo.GetByConfigAndDepartmentAsync(
     request.ProposalConfigId, request.DepartmentId);
+            Console.WriteLine($"[CreatePR] ConfigApprovers count: {configApprovers?.Count ?? 0}");
+            foreach (var ca in configApprovers ?? new())
+            {
+                Console.WriteLine($"[CreatePR]   ca.Id={ca.Id}, ca.ProposalConfigId={ca.ProposalConfigId}, ca.DepartmentId={ca.DepartmentId}, ca.Level={ca.Level}, ca.ApproverId={ca.ApproverId}");
+            }
 
 
             // 5. Build PurchaseRequest graph
@@ -157,47 +166,52 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                 entity.RequestCategories.Add(requestCategory);
             }
 
-            // 6. Thêm Trưởng đơn vị làm người phê duyệt đầu tiên
-            //    Nếu request có ApproverId thì dùng, fallback về department.ManagerId
-            //    Kiểm soát (ControlLevel) sẽ được thêm ở bước duyệt sau
-            //    Người tạo phiếu được ghi nhận qua AuditableBaseEntity.CreatedBy
-            var deptHeadId = !string.IsNullOrEmpty(request.ApproverId) ? request.ApproverId : department.ManagerId;
-            if (!string.IsNullOrEmpty(deptHeadId))
+            // 6. Set creator early
+            entity.CreatedBy = _authenticatesUser.UserId;
+
+            // 7. Thêm Trưởng đơn vị làm người phê duyệt đầu tiên (từ Department.ManagerId)
+            if (string.IsNullOrEmpty(request.ApproverId))
             {
-                var deptHeadName = await _userLookup.GetDisplayNameAsync(deptHeadId);
-                entity.Approvers.Add(new PurchaseRequestApprover
-                {
-                    ApproverId = deptHeadId,
-                    ApproverName = deptHeadName,
-                    Role = PDXROLE.TruongDonVi,
-                    StepOrder = (int)ApprovalLevel.DepartmentLevel,
-                });
+                throw new ApiException("Vui lòng chọn người duyệt cấp đơn vị.");
             }
 
-            // --- BƯỚC 6.2: Khảm cấp Kiểm soát (Step 2) ---
-            // Lọc ra những người thuộc cấp Kiểm soát trong cấu hình
+            var deptHeadId = request.ApproverId;
+            var deptHeadName = await _userLookup.GetDisplayNameAsync(deptHeadId);
+
+            entity.Approvers.Add(new PurchaseRequestApprover
+            {
+                ApproverId = deptHeadId,
+                ApproverName = deptHeadName,
+                Role = PDXROLE.TruongDonVi,
+                StepOrder = (int)ApprovalLevel.DepartmentLevel,
+            });
+
+            // ---  Kiểm soát (Step 2) — chỉ lấy ControlLevel từ ConfigApprover ---
             var controlApprovers = configApprovers
                 .Where(ca => ca.Level == ApprovalLevel.ControlLevel)
                 .ToList();
+            Console.WriteLine($"[CreatePR] ControlApprovers count: {controlApprovers.Count} (after filter Level=={(int)ApprovalLevel.ControlLevel})");
+            foreach (var ca in controlApprovers)
+            {
+                Console.WriteLine($"[CreatePR]   Control ca.Id={ca.Id}, ca.ApproverId={ca.ApproverId}");
+            }
 
             foreach (var ca in controlApprovers)
             {
-                // Snapshot tên cho từng người kiểm soát
                 var controlName = await _userLookup.GetDisplayNameAsync(ca.ApproverId);
-                
+
                 entity.Approvers.Add(new PurchaseRequestApprover
                 {
                     ApproverId = ca.ApproverId,
-                    ApproverName = controlName, // Snapshot 
+                    ApproverName = controlName,
                     Role = PDXROLE.KiemSoat,
-                    StepOrder = (int)ApprovalLevel.ControlLevel, 
+                    StepOrder = (int)ApprovalLevel.ControlLevel,
                 });
             }
 
-            // --- BƯỚC 6.3: Khảm cấp Người tạo phiếu (Step 3) ---
-            entity.CreatedBy = _authenticatesUser.UserId;
+            // --- Người tạo phiếu (Step 3) ---
             if (!string.IsNullOrEmpty(entity.CreatedBy))
-            {   
+            {
                 var creatorName = await _userLookup.GetDisplayNameAsync(entity.CreatedBy);
                 entity.Approvers.Add(new PurchaseRequestApprover
                 {
@@ -205,21 +219,17 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                     ApproverName = creatorName,
                     Role = PDXROLE.NguoiTaoPDX,
                     StepOrder = (int)ApprovalLevel.CreatorLevel,
-                }); 
+                });
             }
-
-            // 
-            var machine = new PurchaseRequestStateMachine(_workflowService, entity);
-            await machine.FireAsync(PurchaseRequestTrigger.Submit);
-            // 7. Save
+            // 7. Save entity trước để có ID — OnEntryAsync cần ID để ghi ApprovalRecord
             await _purchaseRequestRepo.AddAsync(entity);
-            await _approvalRecordService.RecordAsync(
-                entity, // dl 
-                PurchaseRequestStatus.Draft, // status before
-                PurchaseRequestTrigger.Submit, // trigger
-                "Khởi tạo và trình duyệt phiếu", // Bạn có thể truyền Note từ request.Note
-                ct //cancellationToken
-            );  
+
+            // 8. Fire state machine: Draft → PendingDepartment (kèm ghi lịch sử tự động qua OnEntry)
+            var machine = new PurchaseRequestStateMachine(_workflowService, _approvalRecordService, entity, _authenticatesUser.UserId);
+            await machine.FireAsync(PurchaseRequestTrigger.Submit, request.Note, ct);
+
+            // 9. Update entity sau khi state machine thay đổi Status + ApproverStatus
+            await _purchaseRequestRepo.UpdateAsync(entity);
 
             return new Response<int>(entity.Id);
         }

@@ -9,3 +9,9 @@ export interface IDepartment {
   LastModifiedBy: string;
   LastModified: string;
 }
+
+export interface IUser {
+  Id: string;
+  UserName: string;
+  Email: string;
+}

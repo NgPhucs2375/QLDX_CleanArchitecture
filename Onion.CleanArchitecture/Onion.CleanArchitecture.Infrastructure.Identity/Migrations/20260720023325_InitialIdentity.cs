@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Onion.CleanArchitecture.Infrastructure.Identity.Migrations
 {
     /// <inheritdoc />
-    public partial class InitIdentity : Migration
+    public partial class InitialIdentity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,7 +38,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Migrations
                     Id = table.Column<string>(type: "text", nullable: false),
                     FirstName = table.Column<string>(type: "text", nullable: true),
                     LastName = table.Column<string>(type: "text", nullable: true),
-                    DepartmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DepartmentId = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),

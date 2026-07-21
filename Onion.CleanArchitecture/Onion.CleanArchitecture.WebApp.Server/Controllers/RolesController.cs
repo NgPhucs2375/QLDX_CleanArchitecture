@@ -4,6 +4,7 @@ using Onion.CleanArchitecture.Infrastructure.Identity.Features.Role.Commands.Upd
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Role.Queries.GetPagingRole;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Role.Queries.GetRoleById;
 using Microsoft.AspNetCore.Mvc;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
 {
@@ -11,8 +12,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
     [ApiController]
     public class RolesController : BaseApiController
     {
-        [Obsolete]
-        public RolesController(Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public RolesController(Enforcer enforcer) : base(enforcer)
         {
         }
         //GET: api/roles?_start=0&_end=10&_order=asc&_sort=Id

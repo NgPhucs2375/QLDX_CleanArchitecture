@@ -1,0 +1,85 @@
+/* --- BỐ CỤC CHUNG --- */
+.pr-container { max-width: 100%; margin: 0 auto; }
+.pr-w-100 { width: 100%; }
+.pr-min-w-200 { min-width: 200px; }
+.pr-min-w-220 { min-width: 220px; }
+.pr-text-right { text-align: right; }
+.pr-text-center { text-align: center; }
+.pr-flex-center { display: flex; justify-content: center; }
+.pr-flex-end { justify-content: flex-end; }
+.pr-table-scroll { overflow-x: auto; }
+
+/* --- KHOẢNG CÁCH (MARGIN/PADDING) --- */
+.pr-m-0 { margin: 0 !important; }
+.pr-mt-8 { margin-top: 8px; }
+.pr-mt-16 { margin-top: 16px; }
+.pr-mt-24 { margin-top: 24px; }
+.pr-mb-8 { margin-bottom: 8px; }
+.pr-mr-8 { margin-right: 8px; }
+.pr-mr-4 { margin-right: 4px; }
+.pr-py-4 { padding: 4px 0; }
+.pr-px-12 { padding: 0 12px; }
+
+/* --- FONT & MÀU SẮC CHỮ --- */
+.pr-text-ocean { color: #476481 !important; }
+.pr-text-teal { color: #0d9488 !important; }
+.pr-text-danger { color: #e0534a !important; }
+.pr-text-success { color: #52c41a !important; }
+.pr-text-secondary { color: #6b7c93 !important; }
+.pr-text-blue { color: #1677ff !important; }
+.pr-text-warning { color: #fa8c16 !important; }
+.pr-font-13 { font-size: 13px; }
+.pr-font-14 { font-size: 14px; }
+.pr-font-15 { font-size: 15px; }
+.pr-font-16 { font-size: 16px; }
+.pr-font-18 { font-size: 18px; }
+.pr-font-24 { font-size: 24px; }
+.pr-font-bold { font-weight: 700; }
+.pr-font-italic { font-style: italic; }
+
+/* --- TONE MÀU XANH LỤC BẢO NHẠT (EMERALD/TEAL) --- */
+.pr-bg-emerald-light { background-color: #f0fdfa !important; }
+.pr-border-emerald { border: 1px solid #99f6e4 !important; }
+.pr-text-emerald { color: #0f766e !important; }
+.pr-card-emerald .ant-card-head { background: #f0fdfa; border-bottom: 1px solid #ccfbf1; }
+.pr-card-emerald { border: 1px solid #ccfbf1; box-shadow: 0 2px 8px rgba(20, 184, 166, 0.05); }
+
+/* Điều chỉnh thêm cho layout chia cột */
+.pr-sticky-sidebar { position: sticky; top: 24px; }
+
+/* --- CARD & BẢNG --- */
+.pr-card {
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(122, 157, 193, 0.05);
+  border: 1px solid #e1e7ee;
+  overflow: hidden;
+}
+.pr-card-total { border: 2px solid #7a9dc1; }
+.pr-card .ant-card-head { background: linear-gradient(135deg, #f4f7fa 0%, #e6edf4 100%); border-bottom: 1px solid #e1e7ee; }
+.pr-card-head-light .ant-card-head { background: #f4f7fa; }
+.pr-card-head-success .ant-card-head { background: #fdfbf7; }
+.pr-card-head-team .ant-card-head { background: #f0f5ff; }
+.pr-card-head-audit .ant-card-head { background: #fff7e6; }
+.pr-card-bg-actions { background: #f4f7fa; border: 1px dashed #d3dfea; }
+
+.pr-table-header th { background: #7a9dc1 !important; color: #ffffff !important; border-bottom: 2px solid #5d82a6 !important; }
+
+/* --- ICON WRAPPERS --- */
+.pr-icon-wrapper { padding: 6px 10px; border-radius: 8px; }
+.pr-icon-info { background: #e6edf4; color: #7a9dc1; }
+.pr-icon-success { background: #f6ffed; color: #52c41a; }
+.pr-icon-team { background: #d6e4ff; color: #2f54eb; }
+.pr-icon-audit { background: #ffe7ba; color: #fa8c16; }
+
+/* --- NÚT BẤM & INPUT --- */
+.pr-input-qty { width: 70px; text-align: center; border-radius: 6px 0 0 6px; }
+.pr-btn-update-qty { background: #f0fdfa; border: 1px solid #10b981; color: #10b981; border-radius: 0 6px 6px 0; transition: all 0.2s; }
+.pr-btn-update-qty:hover { background: #10b981; color: #fff; }
+.pr-btn-update-qty:disabled { background: #f4f7fa; border-color: #d3dfea; color: #a5b4c3; }
+
+.pr-btn-cyan { background-color: #13c2c2 !important; }
+.pr-btn-purple { background-color: #722ed1 !important; }
+.pr-btn-geekblue { background-color: #2f54eb !important; }
+.pr-btn-volcano { background-color: #fa541c !important; }
+.pr-tag-rounded { border-radius: 12px; padding: 2px 10px; }

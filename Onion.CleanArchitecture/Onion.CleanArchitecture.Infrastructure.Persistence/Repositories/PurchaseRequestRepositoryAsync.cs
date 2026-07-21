@@ -15,12 +15,36 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
     public class PurchaseRequestRepositoryAsync : GenericRepositoryAsync<PurchaseRequest>, IPurchaseRequestRepositoryAsync
     {
         private readonly DbSet<PurchaseRequest> _entities;
-        private readonly ApplicationDbContext _dbContext; // Bổ sung biến để truy vấn linh hoạt các Entity khác
+        private readonly ApplicationDbContext _dbContext; 
 
         public PurchaseRequestRepositoryAsync(ApplicationDbContext dbContext) : base(dbContext)
         {
             _entities = dbContext.Set<PurchaseRequest>();
-            _dbContext = dbContext; // Gán giá trị để sử dụng ở hàm dưới
+            _dbContext = dbContext; 
+        }
+
+        public override async Task UpdateAsync(PurchaseRequest entity)
+        {
+            _dbContext.Entry(entity).State = EntityState.Modified;
+
+            if (entity.Approvers != null)
+                foreach (var approver in entity.Approvers)
+                    _dbContext.Entry(approver).State = EntityState.Modified;
+
+            if (entity.Approvals != null)
+                foreach (var approval in entity.Approvals)
+                    _dbContext.Entry(approval).State = EntityState.Modified;
+
+            if (entity.RequestCategories != null)
+                foreach (var category in entity.RequestCategories)
+                {
+                    _dbContext.Entry(category).State = EntityState.Modified;
+                    if (category.RequestItems != null)
+                        foreach (var item in category.RequestItems)
+                            _dbContext.Entry(item).State = EntityState.Modified;
+                }
+
+            await _dbContext.SaveChangesAsync();
         }
 
         public Task<bool> IsUniqueCodeAsync(string code)
@@ -35,6 +59,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 .Include(pr => pr.RequestCategories)
                     .ThenInclude(rc => rc.RequestItems)
                 .Include(pr => pr.Approvers)
+                .Include(pr=>pr.Approvals)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(pr => pr.Id == id);
         }
 

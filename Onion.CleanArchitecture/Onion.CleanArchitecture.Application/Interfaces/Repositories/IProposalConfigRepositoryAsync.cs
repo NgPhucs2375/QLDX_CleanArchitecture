@@ -9,5 +9,6 @@ namespace Onion.CleanArchitecture.Application.Interfaces.Repositories
     {
         Task<bool> IsUniqueCodeAsync(string code);
         Task<PagedList<ProposalConfig>> GetPagedProposalConfigsAsync(GetAllProposalConfigsParameter parameter);
+        Task<ProposalConfig> GetByIdWithDetailsAsync(int id);
     }
 }

@@ -1,10 +1,9 @@
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Onion.CleanArchitecture.Application.Services
 {
-    public class RecalculateTotalsService
+    public class RecalculateTotalsService : IRecalculateTotalsService
     {
         private readonly IPurchaseRequestItemRepositoryAsync _itemRepo;
         private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
@@ -20,29 +19,42 @@ namespace Onion.CleanArchitecture.Application.Services
             _requestRepo = requestRepo;
         }
 
-        public async Task RecalculateForItem(int itemId)
+        public async Task RecalculateFromItemAsync(int itemId)
         {
             var item = await _itemRepo.GetByIdAsync(itemId);
+            if (item == null) return; 
 
-            // Lấy category cha (FK = int, GetByIdAsync nhận int)
-            var category = await _categoryRepo.GetByIdAsync(item.PurchaseRequestCategoryId);
+            await RecalculateFromCategoryAsync(item.PurchaseRequestCategoryId);
+        }
+
+        public async Task RecalculateFromCategoryAsync(int categoryId)
+        {
+            var category = await _categoryRepo.GetByIdAsync(categoryId);
             if (category == null) return;
 
-            // Lấy tất cả items trong cùng category → tính tổng
-            var allItems = await _itemRepo.GetAllAsync();
-            var categoryItems = allItems.Where(x => x.PurchaseRequestCategoryId == category.Id);
-            category.ActualTotalAmount = categoryItems.Sum(x => x.ActualTotalAmount);
+            // 1. Cập nhật số tiền ĐỀ XUẤT và độ lệch
+            category.TotalProposedAmount = await _itemRepo.GetTotalProposedAmountByCategoryIdAsync(category.Id);
+            category.Difference = category.AllowedQuota - category.TotalProposedAmount;
+
+            // 2. Cập nhật số tiền THỰC TẾ và độ lệch
+            category.ActualTotalAmount = await _itemRepo.GetActualTotalAmountByCategoryIdAsync(category.Id);
             category.ActualDifference = category.AllowedQuota - category.ActualTotalAmount;
+            
             await _categoryRepo.UpdateAsync(category);
 
-            // Lấy PurchaseRequest cha
-            var request = await _requestRepo.GetByIdAsync(category.PurchaseRequestId);
+            // 3. Đẩy lên tính cho phiếu tổng
+            await RecalculateFromRequestAsync(category.PurchaseRequestId);
+        }
+
+        public async Task RecalculateFromRequestAsync(int purchaseRequestId)
+        {
+            var request = await _requestRepo.GetByIdAsync(purchaseRequestId);
             if (request == null) return;
 
-            // Lấy tất cả categories trong cùng request → tính tổng
-            var allCategories = await _categoryRepo.GetAllAsync();
-            var requestCategories = allCategories.Where(x => x.PurchaseRequestId == request.Id);
-            request.TotalActualAmount = requestCategories.Sum(c => c.ActualTotalAmount);
+            // Cập nhật Tổng tiền đề xuất và Tổng tiền thực tế cho toàn phiếu
+            request.TotalProposedAmount = await _categoryRepo.GetTotalProposedAmountByRequestIdAsync(request.Id);
+            request.TotalActualAmount = await _categoryRepo.GetTotalActualAmountByRequestIdAsync(request.Id);
+            
             await _requestRepo.UpdateAsync(request);
         }
     }

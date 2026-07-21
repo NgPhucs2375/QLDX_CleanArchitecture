@@ -1,3 +1,4 @@
+using Casbin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Onion.CleanArchitecture.Application.Features.Categories.Commands.CreateCategory;
@@ -12,9 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/categories")]
     public class CategoryController : BaseApiController
     {
-        [Obsolete]
-        public CategoryController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public CategoryController(Enforcer enforcer) : base(enforcer)
         {
         }
 

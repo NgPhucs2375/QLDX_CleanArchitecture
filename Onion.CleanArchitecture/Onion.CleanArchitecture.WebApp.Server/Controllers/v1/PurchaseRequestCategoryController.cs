@@ -5,6 +5,7 @@ using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Com
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Commands.UpdatePurchaseRequestCategory;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Queries.GetAllPurchaseRequestCategories;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories.Queries.GetPurchaseRequestCategoryById;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
 {
@@ -12,9 +13,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/purchase-request-categories")]
     public class PurchaseRequestCategoryController : BaseApiController
     {
-        [Obsolete]
-        public PurchaseRequestCategoryController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public PurchaseRequestCategoryController(Enforcer enforcer) : base(enforcer)
         {
         }
 

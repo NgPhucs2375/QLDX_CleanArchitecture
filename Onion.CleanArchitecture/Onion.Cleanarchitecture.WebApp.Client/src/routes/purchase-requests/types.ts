@@ -1,8 +1,8 @@
 export interface IPurchaseRequest {
   Id: number;
   Code: string;
-  DepartmentId: string;
-  ProposalConfigId: string;
+  DepartmentId: number;
+  ProposalConfigId: number;
   Status: number;
   TotalProposedAmount: number;
   TotalActualAmount: number;
@@ -10,6 +10,30 @@ export interface IPurchaseRequest {
   Created: string;
   LastModifiedBy: string;
   LastModified: string;
+  Approvals?: IPurchaseRequestApproval[];
+  Approvers?: IPurchaseRequestApprover[];
+}
+
+export interface IPurchaseRequestApproval {
+  Id: number;
+  PurchaseRequestId: number;
+  ApproverId: string;
+  ApproverName: string;
+  FromStatus: number;
+  ToStatus: number;
+  Action: string;
+  Note: string;
+  Created: string;
+}
+
+export interface IPurchaseRequestApprover {
+  Id: number;
+  PurchaseRequestId: number;
+  ApproverId: string;
+  ApproverName: string;
+  Role: number;
+  StepOrder: number;
+  Status: number;
 }
 
 export interface ICascadeCategory {

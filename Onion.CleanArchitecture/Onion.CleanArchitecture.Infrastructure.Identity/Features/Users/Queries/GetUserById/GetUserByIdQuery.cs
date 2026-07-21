@@ -48,7 +48,16 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries
 
                 user.RoleId = userRole.Id;
                 var userClaims = await _userManager.GetClaimsAsync(user);
-                var userModel = _mapper.Map<GetUserByIdModel>(user);
+                var userModel = new GetUserByIdModel
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    DepartmentId = user.DepartmentId.ToString(),
+                    IsActive = user.IsActive
+                };
                 userModel.Avatar = new UserAvatarClaim
                 {
                     AvatarUid = userClaims.FirstOrDefault(x => x.Type == "AvatarUid")?.Value,

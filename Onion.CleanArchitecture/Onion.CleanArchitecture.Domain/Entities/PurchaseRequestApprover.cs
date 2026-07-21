@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Onion.CleanArchitecture.Domain.Common;
 using Onion.CleanArchitecture.Domain.Enums;
 
@@ -11,6 +12,9 @@ namespace Onion.CleanArchitecture.Domain.Entities
         public PDXROLE Role { get; set; } 
         public int StepOrder { get; set; }
 
+        public ApproverStatus Status { get; set; } = ApproverStatus.Waiting;
+
+        [JsonIgnore]
         public virtual PurchaseRequest PurchaseRequest { get; set; } = null!;
     }
 }

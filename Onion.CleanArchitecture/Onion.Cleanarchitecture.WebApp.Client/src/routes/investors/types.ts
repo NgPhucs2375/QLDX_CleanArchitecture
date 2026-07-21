@@ -10,3 +10,9 @@ export interface IInvestor {
   Created: string;
   CreatedBy: string;
 }
+
+export interface IUser {
+  Id: string;
+  UserName: string;
+  Email: string;
+}

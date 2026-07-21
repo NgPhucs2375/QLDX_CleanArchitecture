@@ -1,13 +1,19 @@
 import { CSSProperties } from "react";
 
-export const layoutStyles: CSSProperties = {};
+export const layoutStyles: CSSProperties = {
+  minHeight: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "linear-gradient(135deg, #f4f7fa 0%, #e6edf4 100%)",
+};
 
 export const containerStyles: CSSProperties = {
-  maxWidth: "400px",
-  margin: "auto",
-  padding: "32px",
-  boxShadow:
-    "0px 2px 4px rgba(0, 0, 0, 0.02), 0px 1px 6px -1px rgba(0, 0, 0, 0.02), 0px 1px 2px rgba(0, 0, 0, 0.03)",
+  width: "420px",
+  maxWidth: "100%",
+  borderRadius: "12px",
+  boxShadow: "0 8px 24px rgba(122, 157, 193, 0.15)",
+  border: "1px solid #e1e7ee",
 };
 
 export const headStyles: CSSProperties = {
@@ -15,16 +21,15 @@ export const headStyles: CSSProperties = {
   padding: 0,
 };
 
-export const bodyStyles: CSSProperties = { padding: 0, marginTop: "32px" };
+export const bodyStyles: CSSProperties = { 
+  padding: "40px 32px" 
+};
 
 export const titleStyles: CSSProperties = {
   textAlign: "center",
-  marginBottom: 0,
-  fontSize: "24px",
+  marginBottom: "8px",
+  fontSize: "22px",
   lineHeight: "32px",
   fontWeight: 700,
-  overflowWrap: "break-word",
-  hyphens: "manual",
-  textOverflow: "unset",
-  whiteSpace: "pre-wrap",
+  color: "#476481",
 };

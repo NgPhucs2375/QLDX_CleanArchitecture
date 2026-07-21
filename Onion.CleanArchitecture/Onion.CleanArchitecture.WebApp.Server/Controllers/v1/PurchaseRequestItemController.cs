@@ -6,6 +6,7 @@ using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.UpdateActualQuantity;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetAllPurchaseRequestItems;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetPurchaseRequestItemById;
+using Casbin;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
 {
@@ -13,9 +14,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
     [Route("api/purchase-request-items")]
     public class PurchaseRequestItemController : BaseApiController
     {
-        [Obsolete]
-        public PurchaseRequestItemController(
-            Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment) : base(hostingEnvironment)
+        public PurchaseRequestItemController(Enforcer enforcer) : base(enforcer)
         {
         }
 

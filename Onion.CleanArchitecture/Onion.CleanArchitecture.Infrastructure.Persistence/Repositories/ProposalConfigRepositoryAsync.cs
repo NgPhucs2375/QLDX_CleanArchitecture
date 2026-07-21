@@ -39,5 +39,13 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 request._start,
                 request._end);
         }
+
+        public async Task<ProposalConfig> GetByIdWithDetailsAsync(int id)
+        {
+            return await _proposalConfigs
+                .Include(p => p.ConfigCategories)
+                .Include(p => p.ConfigApprovers)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
     }
 }

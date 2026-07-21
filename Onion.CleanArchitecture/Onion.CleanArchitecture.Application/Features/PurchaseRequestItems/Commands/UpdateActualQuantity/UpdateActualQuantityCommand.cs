@@ -1,7 +1,7 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
-using Onion.CleanArchitecture.Application.Services;
+using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Enums;
 using System.Threading;
@@ -20,13 +20,13 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
         private readonly IPurchaseRequestItemRepositoryAsync _itemRepo;
         private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
         private readonly IPurchaseRequestRepositoryAsync _requestRepo;
-        private readonly RecalculateTotalsService _recalcService;
+        private readonly IRecalculateTotalsService _recalcService; // Sửa tại đây
 
         public UpdateActualQuantityCommandHandler(
             IPurchaseRequestItemRepositoryAsync itemRepo,
             IPurchaseRequestCategoryRepositoryAsync categoryRepo,
             IPurchaseRequestRepositoryAsync requestRepo,
-            RecalculateTotalsService recalcService)
+            IRecalculateTotalsService recalcService) // Sửa tại đây
         {
             _itemRepo = itemRepo;
             _categoryRepo = categoryRepo;
@@ -52,7 +52,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
             item.ActualTotalAmount = item.ActualQuantity * item.UnitPrice;
             await _itemRepo.UpdateAsync(item);
 
-            await _recalcService.RecalculateForItem(item.Id);
+            // Đổi tên hàm gọi
+            await _recalcService.RecalculateFromItemAsync(item.Id); 
 
             return new Response<int>(item.Id);
         }

@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -29,6 +30,11 @@ namespace Onion.CleanArchitecture.Application.Features.ConfigApprovers.Commands.
 
         public async Task<Response<int>> Handle(CreateConfigApproverCommand request, CancellationToken cancellationToken)
         {
+        if (!Guid.TryParse(request.ApproverId, out _))
+                {
+                    throw new ApiException($"Giá trị ApproverId '{request.ApproverId}' không hợp lệ. Vui lòng cấu hình Frontend gửi đúng chuỗi GUID của người dùng (ví dụ: '6aa364ec-...').");
+                }
+
             var configApprover = _mapper.Map<ConfigApprover>(request);
             await _configApproverRepository.AddAsync(configApprover);
             return new Response<int>(configApprover.Id);
