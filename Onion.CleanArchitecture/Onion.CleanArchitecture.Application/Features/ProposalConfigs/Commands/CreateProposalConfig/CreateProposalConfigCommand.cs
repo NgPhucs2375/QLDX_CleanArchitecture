@@ -33,7 +33,7 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.
         public ConfigurationStatus Status { get; set; } = ConfigurationStatus.Draft;
 
         public List<ConfigCategoryDto> Categories { get; set; } = new();
-        public List<ConfigApproverDto> Approvers { get; set; } = new();
+        public List<ConfigApproverDto> Approves { get; set; } = new();
     }
 
     public class CreateProposalConfigCommandHandler : IRequestHandler<CreateProposalConfigCommand, Response<int>>
@@ -61,7 +61,7 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Commands.
                  });
             };
 
-            foreach (var appr in request.Approvers)
+            foreach (var appr in request.Approves)
             {
                 if (!Guid.TryParse(appr.ApproverId, out _))
                     throw new ApiException($"ApproverId '{appr.ApproverId}' không hợp lệ. Phải là GUID của người dùng.");

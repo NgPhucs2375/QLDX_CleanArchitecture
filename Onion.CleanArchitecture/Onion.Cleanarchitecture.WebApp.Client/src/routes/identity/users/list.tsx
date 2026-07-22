@@ -32,22 +32,22 @@ export const ListUser = () => {
   return (
     <Card 
       bordered={false} 
-      style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(122,157,193,0.08)" }}
+      style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(13,148,136,0.08)" }}
       bodyStyle={{ padding: 0 }}
     >
       <List 
-        title={<span style={{ color: "#476481", fontWeight: 700, fontSize: 20 }}>Quản Lý Người Dùng</span>}
+        title={<span style={{ color: "#0f766e", fontWeight: 700, fontSize: 20 }}>Quản Lý Người Dùng</span>}
       >
         <Table {...tableProps} rowKey="Id" size="middle">
           <Table.Column<IUser>
             title="#"
             key="rowNumber"
             width={60}
-            render={(_text, _record, index) => <Text style={{ color: "#6b7c93" }}>{index + 1}</Text>}
+            render={(_text, _record, index) => <Text style={{ color: "#475569" }}>{index + 1}</Text>}
           />
           <Table.Column<IUser>
             dataIndex="Name"
-            title={<Text strong style={{ color: '#476481' }}>Họ Tên</Text>}
+            title={<Text strong style={{ color: '#0f766e' }}>Họ Tên</Text>}
             render={(_, record: IUserShort) => (
               <Space>
                 <CustomAvatar
@@ -55,7 +55,7 @@ export const ListUser = () => {
                   name={`${record.FirstName} ${record.LastName}`}
                   size="large"
                 />
-                <Text strong style={{ color: '#476481' }}>{`${record.FirstName} ${record.LastName}`}</Text>
+                <Text strong style={{ color: '#0f766e' }}>{`${record.FirstName} ${record.LastName}`}</Text>
               </Space>
             )}
             filterDropdown={(props) => (
@@ -67,11 +67,11 @@ export const ListUser = () => {
           />
           <Table.Column<IUser>
             dataIndex="RoleId"
-            title={<Text strong style={{ color: '#476481' }}>Quyền</Text>}
+            title={<Text strong style={{ color: '#0f766e' }}>Quyền</Text>}
             render={(value) => {
               if (isLoading) return <Text type="secondary">Đang tải...</Text>;
               const roleName = roles?.data?.find((role) => role.Id == value)?.Name ?? "Chưa phân quyền";
-              return <Tag color="blue">{roleName}</Tag>;
+              return <Tag color="cyan">{roleName}</Tag>;
             }}
             filterDropdown={(props) => (
               <FilterDropdown {...props} mapValue={(selectedKey) => String(selectedKey)}>
@@ -82,20 +82,20 @@ export const ListUser = () => {
           />
           <Table.Column<IUser> 
             dataIndex="Email" 
-            title={<Text strong style={{ color: '#476481' }}>Email</Text>} 
-            render={(val) => <Text style={{ color: "#6b7c93" }}>{val}</Text>}
+            title={<Text strong style={{ color: '#0f766e' }}>Email</Text>} 
+            render={(val) => <Text style={{ color: "#475569" }}>{val}</Text>}
           />
           <Table.Column<IUser>
             dataIndex="EmailConfirmed"
-            title={<Text strong style={{ color: '#476481' }}>Trạng thái</Text>}
+            title={<Text strong style={{ color: '#0f766e' }}>Trạng thái</Text>}
             render={(value) => (
-              <Tag color={value ? "cyan" : "red"} style={{ borderRadius: 4 }}>
+              <Tag color={value ? "teal" : "red"} style={{ borderRadius: 4 }}>
                 {value ? "Đang hoạt động" : "Chưa kích hoạt"}
               </Tag>
             )}
           />
           <Table.Column
-            title={<Text strong style={{ color: '#476481' }}>Thao tác</Text>}
+            title={<Text strong style={{ color: '#0f766e' }}>Thao tác</Text>}
             width={160}
             render={(_, record: IUser) => (
               <Space size="small">
