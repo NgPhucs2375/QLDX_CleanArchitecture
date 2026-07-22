@@ -168,30 +168,48 @@ export const CreatePurchaseRequest = () => {
                     <Card className="pr-card pr-card-emerald"
                         title={<Space><TeamOutlined className="pr-text-emerald" /><Text strong className="pr-text-emerald">Quy trình duyệt</Text></Space>}>
                         <Row gutter={24}>
-                            <Col xs={24} md={12}>
-                                <Text strong className="pr-text-emerald" style={{ display: 'block', marginBottom: 8 }}>
-                                    <Tag color="blue">Bước 1</Tag> Trưởng đơn vị
-                                </Text>
-                                <Select
-                                    value={selectedApproverId || undefined}
-                                    onChange={(val) => setSelectedApproverId(val)}
-                                    options={userSelectProps.options}
-                                    showSearch
-                                    className="pr-w-100"
-                                    placeholder="Chọn Trưởng đơn vị..."
-                                    style={{ maxWidth: 400 }}
-                                />
+                            <Col xs={24} md={8}>
+                                <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <Tag color="blue">Bước 1</Tag>
+                                        <Text strong>Trưởng đơn vị</Text>
+                                    </div>
+                                    <Select
+                                        value={selectedApproverId || undefined}
+                                        onChange={(val) => setSelectedApproverId(val)}
+                                        options={userSelectProps.options}
+                                        showSearch
+                                        placeholder="Chọn Trưởng đơn vị..."
+                                        style={{ width: '100%' }}
+                                    />
+                                </Card>
                             </Col>
-                            {cascadeData.approvers.filter((a) => a.role !== "Trưởng đơn vị").map((a, idx) => (
-                                <Col xs={24} md={12} key={idx}>
-                                    <Text strong className="pr-text-emerald" style={{ display: 'block', marginBottom: 8 }}>
-                                        <Tag color="purple">Bước {idx + 2}</Tag> {a.role}
-                                    </Text>
-                                    <Tag color="geekblue" style={{ padding: '4px 12px', fontSize: 14 }}>
-                                        {a.approverName || a.approverId}
+                            <Col xs={24} md={8}>
+                                <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <Tag color="purple">Bước 2</Tag>
+                                        <Text strong>Kiểm soát</Text>
+                                    </div>
+                                    <Space wrap>
+                                        {cascadeData.approvers.filter((a) => a.role !== "Trưởng đơn vị").map((a, idx) => (
+                                            <Tag key={idx} color="geekblue" style={{ padding: '4px 12px', fontSize: 14 }}>
+                                                {a.approverName || a.approverId}
+                                            </Tag>
+                                        ))}
+                                    </Space>
+                                </Card>
+                            </Col>
+                            <Col xs={24} md={8}>
+                                <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <Tag color="green">Bước 3</Tag>
+                                        <Text strong>Người tạo</Text>
+                                    </div>
+                                    <Tag color="green" style={{ padding: '4px 12px', fontSize: 14 }}>
+                                        {identity?.name || identity?.userId || "Bạn"}
                                     </Tag>
-                                </Col>
-                            ))}
+                                </Card>
+                            </Col>
                         </Row>
                     </Card>
                 )}
@@ -251,7 +269,7 @@ export const CreatePurchaseRequest = () => {
                                                 setSelectedCategories((prev) => prev.map((c) => c.categoryId !== cat.categoryId ? c : { ...c, items: c.items.map((i) => i.rowId === item.rowId ? { ...i, productId: product.id, code: product.code, productName: product.name, unitPrice: product.unitPrice, unit: product.unit } : i ) }));
                                             }}
                                             options={prods.map((p) => ({
-                                                label: `${p.name} — ${fmtVnd(p.unitPrice)}${p.unit ? ` / ${p.unit}` : ""}`,
+                                                label: p.name,
                                                 value: p.id,
                                                 disabled: cat.items.some(i => i.productId === p.id && i.rowId !== item.rowId)
                                             }))}
@@ -264,20 +282,14 @@ export const CreatePurchaseRequest = () => {
                                     { title: "SL", dataIndex: "proposedQuantity", width: 100, align: "center" as const, render: (val: number, item: IExtendedItem) => (
                                         <InputNumber min={1} value={val} onChange={(v) => updateItemField(cat.categoryId, item.rowId, 'proposedQuantity', v ?? 1)} style={{ width: '100%' }} />
                                     )},
-                                    { title: "Đơn giá", align: "right" as const, width: 120, render: (_: any, item: IExtendedItem) => (
-                                        <Text>{item.productId ? fmtVnd(item.unitPrice) : "—"}</Text>
+                                    { title: "Đơn giá (₫)", align: "right" as const, width: 120, render: (_: any, item: IExtendedItem) => (
+                                        <Text>{item.productId ? (item.unitPrice || 0).toLocaleString("vi-VN") : "—"}</Text>
                                     )},
-                                    { title: "Thành tiền", align: "right" as const, width: 140, render: (_: IExtendedItem) => (
-                                        <Text className="pr-text-emerald" strong>{_.productId ? fmtVnd(_.unitPrice * _.proposedQuantity) : "—"}</Text>
+                                    { title: "Thành tiền (₫)", align: "right" as const, width: 140, render: (_: IExtendedItem) => (
+                                        <Text className="ppr-text-teal" strong style={{fontSize: '15px'}}>{_.productId ? ((_.unitPrice * _.proposedQuantity) || 0).toLocaleString("vi-VN") : "—"}</Text>
                                     )},
-                                    { title: "Ghi chú", width: 130, render: (val: string, item: IExtendedItem) => (
-                                        <Space.Compact style={{ width: '100%' }}>
-                                            <Input size="small" value={val} onChange={(e) => updateItemField(cat.categoryId, item.rowId, 'note', e.target.value)}
-                                                placeholder="Ghi chú..." style={{ width: '100%' }} />
-                                            {val ? <Tooltip title={val}>
-                                                <InfoCircleOutlined className="pr-text-emerald" style={{ padding: '0 6px', lineHeight: '22px', fontSize: 14 }} />
-                                            </Tooltip> : null}
-                                        </Space.Compact>
+                                    { title: "Ghi chú", width: 130, render: (_: any, item: IExtendedItem) => (
+                                        <Input size="small" value={item.note} onChange={(e) => updateItemField(cat.categoryId, item.rowId, 'note', e.target.value)} placeholder="Ghi chú..." />
                                     )},
                                     { title: "", align: "center" as const, width: 50, render: (_: IExtendedItem) => (
                                         <Tooltip title="Xóa dòng này">

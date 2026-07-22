@@ -44,7 +44,11 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
         {
             return await _proposalConfigs
                 .Include(p => p.ConfigCategories)
+                    .ThenInclude(cc => cc.Category)
+                .Include(p => p.ConfigCategories)
+                    .ThenInclude(cc => cc.Department)
                 .Include(p => p.ConfigApprovers)
+                    .ThenInclude(ca => ca.Department)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
     }

@@ -10,10 +10,14 @@ import "../../assets/purchase-request.css";
 const { Title, Text } = Typography;
 
 const statusMap: Record<number, { label: string; color: string }> = {
-  1: { label: "Nháp", color: "default" }, 2: { label: "Đơn vị đang duyệt", color: "orange" },
-  3: { label: "Kiểm soát đang duyệt", color: "blue" }, 4: { label: "Yêu cầu chỉnh sửa", color: "warning" },
-  5: { label: "Chờ xác nhận đặt hàng", color: "purple" }, 6: { label: "Hoàn thành", color: "cyan" },
-  7: { label: "Đơn vị từ chối", color: "red" }, 8: { label: "Kiểm soát từ chối", color: "red" },
+  1: { label: "Bản nháp", color: "default" },        // Slate
+  2: { label: "Chờ Đơn vị duyệt", color: "processing" }, // Blue
+  3: { label: "Chờ Kiểm soát duyệt", color: "geekblue" }, // Xanh đậm hơn
+  4: { label: "Trả về chỉnh sửa", color: "warning" },  // Amber/Orange
+  5: { label: "Chờ đặt hàng", color: "purple" },       // Purple
+  6: { label: "Hoàn thành", color: "success" },      // Emerald/Green
+  7: { label: "Đơn vị từ chối", color: "error" },    // Red
+  8: { label: "Kiểm soát từ chối", color: "error" },  // Red
 };
 
 export const ListPurchaseRequest = () => {
@@ -59,7 +63,7 @@ export const ListPurchaseRequest = () => {
           defaultSortOrder={getDefaultSortOrder("Code", sorters)} 
           defaultFilteredValue={getDefaultFilter("Code", filters)} 
           filterDropdown={(props) => (<FilterDropdown {...props}><Input placeholder="Tìm mã phiếu..." /></FilterDropdown>)} 
-          render={(val) => <Text strong className="pr-text-emerald">{val}</Text>}
+          render={(val) => <Text strong >{val}</Text>}
         />
         <Table.Column 
           dataIndex="CreatedBy" 

@@ -2,7 +2,9 @@ import React from "react";
 import { useShow, useOne } from "@refinedev/core";
 import { IProduct } from "./types";
 import { Show } from "@refinedev/antd";
-import { Typography, Card, Row, Col, Divider, Tag } from "antd";
+import { Typography, Card, Space, Descriptions, Tag } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
+import "../../assets/product.css";
 
 const { Title, Text } = Typography;
 
@@ -10,52 +12,45 @@ export const ShowProduct = () => {
   const { queryResult: { isLoading, data } } = useShow<IProduct>();
   const record = data?.data;
 
-  // Lấy chi tiết category thay vì load toàn bộ select
-  const { data: categoryData, isLoading: categoryIsLoading } = useOne({
+  const { data: categoryData, isFetching: categoryFetching } = useOne({
     resource: "categories",
     id: record?.CategoryId || "",
     queryOptions: { enabled: !!record?.CategoryId },
   });
 
+  // Xử lý an toàn cho object lồng
+  const catName = (categoryData?.data as any)?.data?.Name || categoryData?.data?.Name || record?.CategoryId;
+
   return (
     <Show 
       isLoading={isLoading}
-      title={<Title level={3} style={{ margin: 0, color: '#476481', fontWeight: 700 }}>Chi tiết Sản phẩm</Title>}
+      title={<Title level={3} className="pd-m-0 pd-text-ocean pd-font-bold">Chi tiết sản phẩm</Title>}
     >
-      <Card bordered={false} style={{ background: '#ffffff', borderRadius: 8, boxShadow: '0 2px 8px rgba(122,157,193,0.05)' }}>
-        <div style={{ background: 'linear-gradient(135deg, #f4f7fa 0%, #e6edf4 100%)', padding: '16px 24px', margin: '-24px -24px 24px -24px', borderBottom: '1px solid #e1e7ee', borderRadius: '8px 8px 0 0' }}>
-            <h3 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: '#476481' }}>Thông tin cơ bản</h3>
-        </div>
-        
-        <Row gutter={[32, 24]} style={{ padding: '8px' }}>
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Mã Sản Phẩm</Text><br/>
-            <Text code style={{ fontSize: 16 }}>{record?.Code}</Text>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Tên Sản Phẩm</Text><br/>
-            <Text strong style={{ fontSize: 16, color: '#476481' }}>{record?.Name}</Text>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Danh mục</Text><br/>
-            <Text style={{ fontSize: 16 }}>{categoryIsLoading ? "Đang tải..." : (categoryData?.data?.Name || record?.CategoryId)}</Text>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Trạng thái</Text><br/>
-            {record?.IsActive ? <Tag color="cyan">Đang hoạt động</Tag> : <Tag color="default">Ngừng kinh doanh</Tag>}
-          </Col>
+      <Card loading={isLoading} className="pd-card pd-card-ocean" 
+        title={<Space><InfoCircleOutlined className="pd-text-ocean" style={{ fontSize: '20px' }} /><Text strong className="pd-text-ocean pd-font-16">Thông tin cơ bản</Text></Space>}
+      >
+        <Descriptions column={{ xs: 1, sm: 2 }} layout="vertical" bordered size="middle" labelStyle={{ fontWeight: 'bold', color: '#64748b' }}>
+            <Descriptions.Item label="Mã sản phẩm">
+                <Text strong className="pd-text-ocean">{record?.Code}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Tên sản phẩm">
+                <Text strong>{record?.Name}</Text>
+            </Descriptions.Item>
+            
+            <Descriptions.Item label="Danh mục áp dụng">
+                <Text>{categoryFetching ? "Đang tải..." : (catName || "—")}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái kinh doanh">
+                {record?.IsActive ? <Tag color="success" className="pd-tag-rounded">Đang hoạt động</Tag> : <Tag color="default" className="pd-tag-rounded">Ngừng kinh doanh</Tag>}
+            </Descriptions.Item>
 
-          <Col xs={24}><Divider style={{ margin: '4px 0', borderColor: '#e1e7ee' }} /></Col>
-          
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Đơn giá</Text><br/>
-            <Text strong style={{ fontSize: 20, color: '#7a9dc1' }}>{record?.UnitPrice?.toLocaleString("vi-VN")} ₫</Text>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text type="secondary" style={{ fontSize: 13 }}>Đơn vị tính</Text><br/>
-            <Text style={{ fontSize: 16 }}>{record?.Unit}</Text>
-          </Col>
-        </Row>
+            <Descriptions.Item label="Đơn giá">
+                <Text strong style={{ fontSize: '16px', color: '#0d9488' }}>{record?.UnitPrice?.toLocaleString("vi-VN")} ₫</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Đơn vị tính">
+                <Text>{record?.Unit || "—"}</Text>
+            </Descriptions.Item>
+        </Descriptions>
       </Card>
     </Show>
   );

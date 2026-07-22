@@ -1,34 +1,61 @@
-/* Layout & Spacing */
-.pc-m-0 { margin: 0 !important; }
-.pc-mt-16 { margin-top: 16px !important; }
-.pc-mt-24 { margin-top: 24px !important; }
-.pc-mb-24 { margin-bottom: 24px !important; }
-.pc-w-100 { width: 100% !important; }
-.pc-flex-center { display: flex; align-items: center; justify-content: center; }
+/* ==========================================================================
+   proposal-config.css - GIAO DIỆN MODERN CORPORATE (OCEAN/TEAL BLUE)
+   ========================================================================== */
 
-/* Typography & Colors */
-.pc-text-ocean { color: #476481 !important; }
-.pc-text-secondary { color: #6b7c93 !important; }
-.pc-font-bold { font-weight: 700 !important; }
+:root {
+  --pc-primary: #0891b2;        /* Ocean / Teal Blue */
+  --pc-primary-hover: #0e7490;
+  --pc-primary-bg: #ecfeff;     /* Nền xanh siêu nhạt */
+  
+  --pc-text-main: #1e293b;
+  --pc-text-secondary: #64748b;
+  --pc-border: #e2e8f0;
+}
+
+/* Utilities */
+.pc-text-ocean { color: var(--pc-primary) !important; }
+.pc-bg-ocean { background-color: var(--pc-primary) !important; }
+.pc-bg-ocean-light { background-color: var(--pc-primary-bg) !important; }
+.pc-text-secondary { color: var(--pc-text-secondary) !important; }
+.pc-font-bold { font-weight: 600 !important; }
 .pc-font-16 { font-size: 16px !important; }
 
-/* Components: Cards */
-.pc-card { border-radius: 8px; box-shadow: 0 2px 10px rgba(122, 157, 193, 0.05); margin-bottom: 24px; border: 1px solid #e1e7ee; }
-.pc-card-blue .ant-card-head { background: linear-gradient(135deg, #f4f7fa 0%, #e6edf4 100%); border-bottom: 1px solid #e1e7ee; }
-.pc-card-green .ant-card-head { background: #f0fdfa; border-bottom: 1px solid #ccfbf1; }
-.pc-card-purple .ant-card-head { background: #f9f0ff; border-bottom: 1px solid #eebaf8; }
+.pc-m-0 { margin: 0 !important; }
+.pc-mb-16 { margin-bottom: 16px !important; }
+.pc-mb-24 { margin-bottom: 24px !important; }
+.pc-mt-16 { margin-top: 16px !important; }
+.pc-w-100 { width: 100% !important; }
 
-/* Icons */
-.pc-icon-wrapper { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 8px; }
-.pc-icon-blue { background: #e6f4ff; color: #1677ff; }
-.pc-icon-green { background: #e6fffa; color: #0d9488; }
-.pc-icon-purple { background: #f6e6ff; color: #722ed1; }
+/* Buttons */
+.pc-btn-primary {
+  background-color: var(--pc-primary) !important;
+  border-color: var(--pc-primary) !important;
+}
+.pc-btn-primary:hover {
+  background-color: var(--pc-primary-hover) !important;
+  border-color: var(--pc-primary-hover) !important;
+}
 
-/* Buttons & Tags */
-.pc-btn-primary { background: #7a9dc1; border-color: #7a9dc1; }
-.pc-btn-primary:hover { background: #5d82a6; border-color: #5d82a6; }
-.pc-tag-rounded { padding: 4px 12px; border-radius: 12px; font-size: 13px; }
-.pc-tag-level { background: #e6edf4; padding: 4px 12px; border-radius: 20px; color: #476481; font-weight: 600; font-size: 13px; }
+/* Cards */
+.pc-card {
+  border-radius: 8px;
+  border-color: var(--pc-border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  margin-bottom: 24px;
+}
+.pc-card-ocean {
+  border-top: 3px solid var(--pc-primary); /* Đồng nhất 1 loại viền Card */
+}
 
-/* Custom Add Row Area */
-.pc-add-row { background: #f4f7fa; padding: 16px; border-top: 1px solid #e1e7ee; border-radius: 0 0 8px 8px; }
+/* Header giả lập trong Form.List */
+.pc-fake-table-header {
+  background-color: #f8fafc;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--pc-border);
+  border-radius: 6px;
+}
+
+.pc-tag-rounded {
+  border-radius: 100px;
+  padding: 2px 10px;
+}

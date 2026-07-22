@@ -2,6 +2,7 @@ using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
+using Onion.CleanArchitecture.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,11 +30,21 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Queries.G
     public class ConfigCategoryDto
     {
         public int Id { get; set; }
+        public int CategoryId { get; set; }
+        public int DepartmentId { get; set; }
+        public decimal AllowedQuota { get; set; }
+        public string CategoryName { get; set; }
+        public string DepartmentName { get; set; }
     }
 
     public class ConfigApproverDto
     {
         public int Id { get; set; }
+        public int DepartmentId { get; set; }
+        public string ApproverId { get; set; }
+        public int Level { get; set; }
+        public string Role { get; set; }
+        public string DepartmentName { get; set; }
     }
 
     // 2. QUERY VÀ HANDLER CHÍNH
@@ -73,12 +84,28 @@ namespace Onion.CleanArchitecture.Application.Features.ProposalConfigs.Queries.G
                     // Xử lý 2 mảng, dùng ?? để tránh lỗi null nếu mảng trống
                     ConfigCategories = record.ConfigCategories?.Select(c => new ConfigCategoryDto 
                     {
-                        Id = c.Id
+                        Id = c.Id,
+                        CategoryId = c.CategoryId,
+                        DepartmentId = c.DepartmentId,
+                        AllowedQuota = c.AllowedQuota,
+                        CategoryName = c.Category?.Name,
+                        DepartmentName = c.Department?.Name
                     }).ToList() ?? new List<ConfigCategoryDto>(),
                     
                     ConfigApprovers = record.ConfigApprovers?.Select(a => new ConfigApproverDto 
                     {
-                        Id = a.Id
+                        Id = a.Id,
+                        DepartmentId = a.DepartmentId,
+                        ApproverId = a.ApproverId,
+                        Level = (int)a.Level,
+                        Role = a.Level switch
+                        {
+                            ApprovalLevel.CreatorLevel => "Người tạo phiếu",
+                            ApprovalLevel.DepartmentLevel => "Trưởng đơn vị",
+                            ApprovalLevel.ControlLevel => "Kiểm soát viên",
+                            _ => "Kiểm soát viên"
+                        },
+                        DepartmentName = a.Department?.Name
                     }).ToList() ?? new List<ConfigApproverDto>()
                 };
 

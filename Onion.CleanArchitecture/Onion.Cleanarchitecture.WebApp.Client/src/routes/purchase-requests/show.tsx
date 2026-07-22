@@ -11,6 +11,8 @@ const fmtVnd = (n?: number) => (n || 0).toLocaleString("vi-VN") + " ₫";
 interface ILocalCategory {
   Id?: number; id?: number;
   Name?: string; name?: string;
+  Category?: { Name?: string; name?: string; AllowedQuota?: number; allowedQuota?: number };
+  category?: { Name?: string; name?: string; AllowedQuota?: number; allowedQuota?: number };
   AllowedQuota?: number; allowedQuota?: number;
   RequestItems?: ILocalItem[]; requestItems?: ILocalItem[];
 }
@@ -37,6 +39,14 @@ interface ILocalApproval {
 interface ILocalPurchaseRequest extends IPurchaseRequest {
   Name?: string;
   name?: string;
+  Reason?: string;
+  reason?: string;
+  ContactName?: string;
+  contactName?: string;
+  ContactPhone?: string;
+  contactPhone?: string;
+  ShippingAddress?: string;
+  shippingAddress?: string;
   totalActualAmount?: number;
   totalProposedAmount?: number;
   Categories?: ILocalCategory[];
@@ -54,8 +64,16 @@ interface ILocalApprover extends IPurchaseRequestApprover {
   status?: number;
 }
 
-const statusMap: Record<number, { label: string; color: string }> = { 1: { label: "Bản nháp", color: "default" }, 2: { label: "Chờ trưởng đơn vị duyệt", color: "volcano" }, 3: { label: "Chờ kiểm soát duyệt", color: "geekblue" }, 4: { label: "Trả chỉnh sửa", color: "warning" }, 5: { label: "Chờ xác nhận đơn hàng", color: "purple" }, 6: { label: "Hoàn thành", color: "cyan" }, 7: { label: "Từ chối", color: "red" }, 8: { label: "Từ chối", color: "red" } };
-
+const statusMap: Record<number, { label: string; color: string }> = {
+  1: { label: "Bản nháp", color: "default" },
+  2: { label: "Chờ Trưởng đơn vị duyệt", color: "processing" },
+  3: { label: "Chờ Kiểm soát duyệt", color: "geekblue" },
+  4: { label: "Trả về chỉnh sửa", color: "warning" },
+  5: { label: "Chờ xác nhận đơn hàng", color: "purple" },
+  6: { label: "Hoàn thành", color: "success" },
+  7: { label: "Từ chối", color: "error" },
+  8: { label: "Từ chối", color: "error" }
+};
 const actionIcons: Record<string, React.ReactNode> = {
   submit: <SendOutlined />, "approve-department": <CheckCircleOutlined />, reject: <CloseCircleOutlined />,
   approve: <CheckCircleOutlined />, "return-for-edit": <RollbackOutlined />, "confirm-order": <ShoppingCartOutlined />,
@@ -67,9 +85,14 @@ const actionLabelMap: Record<string, string> = {
 };
 
 const actionColors: Record<string, string> = {
-  submit: "geekblue", "approve-department": "cyan", approve: "cyan", reject: "red",
-  "return-for-edit": "volcano", "confirm-order": "purple", confirm: "purple",
-  return: "volcano",
+  submit: "geekblue", 
+  "approve-department": "success", // Green
+  approve: "success",             // Green
+  reject: "error",               // Red
+  "return-for-edit": "warning",  // Amber
+  return: "warning",
+  "confirm-order": "purple", 
+  confirm: "purple",
 };
 
 export const ShowPurchaseRequest = () => {
@@ -87,6 +110,10 @@ export const ShowPurchaseRequest = () => {
 
   const record = data?.data;
   const status = record?.Status;
+
+  const userId = identity?.Uid;
+  const isCreator = userId && record?.CreatedBy && String(userId) === String(record.CreatedBy);
+  const showEdit = !!isCreator && (status === 1 || status === 4);
 
   const { data: deptData } = useOne({ resource: "departments", id: record?.DepartmentId ?? "", queryOptions: { enabled: !!record?.DepartmentId } });
 
@@ -123,10 +150,10 @@ export const ShowPurchaseRequest = () => {
 
     const allActions = [
       { label: "Gửi duyệt", endpoint: "submit", type: "primary" as const, icon: actionIcons.submit },
-      { label: "Trưởng đơn vị duyệt", endpoint: "approve-department", type: "primary" as const, icon: actionIcons["approve-department"] },
-      { label: "Phê duyệt", endpoint: "approve", type: "primary" as const, icon: actionIcons.approve },
       { label: "Từ chối", endpoint: "reject", type: "primary" as const, danger: true, icon: actionIcons.reject },
-      { label: "Trả về chỉnh sửa", endpoint: "return-for-edit", type: "default" as const, icon: actionIcons["return-for-edit"] },
+      { label: "Duyệt", endpoint: "approve-department", type: "primary" as const, icon: actionIcons["approve-department"] },
+      { label: "Trả về chỉnh sửa", endpoint: "return-for-edit", type: "primary" as const, icon: actionIcons["return-for-edit"] },
+      { label: "Phê duyệt", endpoint: "approve", type: "primary" as const, icon: actionIcons.approve },
       { label: "Hoàn tất đơn hàng", endpoint: "confirm-order", type: "primary" as const, icon: actionIcons["confirm-order"] },
     ];
 
@@ -206,39 +233,25 @@ export const ShowPurchaseRequest = () => {
     mutate({ url: `${apiUrl}/purchase-requests/${record!.Id}/trigger`, method: "post", values: { id: record!.Id, action: finalAction, note: actionNote } }, { onSuccess: () => { message.success(`Thành công!`); setModalVisible(false); refetch(); } });
   };
 
-  const flatItems = useMemo(() => {
-    const result: Array<ILocalItem & { _categoryName: string; _categoryId: number }> = [];
-    categories.forEach((cat) => {
-      ((cat.RequestItems || cat.requestItems) || []).forEach((item) => {
-        result.push({ ...item, _categoryName: cat.Name ?? cat.name ?? "", _categoryId: cat.Id ?? cat.id ?? 0 });
-      });
-    });
-    return result;
-  }, [categories]);
-
   return (
-    <Show isLoading={isLoading} title={<Title level={3} className="pr-m-0 pr-text-emerald">Chi tiết Phiếu Đề Xuất</Title>}
-      headerButtons={(() => {
-        const userId = identity?.Uid;
-        const isCreator = userId && record?.CreatedBy && String(userId) === String(record.CreatedBy);
-        const showEdit = !!isCreator && (status === 1 || status === 4);
-        return showEdit ? <EditButton type="primary" ghost size="middle">Chỉnh sửa</EditButton> : <></>;
-      })()}>
+    <Show isLoading={isLoading} title={<Title level={3} className="pr-m-0 pr-text-emerald">Chi tiết Phiếu Đề Xuất</Title>} headerButtons={<></>}>
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
             <Space direction="vertical" size="large" className="pr-w-100">
 
                 <Card loading={isLoading} className="pr-card pr-card-emerald"
-                    title={<Space><InfoCircleOutlined className="pr-text-emerald" style={{ fontSize: '20px' }} /><Text strong className="pr-text-emerald" style={{ fontSize: '18px' }}>Thông tin quy chiếu</Text></Space>}
-                    extra={visibleActions.length > 0 && (
+                    title={<Space><InfoCircleOutlined className="pr-text-emerald" style={{ fontSize: '20px' }} />
+                    <Text strong className="pr-text-emerald" style={{ fontSize: '18px' }}>Thông tin quy chiếu</Text></Space>}
+                    extra={(showEdit || visibleActions.length > 0) ? (
                         <Space>
+                            {showEdit && <EditButton size="middle" className="pr-btn-edit">Chỉnh sửa</EditButton>}
                             {visibleActions.map((act) => (
-                                <Button key={act.endpoint} type="primary" size="middle" danger={act.classColor === "pr-text-danger"} icon={act.icon} onClick={() => { if (act.endpoint === "confirm-order") { setConfirmModalVisible(true); } else { setActionEndpoint(act.endpoint); setActionLabel(act.label); setModalVisible(true); } }}>
+                                <Button key={act.endpoint} type="primary" size="middle" danger={act.danger === true} icon={act.icon} className={act.endpoint === "return-for-edit" ? "pr-btn-warning" : ""} onClick={() => { if (act.endpoint === "confirm-order") { setConfirmModalVisible(true); } else { setActionEndpoint(act.endpoint); setActionLabel(act.label); setModalVisible(true); } }}>
                                     {act.label}
                                 </Button>
                             ))}
                         </Space>
-                    )}
+                    ) : undefined}
                 >
                     <Descriptions column={{ xs: 1, sm: 2, lg: 2 }} layout="vertical" bordered size="middle" labelStyle={{ fontWeight: 'bold', color: '#64748b' }} contentStyle={{ fontSize: '15px' }}>
                         <Descriptions.Item label="Mã Phiếu">
@@ -256,12 +269,22 @@ export const ShowPurchaseRequest = () => {
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Tổng Tiền Đề Xuất">
-                            <Text strong className="pr-text-emerald">{fmtVnd(record?.TotalProposedAmount)}</Text>
+                            <Text strong className="pr-text-teal" style={{fontSize: '16px'}}>{fmtVnd(record?.TotalProposedAmount)}</Text>
                         </Descriptions.Item>
                         <Descriptions.Item label="Tổng Tiền Thực Tế">
-                            <Text strong className={record?.TotalActualAmount ? "pr-text-teal" : undefined}>
+                            <Text className="pr-text-teal" strong style={{fontSize: '16px'}}>
                               {record?.TotalActualAmount != null ? fmtVnd(record.TotalActualAmount) : "—"}
                             </Text>
+                        </Descriptions.Item>
+
+                        <Descriptions.Item label="Tổng Chênh Lệch">
+                            {(() => {
+                                const proposed = record?.TotalProposedAmount;
+                                const actual = record?.TotalActualAmount;
+                                if (actual == null) return <Text type="secondary">—</Text>;
+                                const diff = proposed - actual;
+                                return <Text strong className={diff >= 0 ? "pr-text-emerald" : "pr-text-danger"} style={{fontSize: '16px'}}>{diff >= 0 ? "" : "-"}{fmtVnd(Math.abs(diff))}</Text>;
+                            })()}
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Trạng Thái">
@@ -273,20 +296,41 @@ export const ShowPurchaseRequest = () => {
                     </Descriptions>
                 </Card>
 
-                {flatItems.length > 0 && (
+                {categories.length > 0 && (
                   <Card loading={isLoading} className="pr-card"
                     title={<Space><CheckCircleOutlined className="pr-text-emerald"/><Text strong className="pr-text-emerald">Danh mục hàng hóa</Text></Space>}
                     extra={<Text className="pr-text-secondary">Tổng đề xuất: <Text strong className="pr-text-emerald">{fmtVnd(record?.TotalProposedAmount)}</Text></Text>}
                   >
-                    <Table dataSource={flatItems} rowKey={(i) => i.Id ?? i.id} pagination={false} size="small" scroll={{ x: 'max-content' }}
-                      columns={[
-                        { title: "Danh mục", dataIndex: "_categoryName", width: 150, render: (val: string) => <Tag color="blue">{val}</Tag> },
-                        { title: "Sản phẩm", dataIndex: "ProductName", render: (val, i) => <Text strong>{i.Product?.Name || i.product?.name || val}</Text> },
-                        { title: "SL Đề xuất", dataIndex: "ProposedQuantity", align: "center" as const },
-                        { title: "Đơn giá", dataIndex: "UnitPrice", align: "right" as const, render: (val: number) => fmtVnd(val) },
-                        { title: "Thành tiền", align: "right" as const, render: (_, item) => <Text strong className="pr-text-emerald">{fmtVnd((item.ProposedQuantity ?? 0) * (item.UnitPrice ?? 0))}</Text> },
-                      ]}
-                    />
+                    <Space direction="vertical" size="middle" className="pr-w-100">
+                      {categories.map((cat) => {
+                        const catItems = (cat.RequestItems || cat.requestItems) || [];
+                        const subtotal = catItems.reduce((sum, i) => sum + ((i.ProposedQuantity || 0) * (i.UnitPrice || 0)), 0);
+                        const quota = cat.AllowedQuota ?? cat.allowedQuota ?? 0;
+                        const diff = quota - subtotal;
+
+                        return (
+                          <Card key={cat.Id ?? cat.id} size="small" className="pr-card"
+                            title={<Text strong className="pr-text-emerald">{cat.Category?.Name || cat.category?.name || cat.Name || cat.name || "Danh mục"}</Text>}
+                            extra={
+                              <Space size="middle" wrap>
+                                <Text className="pr-text-secondary">Định mức: <Text strong>{fmtVnd(quota)}</Text></Text>
+                                <Text className="pr-text-secondary">Tạm tính: <Text strong className="pr-text-emerald">{fmtVnd(subtotal)}</Text></Text>
+                                <Text className="pr-text-secondary">Chênh lệch: <Text strong className={diff < 0 ? 'pr-text-danger' : 'pr-text-success'}>{diff >= 0 ? '+' : ''}{fmtVnd(diff)}</Text></Text>
+                              </Space>
+                            }
+                          >
+                            <Table dataSource={catItems} rowKey={(i) => i.Id ?? i.id} pagination={false} size="small"
+                              columns={[
+                                { title: "Sản phẩm", dataIndex: "ProductName", render: (val, i) => <Text strong>{i.Product?.Name || i.product?.name || val}</Text> },
+                                { title: "SL Đề xuất", dataIndex: "ProposedQuantity", align: "center" as const },
+                                { title: "Đơn giá (₫)", align: "right" as const, render: (_, item) => <Text>{(item.UnitPrice || 0).toLocaleString("vi-VN")}</Text> },
+                                { title: "Thành tiền (₫)", align: "right" as const, render: (_, item) => <Text strong className="pr-text-teal">{((item.ProposedQuantity ?? 0) * (item.UnitPrice ?? 0)).toLocaleString("vi-VN")}</Text> },
+                              ]}
+                            />
+                          </Card>
+                        );
+                      })}
+                    </Space>
                   </Card>
                 )}
             </Space>
@@ -309,10 +353,9 @@ export const ShowPurchaseRequest = () => {
                       }
                     >
                       {sortedApprovers.length > 0 ? (
-                        // Dùng <Flex> thay cho <div> để tạo khung cuộn (scroll)
                         <Flex vertical style={{ maxHeight: 420, overflowY: 'auto', padding: '12px 4px 8px 16px' }}>
                           <Timeline 
-                            className = "pr-timeline-bold"
+                            className="pr-timeline-bold"
                             items={sortedApprovers.map((ap) => {
                               const apId = ap.ApproverId ?? ap.approverId ?? "";
                               const apName = ap.ApproverName ?? ap.approverName ?? apId;
@@ -324,7 +367,6 @@ export const ShowPurchaseRequest = () => {
                               
                               const approvalAction = getApprovalAction(apId);
                               const actionVal = (approvalAction?.Action ?? approvalAction?.action) || "";
-                              
                               
                               const timelineColor = isApproved ? "green" : isRejected ? "red" : "gray";
                               const timelineDot = isApproved ? (
@@ -340,39 +382,40 @@ export const ShowPurchaseRequest = () => {
                                 dot: timelineDot,
                                 className: `pr-line-${timelineColor}`,
                                 children: (
-                                  // Dùng <Card> thay cho <div> bọc từng step
                                   <Card
                                     size="small"
                                     bordered={true}
                                     style={{
-                                      marginBottom: 12,
-                                      background: isApproved ? '#f0fdf4' : isRejected ? '#fef2f2' : '#f8fafc',
-                                      borderColor: isApproved ? '#bbf7d0' : isRejected ? '#fecaca' : '#e2e8f0',
-                                      borderRadius: 8
+                                      marginBottom: 16,
+                                      background: '#ffffff', // Đưa nền về trắng sạch sẽ
+                                      border: '1px solid #e2e8f0', // Viền xám nhạt toàn cục
+                                      borderLeft: isApproved ? '4px solid #10b981' : isRejected ? '4px solid #ef4444' : '4px solid #cbd5e1', // Điểm nhấn viền trái theo trạng thái
+                                      borderRadius: 8,
+                                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)'
                                     }}
-                                    styles={{ body: { padding: '14px 20px' } }} // Dùng bodyStyle={{ padding: '14px 20px' }} nếu bạn xài antd v4
+                                    styles={{ body: { padding: '14px 16px' } }}
                                   >
-                                    {/* Header: Vai trò & Tên (Dùng <Flex> dàn 2 bên) */}
+                                    {/* Header: Vai trò & Tên */}
                                     <Flex justify="space-between" align="flex-start" style={{ marginBottom: 4 }}>
-                                      <Space size={6} wrap>
+                                      <Space size={8} wrap>
                                         <Tag 
-                                          color={isApproved ? "success" : isRejected ? "error" : "default"} 
-                                          style={{ margin: 0, whiteSpace: 'normal', lineHeight: '20px' }}
+                                          /* Dùng màu Processing (Xanh lam) cố định cho chức danh để tránh loạn màu */
+                                          color="processing" 
+                                          bordered={false}
+                                          style={{ margin: 0, fontWeight: 500 }}
                                         >
                                           {apRole}
                                         </Tag>
-                                        <Text strong style={{ fontSize: 14, wordBreak: 'break-word' }}>
+                                        <Text strong style={{ fontSize: 14 }}>
                                           {apName}
                                         </Text>
                                       </Space>
-                                      {isApproved && <CheckCircleFilled style={{ color: '#10b981', fontSize: 18 }} />}
-                                      {isRejected && <CloseCircleFilled style={{ color: '#ef4444', fontSize: 18 }} />}
                                     </Flex>
 
                                     {/* Body: Hành động & Thời gian */}
                                     {approvalAction && (
                                       <Space style={{ marginTop: 8 }}>
-                                        <Tag color={actionColors[actionVal] || "blue"} style={{ fontSize: 12 }}>
+                                        <Tag color={actionColors[actionVal] || "default"} bordered={false} style={{ fontSize: 12, fontWeight: 500 }}>
                                           {actionLabelMap[actionVal] || actionVal}
                                         </Tag>
                                         {approvalAction.Created && (
@@ -385,19 +428,25 @@ export const ShowPurchaseRequest = () => {
 
                                     {/* Status: Đang chờ */}
                                     {isPending && (
-                                      <Paragraph type="secondary" style={{ fontSize: 13, marginTop: 4, marginBottom: 0 }}>
-                                        Đang chờ duyệt
-                                      </Paragraph>
+                                      <Text type="secondary" italic style={{ fontSize: 13, display: 'block', marginTop: 8 }}>
+                                        Đang chờ xử lý...
+                                      </Text>
                                     )}
 
-                                    {/* Footer: Ghi chú (Nếu có) */}
+                                    {/* Footer: Ghi chú */}
                                     {approvalAction?.Note && (
-                                      <Alert 
-                                        message={approvalAction.Note} 
-                                        type={isRejected ? "error" : "info"} 
-                                        showIcon
-                                        style={{ padding: '6px 10px', marginTop: 8, fontSize: 13 }} 
-                          />
+                                      <div style={{ 
+                                        marginTop: 12, 
+                                        padding: '8px 12px', 
+                                        background: isRejected ? '#fef2f2' : '#f8fafc', 
+                                        borderLeft: `2px solid ${isRejected ? '#fca5a5' : '#cbd5e1'}`,
+                                        borderRadius: '0 4px 4px 0'
+                                      }}>
+                                        <Text type="secondary" style={{ fontSize: 13 }}>
+                                          <Text strong type={isRejected ? "danger" : "secondary"}>Ghi chú: </Text> 
+                                          {approvalAction.Note}
+                                        </Text>
+                                      </div>
                                     )}
                                   </Card>
                                 )
@@ -408,101 +457,103 @@ export const ShowPurchaseRequest = () => {
                       ) : (
                         <Text type="secondary">Chưa có luồng duyệt</Text>
                       )}
-                    </Card> 
-
+                    </Card>
                     <Card 
-  loading={isLoading} 
-  className="pr-card"
-  title={<Text strong style={{ fontSize: '16px' }}>Lịch sử thao tác</Text>}
->
-  {approvals.length > 0 ? (
-    // Dùng <Flex> thay cho <div> bọc ngoài cùng
-    <Flex vertical style={{ maxHeight: 420, overflowY: 'auto', padding: '12px 4px 8px 16px' }}>
-      <Timeline 
-        className="pr-timeline-bold"
-        items={[...approvals].reverse().slice(0, showAllHistory ? undefined : 5).map((ap) => {
-          const act = ap.Action || ap.action || "";
-          const isDanger = act === "reject" || act === "return" || act === "rejected";
-          const actLabel = actionLabelMap[act] || act;
-          const actColor = actionColors[act] || (isDanger ? "red" : "blue");
-          
-          const historyLineColor = isDanger ? "red" : "blue";
-
-          return {
-            color: historyLineColor,
-            className: `pr-line-${historyLineColor}`, // <--- Gắn class màu cho đường Line
-            dot: isDanger 
-              ? <CloseCircleFilled style={{ fontSize: '20px', color: '#ef4444' }} />
-              : <CheckCircleFilled style={{ fontSize: '20px', color: '#3b82f6' }} />,
-            
-            children: (
-              // Dùng <Card> thay cho <div> bọc từng lịch sử
-              <Card
-                size="small"
-                bordered={true}
-                style={{
-                  marginBottom: 12,
-                  background: isDanger ? '#fef2f2' : '#eff6ff',
-                  borderColor: isDanger ? '#fecaca' : '#bfdbfe',
-                  borderRadius: 8
-                }}
-                styles={{ body: { padding: '12px 20px' } }}
-              >
-                {/* Dùng <Flex> thay cho <div> dàn ngang Header */}
-                <Flex justify="space-between" align="flex-start" gap={8}>
-                  <Space size={6} wrap>
-                    <Text strong style={{ fontSize: 14, wordBreak: 'break-word' }}>
-                      {ap.ApproverName || ap.approverName || "Hệ thống"}
-                    </Text>
-                    <Tag 
-                      color={actColor} 
-                      style={{ margin: 0, fontSize: 12, whiteSpace: 'normal', lineHeight: '20px' }}
+                      loading={isLoading} 
+                      className="pr-card"
+                      title={<Text strong style={{ fontSize: '16px' }}>Lịch sử thao tác</Text>}
                     >
-                      {actLabel}
-                    </Tag>
-                  </Space>
-                  
-                  {ap.Created && (
-                    <Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
-                      <DateField value={ap.Created} format="DD/MM - HH:mm" />
-                    </Text>
-                  )}
-                </Flex>
+                      {approvals.length > 0 ? (
+                        <Flex vertical style={{ maxHeight: 420, overflowY: 'auto', padding: '12px 4px 8px 16px' }}>
+                          <Timeline 
+                            className="pr-timeline-bold"
+                            items={[...approvals].reverse().slice(0, showAllHistory ? undefined : 5).map((ap) => {
+                              const act = ap.Action || ap.action || "";
+                              const isDanger = act === "reject" || act === "return" || act === "rejected";
+                              const actLabel = actionLabelMap[act] || act;
+                              
+                              return {
+                                color: isDanger ? 'red' : 'gray', // Màu đường line trung tính hoặc đỏ nếu từ chối
+                                dot: isDanger 
+                                  ? <CloseCircleFilled style={{ fontSize: '20px', color: '#ef4444' }} />
+                                  : <CheckCircleFilled style={{ fontSize: '20px', color: '#3b82f6' }} />,
+                                
+                                children: (
+                                  <Card
+                                    size="small"
+                                    bordered={true}
+                                    style={{
+                                      marginBottom: 16,
+                                      background: '#ffffff', // Nền trắng sạch sẽ
+                                      borderColor: '#e2e8f0', // Viền xám trung tính
+                                      borderRadius: 8,
+                                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)'
+                                    }}
+                                    styles={{ body: { padding: '12px 16px' } }}
+                                  >
+                                    <Flex justify="space-between" align="flex-start" gap={8}>
+                                      <Space size={8} wrap>
+                                        <Text strong style={{ fontSize: 14, wordBreak: 'break-word' }}>
+                                          {ap.ApproverName || ap.approverName || "Hệ thống"}
+                                        </Text>
+                                        <Tag 
+                                          color={isDanger ? "error" : "processing"} 
+                                          bordered={false}
+                                          style={{ margin: 0, fontWeight: 500 }}
+                                        >
+                                          {actLabel}
+                                        </Tag>
+                                      </Space>
+                                      
+                                      {ap.Created && (
+                                        <Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
+                                          <DateField value={ap.Created} format="DD/MM - HH:mm" />
+                                        </Text>
+                                      )}
+                                    </Flex>
 
-                {/* Ghi chú */}
-                {ap.Note && (
-                  <Alert 
-                    message={ap.Note} 
-                    type={isDanger ? "error" : "info"} 
-                    showIcon
-                    style={{ padding: '6px 10px', marginTop: 8, fontSize: 13 }} 
-                  />
-                )}
-              </Card>
-            )
-          };
-        })} 
-      />
-      
-      {/* Nút Xem thêm / Thu gọn (Dùng <Flex justify="center"> thay cho <div>) */}
-      {!showAllHistory && approvals.length > 5 && (
-        <Flex justify="center" style={{ padding: '8px 0' }}>
-          <Button type="link" onClick={() => setShowAllHistory(true)}>
-            Xem thêm ({approvals.length - 5} mục cũ hơn)
-          </Button>
-        </Flex>
-      )}
-      {showAllHistory && approvals.length > 5 && (
-        <Flex justify="center" style={{ padding: '8px 0' }}>
-          <Button type="link" onClick={() => setShowAllHistory(false)}>
-            Thu gọn
-          </Button>
-        </Flex>
-      )}
-    </Flex>
-  ) : (
-    <Text type="secondary">Chưa có lịch sử</Text>
-  )}
+                                    {/* Ghi chú được thiết kế lại, bỏ <Alert> nặng nề */}
+                                    {ap.Note && (
+                                      <Flex 
+                                        vertical 
+                                        style={{ 
+                                          marginTop: 12, 
+                                          padding: '8px 12px', 
+                                          background: '#f8fafc', // Xám siêu nhạt
+                                          borderLeft: `2px solid ${isDanger ? '#ef4444' : '#cbd5e1'}`, // Vạch màu phân biệt
+                                          borderRadius: '0 4px 4px 0' 
+                                        }}
+                                      >
+                                        <Text type="secondary" style={{ fontSize: 13 }}>
+                                          <Text strong type={isDanger ? "danger" : "secondary"}>Ghi chú: </Text>
+                                          {ap.Note}
+                                        </Text>
+                                      </Flex>
+                                    )}
+                                  </Card>
+                                )
+                              };
+                            })} 
+                          />
+                          
+                          {!showAllHistory && approvals.length > 5 && (
+                            <Flex justify="center" style={{ padding: '8px 0' }}>
+                              <Button type="link" onClick={() => setShowAllHistory(true)}>
+                                Xem thêm ({approvals.length - 5} mục cũ hơn)
+                              </Button>
+                            </Flex>
+                          )}
+                          {showAllHistory && approvals.length > 5 && (
+                            <Flex justify="center" style={{ padding: '8px 0' }}>
+                              <Button type="link" onClick={() => setShowAllHistory(false)}>
+                                Thu gọn
+                              </Button>
+                            </Flex>
+                          )}
+                        </Flex>
+                      ) : (
+                        <Text type="secondary">Chưa có lịch sử thao tác</Text>
+                      )}
                     </Card>
 
                 </Space>

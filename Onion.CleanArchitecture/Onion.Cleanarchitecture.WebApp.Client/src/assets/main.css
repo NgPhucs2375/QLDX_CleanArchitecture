@@ -1,0 +1,26 @@
+/* Chỉ mở rộng chiều rộng của Sidebar khi KHÔNG bị thu gọn */
+.ant-layout-sider:not(.ant-layout-sider-collapsed) {
+  flex: 0 0 260px !important;
+  max-width: 260px !important;
+  min-width: 260px !important;
+  width: 260px !important;
+}
+
+/* Các phần CSS làm to chữ bên dưới bạn vẫn giữ nguyên nhé */
+.ant-menu-item, 
+.ant-menu-submenu-title {
+  font-size: 15px !important; 
+  font-weight: 500 !important; 
+  margin-bottom: 4px !important; 
+}
+
+.ant-menu-item .anticon, 
+.ant-menu-submenu-title .anticon {
+  font-size: 18px !important;
+}
+
+.ant-menu-light .ant-menu-item-selected {
+  background-color: #f0fdfa !important;
+  color: #0d9488 !important;
+  font-weight: 600 !important;
+}

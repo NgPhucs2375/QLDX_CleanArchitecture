@@ -1,0 +1,37 @@
+/* product.css - ĐỒNG BỘ MODERN CORPORATE (OCEAN/TEAL BLUE) */
+:root {
+  --pd-primary: #0891b2;        /* Ocean / Teal Blue */
+  --pd-primary-hover: #0e7490;
+  --pd-text-main: #1e293b;
+  --pd-text-secondary: #64748b;
+  --pd-border: #e2e8f0;
+}
+
+.pd-text-ocean { color: var(--pd-primary) !important; }
+.pd-font-bold { font-weight: 600 !important; }
+.pd-font-16 { font-size: 16px !important; }
+.pd-m-0 { margin: 0 !important; }
+.pd-w-100 { width: 100% !important; }
+
+.pd-btn-primary {
+  background-color: var(--pd-primary) !important;
+  border-color: var(--pd-primary) !important;
+}
+.pd-btn-primary:hover {
+  background-color: var(--pd-primary-hover) !important;
+  border-color: var(--pd-primary-hover) !important;
+}
+
+.pd-card {
+  border-radius: 8px;
+  border-color: var(--pd-border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  margin-bottom: 24px;
+}
+.pd-card-ocean {
+  border-top: 3px solid var(--pd-primary);
+}
+.pd-tag-rounded {
+  border-radius: 100px;
+  padding: 2px 10px;
+}

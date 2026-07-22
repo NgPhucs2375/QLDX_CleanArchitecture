@@ -1,11 +1,12 @@
 import { useForm, Edit, useSelect } from "@refinedev/antd";
 import { HttpError } from "@refinedev/core";
 import { useMemo } from "react";
+import { Typography, Button } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { Typography } from "antd";
 import type { IProposalConfig, ICategory, IDepartment, IProposalConfigPayload } from "./types";
 import { ProposalConfigForm } from "./form";
-import "../../assets/proposal-config.css"; // Nhúng file CSS dùng chung
+import "../../assets/proposal-config.css"; 
 
 const { Title } = Typography;
 
@@ -18,7 +19,6 @@ export const EditProposalConfig = () => {
 
   const initialData = queryResult?.data?.data;
 
-  // Sửa lại formProps để định dạng lại ngày tháng trước khi đưa vào Form
   const editableFormProps = {
     ...formProps,
     initialValues: initialData ? { ...initialData, EffectiveDate: dayjs(initialData.EffectiveDate) } : {},
@@ -45,8 +45,20 @@ export const EditProposalConfig = () => {
 
   return (
     <Edit 
-      title={<Title level={3} className="pc-m-0 pc-text-ocean pc-font-bold">Chỉnh sửa Cấu hình Đề xuất</Title>}
-      saveButtonProps={{ ...saveButtonProps, children: "Lưu Chỉnh Sửa", className: "pc-btn-primary" }}
+      isLoading={queryResult?.isLoading}
+      title={<Title level={3} className="pc-m-0 pc-text-ocean pc-font-bold">Cập nhật cấu hình đề xuất</Title>}
+      footerButtons={
+        <Button 
+          type="primary" 
+          onClick={saveButtonProps.onClick} 
+          loading={saveButtonProps.loading}
+          size="large" 
+          icon={<SaveOutlined />}
+          className="pc-btn-primary"
+        >
+          Lưu thay đổi
+        </Button>
+      }
     >
       <ProposalConfigForm
         formProps={{ ...editableFormProps, onFinish }}

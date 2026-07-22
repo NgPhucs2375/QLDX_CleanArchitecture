@@ -1,7 +1,7 @@
 import { App as AntdApp, ConfigProvider } from "antd";
 import React from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
-import { Authenticated, CanAccess, Refine } from "@refinedev/core";
+import { Authenticated, CanAccess, Refine,useGetIdentity } from "@refinedev/core";
 import {
   AuthPage,
   ErrorComponent,
@@ -14,7 +14,7 @@ import routerProvider, {
   CatchAllNavigate,
   NavigateToResource,
 } from "@refinedev/react-router-v6";
-
+import "./assets/main.css";
 // --- CONFIG & PROVIDERS ---
 import { resources, themeConfig } from "./config";
 import { accessControlProvider, authProvider, dataProvider } from "./providers";
@@ -41,13 +41,25 @@ import {
 } from "./routes";
 
 // --- COMPONENT TÁI SỬ DỤNG GIAO DIỆN CHUNG ---
-const AppTitle = ({ collapsed }: { collapsed: boolean }) => (
-  <ThemedTitleV2
-    collapsed={collapsed}
-    icon={<ImageField value="https://static.vietbank.com.vn/web/vietbank-logo.png" title="Vietbank Logo" style={{ width: 32, height: 32 }} />}
-    text={<span style={{ color: '#0d9488', fontWeight: 700, fontSize: 18 }}>Vietbank Admin</span>}
-  />
-);
+const AppTitle = ({ collapsed }: { collapsed: boolean }) => {
+  // Lấy thông tin user từ authProvider
+  const { data: user } = useGetIdentity<any>();
+
+  // Lấy tên hoặc email (Tùy thuộc vào việc Backend của bạn trả về field nào: FullName, UserName, Email, v.v.)
+  const displayName = user?.FullName || user?.Name || user?.name || user?.Email || user?.email || "Admin Dashboard";
+
+  return (
+    <ThemedTitleV2
+      collapsed={collapsed}
+      icon={null} // Đã loại bỏ logo Vietbank
+      text={
+        <span style={{ color: '#0d9488', fontWeight: 700, fontSize: 18 }}>
+          {displayName}
+        </span>
+      }
+    />
+  );
+};
 
 const App: React.FC = () => {
   return (

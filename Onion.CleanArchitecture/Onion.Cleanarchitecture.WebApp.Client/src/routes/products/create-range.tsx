@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { ImportButton, useImport, Create, Breadcrumb } from "@refinedev/antd";
-import { Space, Table, Tag, Typography, Card } from "antd";
+import { Table, Tag, Typography, Card, Flex } from "antd";
 import type { TableProps } from "antd";
 import { HttpError } from "@refinedev/core";
 import { IProduct } from "./types";
+import "../../assets/product.css";
 
 const { Title, Text } = Typography;
 
@@ -17,10 +18,7 @@ export const CreateRangeProduct: React.FC = () => {
   const [responses, setResponses] = useState<IProductError[]>([]);
 
   const handleSuccess = (successes: any[]) => {
-    successes.forEach((success) => {
-      const successData = success.response as IProductError[];
-      setResponses((prev: IProductError[]) => [...prev, ...successData]);
-    });
+    successes.forEach((success) => setResponses((prev) => [...prev, ...(success.response as IProductError[])]));
   };
 
   const handleError = (errors: any[]) => {
@@ -29,11 +27,7 @@ export const CreateRangeProduct: React.FC = () => {
       const errorResponse = error.response as HttpError[];
       setResponses((prev) => [
         ...prev,
-        ...errorRequest.map((request, index) => ({
-          ...request,
-          Message: errorResponse[index].message,
-          Success: false,
-        })),
+        ...errorRequest.map((req, idx) => ({ ...req, Message: errorResponse[idx].message, Success: false })),
       ]);
     });
   };
@@ -41,38 +35,35 @@ export const CreateRangeProduct: React.FC = () => {
   const importProps = useImport<IProductError>({
     resource: "products",
     onFinish: (result) => {
-      const { succeeded, errored } = result;
-      if (succeeded.length > 0) handleSuccess(succeeded);
-      if (errored.length > 0) handleError(errored);
+      if (result.succeeded.length > 0) handleSuccess(result.succeeded);
+      if (result.errored.length > 0) handleError(result.errored);
     },
-    onProgress: (progress) => {
-      setImportProgress({ processed: progress.processedAmount, total: progress.totalAmount });
-    },
+    onProgress: (progress) => setImportProgress({ processed: progress.processedAmount, total: progress.totalAmount }),
     paparseOptions: { header: false },
     batchSize: 5,
   });
 
   const columns: TableProps<IProductError>["columns"] = [
-    { title: <Text strong style={{ color: '#476481' }}>Trạng thái</Text>, dataIndex: "Success", key: "Success", render: (value) => value ? <Tag color="cyan">Thành công</Tag> : <Tag color="red">Lỗi</Tag> },
-    { title: <Text strong style={{ color: '#476481' }}>Mã SP</Text>, dataIndex: "Code", key: "Code" },
-    { title: <Text strong style={{ color: '#476481' }}>Tên SP</Text>, dataIndex: "Name", key: "Name" },
-    { title: <Text strong style={{ color: '#476481' }}>Thông báo</Text>, dataIndex: "Message", key: "Message" },
+    { title: "Trạng thái", dataIndex: "Success", render: (val) => val ? <Tag color="success">Thành công</Tag> : <Tag color="error">Lỗi</Tag> },
+    { title: "Mã sản phẩm", dataIndex: "Code", render: (val) => <Text strong>{val}</Text> },
+    { title: "Tên sản phẩm", dataIndex: "Name" },
+    { title: "Thông báo", dataIndex: "Message", render: (val, record) => <Text type={record.Success ? "secondary" : "danger"}>{val || "—"}</Text> },
   ];
 
   return (
     <Create
-      title={<Title level={3} style={{ margin: 0, color: '#476481', fontWeight: 700 }}>Import Sản phẩm hàng loạt</Title>}
+      title={<Title level={3} className="pd-m-0 pd-text-ocean pd-font-bold">Thêm sản phẩm hàng loạt</Title>}
       breadcrumb={<Breadcrumb breadcrumbProps={{ items: [{ title: "Sản phẩm", href: "/products" }, { title: "Thêm hàng loạt" }] }} />}
     >
-      <Card bordered={false} style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(122,157,193,0.08)" }} bodyStyle={{ padding: 24 }}>
-        <Space style={{ marginBottom: 24 }}>
-          <ImportButton {...importProps} accept=".csv" style={{ background: '#7a9dc1', borderColor: '#7a9dc1', color: '#fff', borderRadius: 6, fontWeight: 600 }} />
-          <Text style={{ fontSize: 15, color: '#6b7c93' }}>
-            Đã xử lý: <strong style={{ color: '#476481' }}>{importProgress.processed} / {importProgress.total}</strong> dòng
+      <Card className="pd-card pd-card-ocean">
+        <Flex justify="space-between" align="center" className="pd-mb-24">
+          <ImportButton {...importProps} accept=".csv" className="pd-btn-primary" />
+          <Text type="secondary" style={{ fontSize: 15 }}>
+            Đã xử lý: <Text strong className="pd-text-ocean">{importProgress.processed} / {importProgress.total}</Text> dòng
           </Text>
-        </Space>
+        </Flex>
         
-        <Table columns={columns} dataSource={responses} pagination={{ pageSize: 20 }} size="middle" rowKey={(record, idx) => record.Code || String(idx)} />
+        <Table columns={columns} dataSource={responses} pagination={{ pageSize: 20 }} size="middle" rowKey={(record, idx) => record.Code || String(idx)} bordered />
       </Card>
     </Create>
   );
