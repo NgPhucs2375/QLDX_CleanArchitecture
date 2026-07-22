@@ -46,6 +46,7 @@ export interface ICascadeCategory {
 
 export interface ICascadeApprover {
   approverId: string;
+  approverName: string;
   role: string;
   stepOrder: number;
 }
@@ -103,3 +104,18 @@ export interface ISelectedCategory {
   allowedQuota: number;
   items: ISelectedItem[];
 }
+// export enum StatusEnum {
+//   Draft = 0,
+//   PendingApproval = 1,
+//   Approved = 2,
+//   Rejected = 3,
+//   ReturnedForEdit = 4,
+//   OrderCompleted = 5
+// }
+// export const listStatus.find(i => i.value == phieu.Status)?.label = [
+//   {
+//     value: StatusEnum.Draft,
+//     label: "Chưa gửi duyệt",
+//     color: "blue"
+//   }
+// ]

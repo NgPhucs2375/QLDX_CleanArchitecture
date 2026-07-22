@@ -1,8 +1,8 @@
 import { useForm, Create, useSelect } from "@refinedev/antd";
 import { useCreate, useGetIdentity, useNavigation, HttpError } from "@refinedev/core";
-import { Form, Input, Select, InputNumber, Typography, App, Row, Col, Button, Tooltip, Card, Space, Table } from "antd";
+import { Form, Input, Select, InputNumber, Typography, App, Row, Col, Button, Tooltip, Card, Space, Table, Tag, Alert, Divider } from "antd";
 import { useState, useRef, useEffect } from "react";
-import { TeamOutlined, DeleteOutlined, SaveOutlined, PlusOutlined, AppstoreOutlined, DownOutlined, InfoCircleOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { TeamOutlined, DeleteOutlined, SaveOutlined, PlusOutlined, AppstoreOutlined, DownOutlined, InfoCircleOutlined, EnvironmentOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import type { IPurchaseRequest, ICascadeProduct, ICascadeCreateData, ICreatePayload, ISelectedCategory } from "./types";
 import { dataProvider } from "../../providers/data-provider";
 import "../../assets/purchase-request.css";
@@ -12,8 +12,7 @@ const { TextArea } = Input;
 
 let rowIdCounter = 0;
 const generateRowId = () => `r_${Date.now()}_${++rowIdCounter}`;
-const fmtNum = (n: number) => n.toLocaleString("vi-VN");
-const fmtVnd = (n: number) => n.toLocaleString("vi-VN") + " ₫";
+const fmtVnd = (n: number) => (n || 0).toLocaleString("vi-VN") + " ₫";
 
 function mapPascalToCamel(obj: unknown): unknown {
   if (Array.isArray(obj)) return obj.map(mapPascalToCamel);
@@ -119,13 +118,16 @@ export const CreatePurchaseRequest = () => {
 
     const cascadeAvailable = cascadeData.categories.length > 0;
     const totalProposed = selectedCategories.reduce((s, c) => s + c.items.reduce((s2, i) => s2 + i.unitPrice * i.proposedQuantity, 0), 0);
+    const totalItems = selectedCategories.reduce((s, c) => s + c.items.length, 0);
 
     return (
-        <Create 
+        <Create
             title={<Title level={3} className="pr-m-0 pr-text-emerald">Tạo Phiếu Đề Xuất</Title>}
             footerButtons={({ saveButtonProps }) => (
-                <Button type="primary" icon={<SaveOutlined />} {...saveButtonProps} onClick={handleSubmit} loading={isCreating} className="pr-bg-emerald-light pr-text-emerald pr-border-emerald">
-                    Lưu phiếu đề xuất
+                <Button type="primary" {...saveButtonProps} onClick={handleSubmit} loading={isCreating}
+                    size="large" className="pr-bg-emerald-light pr-text-emerald pr-border-emerald"
+                    style={{ minWidth: 200, height: 44, fontSize: 16 }}>
+                    <SaveOutlined /> Lưu phiếu đề xuất
                 </Button>
             )}
         >
@@ -163,7 +165,42 @@ export const CreatePurchaseRequest = () => {
                 </Row>
 
                 {cascadeAvailable && (
-                    <Card loading={loadingCascade} title={<Text strong className="pr-text-emerald">Danh mục hàng hóa</Text>} className="pr-card pr-card-emerald">
+                    <Card className="pr-card pr-card-emerald"
+                        title={<Space><TeamOutlined className="pr-text-emerald" /><Text strong className="pr-text-emerald">Quy trình duyệt</Text></Space>}>
+                        <Row gutter={24}>
+                            <Col xs={24} md={12}>
+                                <Text strong className="pr-text-emerald" style={{ display: 'block', marginBottom: 8 }}>
+                                    <Tag color="blue">Bước 1</Tag> Trưởng đơn vị
+                                </Text>
+                                <Select
+                                    value={selectedApproverId || undefined}
+                                    onChange={(val) => setSelectedApproverId(val)}
+                                    options={userSelectProps.options}
+                                    showSearch
+                                    className="pr-w-100"
+                                    placeholder="Chọn Trưởng đơn vị..."
+                                    style={{ maxWidth: 400 }}
+                                />
+                            </Col>
+                            {cascadeData.approvers.filter((a) => a.role !== "Trưởng đơn vị").map((a, idx) => (
+                                <Col xs={24} md={12} key={idx}>
+                                    <Text strong className="pr-text-emerald" style={{ display: 'block', marginBottom: 8 }}>
+                                        <Tag color="purple">Bước {idx + 2}</Tag> {a.role}
+                                    </Text>
+                                    <Tag color="geekblue" style={{ padding: '4px 12px', fontSize: 14 }}>
+                                        {a.approverName || a.approverId}
+                                    </Tag>
+                                </Col>
+                            ))}
+                        </Row>
+                    </Card>
+                )}
+
+                {cascadeAvailable && (
+                    <Card loading={loadingCascade}
+                        title={<Space><AppstoreOutlined className="pr-text-emerald" /><Text strong className="pr-text-emerald">Danh mục hàng hóa</Text></Space>}
+                        extra={totalItems > 0 ? <Text strong className="pr-text-emerald">Tổng đề xuất: {fmtVnd(totalProposed)}</Text> : null}
+                        className="pr-card pr-card-emerald">
                         <Select
                             mode="multiple"
                             className="pr-w-100"
@@ -181,94 +218,93 @@ export const CreatePurchaseRequest = () => {
                             options={cascadeData.categories.map((c) => ({ label: `${c.categoryName} (Định mức: ${fmtVnd(c.allowedQuota)})`, value: c.categoryId }))}
                             filterOption={(input, option) => (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())}
                         />
-                    </Card>
-                )}
 
-                <Space direction="vertical" size="large" className="pr-w-100">
-                    {selectedCategories.map((cat) => {
-                        const prods = productsCache[cat.categoryId] ?? [];
-                        const subtotal = cat.items.reduce((s, i) => s + i.unitPrice * i.proposedQuantity, 0);
-                        const quotaDiff = cat.allowedQuota - subtotal;
+                        {totalItems > 0 && (
+                            <Alert
+                                type="info"
+                                showIcon
+                                icon={<ShoppingCartOutlined />}
+                                message={
+                                    <Space size="large" wrap>
+                                        <Text>Số danh mục: <Text strong>{selectedCategories.filter(c => c.items.length > 0).length}</Text></Text>
+                                        <Text>Số sản phẩm: <Text strong>{totalItems}</Text></Text>
+                                        <Text>Tổng tiền: <Text strong className="pr-text-emerald" style={{ fontSize: 16 }}>{fmtVnd(totalProposed)}</Text></Text>
+                                    </Space>
+                                }
+                                style={{ marginTop: 16, marginBottom: 16 }}
+                            />
+                        )}
 
-                        const tableColumns = [
-                            { title: "Mã SP", dataIndex: "code", render: (val: string) => <Text className="pr-text-secondary">{val || "—"}</Text> },
-                            { title: "Tên Sản Phẩm", dataIndex: "productId", render: (_: number, item: IExtendedItem) => (
-                                <Select
-                                    value={item.productId || null}
-                                    onChange={(val: number) => {
-                                        const product = prods.find((p) => p.id === val);
-                                        if (!product) return;
-                                        setSelectedCategories((prev) => prev.map((c) => c.categoryId !== cat.categoryId ? c : { ...c, items: c.items.map((i) => i.rowId === item.rowId ? { ...i, productId: product.id, code: product.code, productName: product.name, unitPrice: product.unitPrice, unit: product.unit } : i ) }));
-                                    }}
-                                    options={prods.map((p) => ({ label: p.name, value: p.id, disabled: cat.items.some(i => i.productId === p.id && i.rowId !== item.rowId) }))}
-                                    className="pr-w-100 pr-min-w-200"
-                                    placeholder="Chọn sản phẩm..."
-                                    showSearch
-                                />
-                            )},
-                            { title: "ĐVT", dataIndex: "unit", render: (val: string) => <Text className="pr-text-secondary">{val || "—"}</Text> },
-                            { title: "Số Lượng", dataIndex: "proposedQuantity", render: (val: number, item: IExtendedItem) => (
-                                <InputNumber min={1} value={val} onChange={(v) => updateItemField(cat.categoryId, item.rowId, 'proposedQuantity', v ?? 1)} className="pr-w-100" />
-                            )},
-                            { title: "Đơn Giá", dataIndex: "unitPrice", align: "right" as const, render: (val: number) => <Text>{fmtNum(val)}</Text> },
-                            { title: "Thành tiền", align: "right" as const, render: (_: IExtendedItem) => <Text className="pr-text-emerald" strong>{fmtNum(_.unitPrice * _.proposedQuantity)}</Text> },
-                            { title: "Ghi chú", dataIndex: "note", render: (val: string, item: IExtendedItem) => (
-                                <Input value={val} onChange={(e) => updateItemField(cat.categoryId, item.rowId, 'note', e.target.value)} />
-                            )},
-                            { title: "", align: "center" as const, render: (_: IExtendedItem) => (
-                                <Tooltip title="Xóa dòng này">
-                                    <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeItem(cat.categoryId, _.rowId)} />
-                                </Tooltip>
-                            )}
-                        ];
+                        <Space direction="vertical" size="large" className="pr-w-100">
+                            {selectedCategories.map((cat) => {
+                                const prods = productsCache[cat.categoryId] ?? [];
+                                const subtotal = cat.items.reduce((s, i) => s + i.unitPrice * i.proposedQuantity, 0);
+                                const quotaDiff = cat.allowedQuota - subtotal;
 
-                        return (
-                            <Card key={cat.categoryId} className="pr-card" title={<Space><Text strong className="pr-text-emerald">{cat.categoryName}</Text></Space>} extra={<Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeCategory(cat.categoryId)} />}>
-                                <Table dataSource={cat.items} columns={tableColumns} rowKey="rowId" pagination={false} scroll={{ x: 'max-content' }} />
-                                <Button type="dashed" block icon={<PlusOutlined />} className="pr-mt-16" onClick={() => {
-                                    setSelectedCategories((prev) => prev.map((c) => c.categoryId !== cat.categoryId ? c : { ...c, items: [...c.items, { productId: 0, code: "", productName: "", unitPrice: 0, unit: "", proposedQuantity: 1, note: "", rowId: generateRowId() }] }));
-                                }}>
-                                    Bổ sung sản phẩm
-                                </Button>
-                                <Space size="large" className="pr-mt-16 pr-w-100 pr-flex-end">
-                                    <Text className="pr-text-secondary">Định mức cho phép: <Text strong>{fmtNum(cat.allowedQuota)}</Text></Text>
-                                    <Text className="pr-text-secondary">Tổng tiền: <Text strong className="pr-text-emerald">{fmtNum(subtotal)}</Text></Text>
-                                    <Text className="pr-text-secondary">Chênh lệch định mức: <Text strong className={quotaDiff < 0 ? 'pr-text-danger' : 'pr-text-success'}> {quotaDiff > 0 ? "+" : ""}{fmtNum(quotaDiff)}</Text></Text>
-                                </Space>
-                            </Card>
-                        );
-                    })}
-                </Space>
+                                const tableColumns = [
+                                    { title: "Sản phẩm", dataIndex: "productId", width: 320, render: (_: number, item: IExtendedItem) => (
+                                        <Select
+                                            value={item.productId || null}
+                                            onChange={(val: number) => {
+                                                const product = prods.find((p) => p.id === val);
+                                                if (!product) return;
+                                                setSelectedCategories((prev) => prev.map((c) => c.categoryId !== cat.categoryId ? c : { ...c, items: c.items.map((i) => i.rowId === item.rowId ? { ...i, productId: product.id, code: product.code, productName: product.name, unitPrice: product.unitPrice, unit: product.unit } : i ) }));
+                                            }}
+                                            options={prods.map((p) => ({
+                                                label: `${p.name} — ${fmtVnd(p.unitPrice)}${p.unit ? ` / ${p.unit}` : ""}`,
+                                                value: p.id,
+                                                disabled: cat.items.some(i => i.productId === p.id && i.rowId !== item.rowId)
+                                            }))}
+                                            className="pr-w-100"
+                                            placeholder="Chọn sản phẩm..."
+                                            showSearch
+                                            filterOption={(input, option) => (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())}
+                                        />
+                                    )},
+                                    { title: "SL", dataIndex: "proposedQuantity", width: 100, align: "center" as const, render: (val: number, item: IExtendedItem) => (
+                                        <InputNumber min={1} value={val} onChange={(v) => updateItemField(cat.categoryId, item.rowId, 'proposedQuantity', v ?? 1)} style={{ width: '100%' }} />
+                                    )},
+                                    { title: "Đơn giá", align: "right" as const, width: 120, render: (_: any, item: IExtendedItem) => (
+                                        <Text>{item.productId ? fmtVnd(item.unitPrice) : "—"}</Text>
+                                    )},
+                                    { title: "Thành tiền", align: "right" as const, width: 140, render: (_: IExtendedItem) => (
+                                        <Text className="pr-text-emerald" strong>{_.productId ? fmtVnd(_.unitPrice * _.proposedQuantity) : "—"}</Text>
+                                    )},
+                                    { title: "Ghi chú", width: 130, render: (val: string, item: IExtendedItem) => (
+                                        <Space.Compact style={{ width: '100%' }}>
+                                            <Input size="small" value={val} onChange={(e) => updateItemField(cat.categoryId, item.rowId, 'note', e.target.value)}
+                                                placeholder="Ghi chú..." style={{ width: '100%' }} />
+                                            {val ? <Tooltip title={val}>
+                                                <InfoCircleOutlined className="pr-text-emerald" style={{ padding: '0 6px', lineHeight: '22px', fontSize: 14 }} />
+                                            </Tooltip> : null}
+                                        </Space.Compact>
+                                    )},
+                                    { title: "", align: "center" as const, width: 50, render: (_: IExtendedItem) => (
+                                        <Tooltip title="Xóa dòng này">
+                                            <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeItem(cat.categoryId, _.rowId)} />
+                                        </Tooltip>
+                                    )}
+                                ];
 
-                {selectedCategories.some((c) => c.items.length > 0) && (
-                    <Card className="pr-card pr-card-total pr-mt-24 pr-text-right">
-                        <Space size="large">
-                            <Text strong className="pr-text-emerald pr-font-16">Tổng cộng:</Text>
-                            <Text strong className="pr-text-emerald pr-font-24">{fmtVnd(totalProposed)}</Text>
-                        </Space>
-                    </Card>
-                )}
-
-                {cascadeAvailable && (
-                    <Card title={<Space><Space className="pr-icon-wrapper pr-icon-team"><TeamOutlined /></Space><Text strong className="pr-text-emerald">Quy trình duyệt</Text></Space>} className="pr-card pr-card-emerald">
-                        <Space wrap size="large">
-                            <Space direction="vertical">
-                                <Text strong className="pr-text-emerald">1. Trưởng đơn vị</Text>
-                                <Select
-                                    value={selectedApproverId || undefined}
-                                    onChange={(val) => setSelectedApproverId(val)}
-                                    options={userSelectProps.options}
-                                    showSearch
-                                    className="pr-min-w-220"
-                                    placeholder="Chọn Trưởng đơn vị..."
-                                />
-                            </Space>
-                            {cascadeData.approvers.filter((a) => a.role !== "Trưởng đơn vị").map((a, idx) => (
-                                <Space direction="vertical" key={idx}>
-                                    <Text strong className="pr-text-emerald">{idx + 2}. {a.role}</Text>
-                                    <Text className="pr-text-secondary">Người duyệt: {a.approverId}</Text>
-                                </Space>
-                            ))}
+                                return (
+                                    <Card key={cat.categoryId} className="pr-card" size="small"
+                                        title={<Text strong className="pr-text-emerald">{cat.categoryName}</Text>}
+                                        extra={<Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeCategory(cat.categoryId)} />}>
+                                        <Table dataSource={cat.items} columns={tableColumns} rowKey="rowId" pagination={false} size="small" />
+                                        <Button type="dashed" block icon={<PlusOutlined />} className="pr-mt-12" onClick={() => {
+                                            setSelectedCategories((prev) => prev.map((c) => c.categoryId !== cat.categoryId ? c : { ...c, items: [...c.items, { productId: 0, code: "", productName: "", unitPrice: 0, unit: "", proposedQuantity: 1, note: "", rowId: generateRowId() }] }));
+                                        }}>
+                                            Bổ sung sản phẩm
+                                        </Button>
+                                        <Divider style={{ margin: '12px 0' }} />
+                                        <Space size="large" className="pr-w-100" style={{ justifyContent: 'flex-end' }}>
+                                            <Text className="pr-text-secondary">Định mức: <Text strong>{fmtVnd(cat.allowedQuota)}</Text></Text>
+                                            <Text className="pr-text-secondary">Tạm tính: <Text strong className="pr-text-emerald">{fmtVnd(subtotal)}</Text></Text>
+                                            <Text className="pr-text-secondary">Chênh lệch: <Text strong className={quotaDiff < 0 ? 'pr-text-danger' : 'pr-text-success'}> {quotaDiff >= 0 ? "+" : ""}{fmtVnd(quotaDiff)}</Text></Text>
+                                        </Space>
+                                    </Card>
+                                );
+                            })}
                         </Space>
                     </Card>
                 )}

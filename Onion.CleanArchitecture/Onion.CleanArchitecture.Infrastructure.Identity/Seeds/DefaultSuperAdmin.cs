@@ -79,7 +79,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Seeds
                 await AddClaimIfNotExist("config-approvers", "list#create#show#edit#delete");
                 await AddClaimIfNotExist("purchase-requests", "list#create#show#edit#delete#submit#approve-department#reject#return-for-edit#return#approve#confirm-order#confirm#complete");
                 await AddClaimIfNotExist("purchase-request-categories", "list#create#show#edit#delete");
-                await AddClaimIfNotExist("purchase-request-items", "list#create#show#edit#delete#update-actual-quantity");
+                await AddClaimIfNotExist("purchase-request-items", "list#create#show#edit#delete#update-actual-quantity#update-true-quantity-items");
                 await AddClaimIfNotExist("purchase-request-logs", "list#create#show#edit#delete");
             }
         }

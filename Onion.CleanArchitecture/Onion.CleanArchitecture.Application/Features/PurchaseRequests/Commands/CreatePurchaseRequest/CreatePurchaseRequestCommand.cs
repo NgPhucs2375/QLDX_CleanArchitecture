@@ -33,6 +33,10 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         public int ProposalConfigId { get; set; }
         public string ApproverId { get; set; } = string.Empty;
         public string Note { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public string? ContactName { get; set; }
+        public string? ContactPhone { get; set; }
+        public string? ShippingAddress { get; set; }
         public List<CreatePurchaseRequestCategoryDto> Categories { get; set; } = new();
     }
 
@@ -122,6 +126,11 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                 Status = PurchaseRequestStatus.Draft,
                 TotalProposedAmount = 0,
                 TotalActualAmount = 0,
+                Reason = request.Reason,
+                ContactName = request.ContactName,
+                ContactPhone = request.ContactPhone,
+                ShippingAddress = request.ShippingAddress,
+                Note = request.Note,
             };
 
             foreach (var catDto in request.Categories)

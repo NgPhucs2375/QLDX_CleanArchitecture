@@ -29,6 +29,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
     public class CascadeApproverDto
     {
         public string ApproverId { get; set; }
+        public string ApproverName { get; set; }
         public string Role { get; set; }
         public int StepOrder { get; set; }
     }
@@ -95,12 +96,13 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.
                     AllowedQuota = cc.AllowedQuota,
                 }).ToList(),
 
-                Approvers = controlApprovers.Select(ca => new CascadeApproverDto
+                Approvers = (await Task.WhenAll(controlApprovers.Select(async ca => new CascadeApproverDto
                 {
                     ApproverId = ca.ApproverId,
+                    ApproverName = await _userLookup.GetDisplayNameAsync(ca.ApproverId) ?? ca.ApproverId,
                     Role = "Kiểm soát",
                     StepOrder = 2,
-                }).ToList(),
+                }))).ToList(),
 
                 DepartmentHeads = string.IsNullOrEmpty(managerId)
                     ? new List<CascadeDepartmentHeadDto>()

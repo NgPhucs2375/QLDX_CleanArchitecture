@@ -1,8 +1,8 @@
-import { useTable, List, ShowButton, EditButton, getDefaultSortOrder, DateField, FilterDropdown } from "@refinedev/antd";
+import { useTable, List, ShowButton, getDefaultSortOrder, DateField, FilterDropdown } from "@refinedev/antd";
 import { Table, Space, Input, Button, Tag, Typography, Avatar } from "antd";
 import { PlusOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
 import { IPurchaseRequest } from "./types";
-import { getDefaultFilter, useNavigation, useDeleteMany, CanAccess } from "@refinedev/core";
+import { getDefaultFilter, useNavigation, useDeleteMany, CanAccess, useMany } from "@refinedev/core";
 import React from "react";
 import { PaginationTotal } from "@components/pagination-total";
 import "../../assets/purchase-request.css";
@@ -26,6 +26,12 @@ export const ListPurchaseRequest = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<React.Key[]>([]);
   const { create } = useNavigation();
+
+  const createdByIds = React.useMemo(() =>
+    [...new Set((tableProps.dataSource || []).map((r: any) => r.CreatedBy).filter(Boolean))],
+    [tableProps.dataSource]
+  );
+  const { data: usersData } = useMany({ resource: "users", ids: createdByIds, queryOptions: { enabled: createdByIds.length > 0 } });
 
   const rowSelection = { selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) };
 
@@ -58,7 +64,11 @@ export const ListPurchaseRequest = () => {
         <Table.Column 
           dataIndex="CreatedBy" 
           title="Người tạo" 
-          render={(val: string) => <Space><Avatar size="small" icon={<UserOutlined />} /> <Text>{val || "Hệ thống"}</Text></Space>} 
+          render={(val: string) => {
+            const user = (usersData?.data as any[])?.find((u: any) => u.Id === val || u.id === val);
+            const name = user?.UserName || user?.userName || user?.Name || user?.name || val;
+            return <Space><Avatar size="small" icon={<UserOutlined />} /> <Text>{name || "Hệ thống"}</Text></Space>;
+          }} 
         />
         <Table.Column 
           dataIndex="Status" 
@@ -78,7 +88,6 @@ export const ListPurchaseRequest = () => {
           render={(_, record: IPurchaseRequest) => (
             <Space>
               <ShowButton hideText size="small" recordItemId={record.Id} />
-              <EditButton hideText size="small" recordItemId={record.Id} />
             </Space>
           )} 
         />

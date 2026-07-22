@@ -7,6 +7,7 @@ using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Services;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Enums;
+using System.Linq;
 
 namespace Onion.CleanArchitecture.Application.Features.TriggerPurchaseRequest.Commands.TriggerPurchaseRequestCommand
 {
@@ -51,11 +52,26 @@ namespace Onion.CleanArchitecture.Application.Features.TriggerPurchaseRequest.Co
             // 3. Fire event
             var machine = new PurchaseRequestStateMachine(_workflowService, _approvalRecordService, entity, _authenticatedUser.UserId);
             await machine.FireAsync(trigger, request.Note, ct);
-                
-            // 4. Update entity in database 
+
+            // 4. Nếu action là confirm, tính lại TotalActualAmount từ items
+            if (trigger == PurchaseRequestTrigger.ConfirmOrder)
+            {
+                decimal totalActual = 0;
+                if (entity.RequestCategories != null)
+                {
+                    foreach (var cat in entity.RequestCategories)
+                    {
+                        if (cat.RequestItems == null) continue;
+                        totalActual += cat.RequestItems.Sum(i => i.ActualTotalAmount);
+                    }
+                }
+                entity.TotalActualAmount = totalActual;
+            }
+
+            // 5. Update entity in database 
             await _purchaseRequestRepository.UpdateAsync(entity);
 
-            // 5. Return response
+            // 6. Return response
             return new Response<int>(entity.Id);
 
         }

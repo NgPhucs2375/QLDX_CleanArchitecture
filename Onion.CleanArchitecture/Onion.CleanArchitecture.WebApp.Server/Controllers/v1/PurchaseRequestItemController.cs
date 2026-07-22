@@ -7,6 +7,7 @@ using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetAllPurchaseRequestItems;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Queries.GetPurchaseRequestItemById;
 using Casbin;
+using Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Commands.UpdateTrueQuantityItems;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
 {
@@ -78,6 +79,15 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.v1
             // check permission gom : string resource, string action, Func<Task<IActionResult>> execute
             return await EnforcePermissionAndExecute("purchase-request-items","update-actual-quantity",async () => {
                 if(id != command.Id) return BadRequest();
+                return Ok(await Mediator.Send(command));
+            });
+        }
+
+        [HttpPut("{id}/update-true-quantity-items")]
+        public async Task<IActionResult> UpdateTrueQuantityItems(int id,UpdateTrueQuantityItemsCommand command)
+        {
+            return await EnforcePermissionAndExecute("purchase-request-items","update-true-quantity-items",async () => {
+                if (id != command.PurchaseRequestId) return BadRequest();
                 return Ok(await Mediator.Send(command));
             });
         }

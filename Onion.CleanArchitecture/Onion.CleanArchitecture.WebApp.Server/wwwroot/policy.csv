@@ -62,20 +62,11 @@ p, SuperAdmin, purchase-request-categories, create
 p, SuperAdmin, purchase-request-categories, show
 p, SuperAdmin, purchase-request-categories, edit
 p, SuperAdmin, purchase-request-categories, delete
-p, SuperAdmin, purchase-request-items, list
-p, SuperAdmin, purchase-request-items, create
-p, SuperAdmin, purchase-request-items, show
-p, SuperAdmin, purchase-request-items, edit
-p, SuperAdmin, purchase-request-items, delete
-p, SuperAdmin, purchase-request-items, update-actual-quantity
 p, SuperAdmin, purchase-request-logs, list
 p, SuperAdmin, purchase-request-logs, create
 p, SuperAdmin, purchase-request-logs, show
 p, SuperAdmin, purchase-request-logs, edit
 p, SuperAdmin, purchase-request-logs, delete
-p, Basic, purchase-request-items, list
-p, Basic, purchase-request-items, show
-p, Basic, purchase-request-items, trigger
 p, Basic, purchase-request-logs, list
 p, Basic, purchase-request-logs, trigger
 p, Basic, categories, list
@@ -99,3 +90,5 @@ p, Basic, purchase-requests, complete
 p, Basic, purchase-requests, trigger
 p, Basic, purchase-requests, list
 p, Basic, users, list
+p, SuperAdmin, purchase-request-items, update-true-quantity-items
+p, Basic, purchase-request-items, update-true-quantity-items

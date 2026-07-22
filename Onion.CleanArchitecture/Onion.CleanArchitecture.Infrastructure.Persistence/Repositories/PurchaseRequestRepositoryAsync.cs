@@ -78,6 +78,14 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
                 request._end);
         }
 
+        public async Task<PurchaseRequestStatus?> GetStatusByIdAsync(int id)
+        {
+            return await _entities
+                .Where(pr => pr.Id == id)
+                .Select(pr => (PurchaseRequestStatus?)pr.Status)
+                .FirstOrDefaultAsync();
+        }
+
         // Bổ sung từ khóa 'async' để giải quyết lỗi CS4032
         public async Task<decimal> GetUsedAmountByCategoryAsync(int proposalConfigId, int departmentId, int categoryId, int? excludePurchaseRequestId = null)
         {
