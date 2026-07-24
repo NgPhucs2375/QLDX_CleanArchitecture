@@ -109,7 +109,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
 
             // 4. Load cấu hình người duyệt từ DB
             var configApprovers = await _configApproverRepo.GetByConfigAndDepartmentAsync(
-    request.ProposalConfigId, request.DepartmentId);
+            request.ProposalConfigId, request.DepartmentId);
             Console.WriteLine($"[CreatePR] ConfigApprovers count: {configApprovers?.Count ?? 0}");
             foreach (var ca in configApprovers ?? new())
             {

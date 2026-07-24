@@ -1,0 +1,1 @@
+// Contract Báo cho người tạo biết bị từ chối (kèm lý do)

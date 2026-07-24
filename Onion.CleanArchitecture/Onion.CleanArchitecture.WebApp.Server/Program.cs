@@ -61,6 +61,8 @@ _services.AddHealthChecks();
 _services.AddScoped<IAuthenticatedUserService, AuthenticatedUserService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 _services.AddEndpointsApiExplorer();
+// 2. Đăng ký MassTransit
+_services.AddMessageBus(_config);
 
 var app = builder.Build();
 

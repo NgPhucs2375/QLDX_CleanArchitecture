@@ -1,0 +1,1 @@
+// Ghi lại tất cả integration events vào hệ thống log/audit (dùng chung 1 handler cho mọi event)

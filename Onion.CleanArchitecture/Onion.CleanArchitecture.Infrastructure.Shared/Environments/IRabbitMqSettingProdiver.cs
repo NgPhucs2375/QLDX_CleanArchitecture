@@ -15,6 +15,6 @@ namespace Onion.CleanArchitecture.Infrastructure.Shared.Environments
         string GetConnectionString();
         bool IsHealthy();
         ConnectionFactory GetConnectionFactory();
-        Task GetUri<T>(IBus _bus,string queueName,T message);
+        Task SendUri<T>(IBus _bus,string queueName,T message);
     }
 }

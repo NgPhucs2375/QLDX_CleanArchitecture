@@ -1,6 +1,6 @@
 ﻿using MassTransit;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Onion.CleanArchitecture.Domain.Settings;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using System;
@@ -8,118 +8,85 @@ using System.Threading.Tasks;
 
 namespace Onion.CleanArchitecture.Infrastructure.Shared.Environments
 {
+    /// <summary>
+    /// Lớp tiện ích cung cấp thông tin kết nối RabbitMQ(host,port,username,password) và các method kiểm tra 
+    /// health check(IsHealthy) + gửi message trực tiếp tới queue(GetUri<T>)
+    /// Thực chất là 1 Wrapper xung quanh RabbitMqOptions.
+    /// </summary> 
     public class RabbitMqSettingProdiver : IRabbitMqSettingProdiver
     {
-        private readonly IHostEnvironment _env;
-        private readonly IConfiguration _config;
-        public RabbitMqSettingProdiver(
-            IHostEnvironment env,
-            IConfiguration config
-            )
+        // Tiêm vào để sài 
+        private readonly RabbitMqOptions _options;
+        public RabbitMqSettingProdiver(IOptions<RabbitMqOptions> options)
         {
-            _config = config;
-            _env = env;
+            _options = options.Value;
         }
-
+        // ánh xạ các thuộc tính từ RabbitMqOptions sang các phương thức của RabbitMqSettingProdiver để cung cấp thông tin kết nối RabbitMQ(host,port,username,password) và các method kiểm tra health check(IsHealthy) + gửi message trực tiếp tới queue(GetUri<T>)
         public ConnectionFactory GetConnectionFactory()
         {
-            var connectionFactory = new ConnectionFactory
+            return new ConnectionFactory
             {
-                Uri = new Uri(GetConnectionString())
+                HostName = _options.Host,
+                Port = _options.Port,
+                UserName = _options.Username,
+                Password = _options.Password,
+                VirtualHost = _options.VirtualHost
             };
-            return connectionFactory;
         }
 
+        // Tạo chuỗi kết nối RabbitMQ chuẩn
         public string GetConnectionString()
         {
-
-            return $"amqp://{GetUserName()}:{GetPassword()}@{GetHostName()}:{GetPort()}/{GetVHost()}";
+            return $"amqp://{_options.Username}:{_options.Password}@{_options.Host}:{_options.Port}/{_options.VirtualHost}";
         }
 
-        public string GetHostName()
-        {
-            var isHasRabbitMqHostName = EnvironmentVariables.HasRabbitMqHostName();
-            if (_env.IsProduction() && isHasRabbitMqHostName)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqHostName);
-            }
-            return _config["RabbitMq:HostName"];
-        }
+        /// ===============[ => return nhanh để lấy về chuẩn giá trị dể hàm GetConnectionString có tài nguyên ghép nối nhanh hơn ]================
+        public string GetHostName() => _options.Host;
 
-        public string GetPassword()
-        {
-            var isHasRabbitMqPassword = EnvironmentVariables.HasRabbitMqPassword();
-            if (_env.IsProduction() && isHasRabbitMqPassword)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqPassword);
-            }
-            return _config["RabbitMq:Password"];
-        }
+        public string GetUserName() => _options.Username;
 
-        public string GetPort()
-        {
-            var isHasRabbitMqPort = EnvironmentVariables.HasRabbitMqPort();
-            if (_env.IsProduction() && isHasRabbitMqPort)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqPort);
-            }
-            return _config["RabbitMq:Port"];
-        }
+        public string GetPassword() => _options.Password;
 
-        public async Task GetUri<T>(IBus _bus,string queueName, T message)
+        public string GetPort() => _options.Port.ToString();
+
+        public string GetVHost() => _options.VirtualHost;
+
+        /// <summary>
+        /// Gửi message trực tiếp tới queue thông qua MassTransit IBus, sử dụng SendEndpoint để gửi message đến queue được chỉ định bởi queueName. Phương thức này giúp gửi message một cách trực tiếp và nhanh chóng mà không cần phải tạo consumer để nhận message.
+        /// </summary>
+        public async Task SendUri<T>(IBus bus, string queueName, T message)
         {
-            Uri uri;
-            ISendEndpoint endPoint;
-            if (!string.IsNullOrEmpty(GetVHost()) && GetVHost().Length > 0)
-            {
-                uri = new Uri($"rabbitmq://{GetHostName()}/{GetVHost()}/{queueName}");
-            }
-            else
-            {
-                uri = new Uri($"rabbitmq://{GetHostName()}/{queueName}");
-            }
-            
-            endPoint = await _bus.GetSendEndpoint(uri);
+            // Đinh tuyến point to point đến hàng đợi cuối để định dạng endpoint 
+            var uri = new Uri($"rabbitmq://{_options.Host}/{_options.VirtualHost}/{queueName}");
+            // trung chuyển lập 1 cầu nối trỏ đúng vô cái uri ở trên 
+            var endPoint = await bus.GetSendEndpoint(uri);
+            // gửi message trực tiếp tới queue
             await endPoint.Send(message);
         }
 
-        public string GetUserName()
-        {
-            var isHasRabbitMqUserName = EnvironmentVariables.HasRabbitMqUserName();
-            if (_env.IsProduction() && isHasRabbitMqUserName)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqUserName);
-            }
-            return _config["RabbitMq:UserName"];
-        }
-
-        public string GetVHost()
-        {
-            var isHasRabbitMqVHost = EnvironmentVariables.HasRabbitMqVHost();
-            if (_env.IsProduction() && isHasRabbitMqVHost)
-            {
-                return Environment.GetEnvironmentVariable(EnvironmentVariables.RabbitMqVHost);
-            }
-            return _config["RabbitMq:VHost"];
-        }
-
+        /// <summary>
+        /// "ping" thử đến S RabbitMQ xem broker Islive? 
+        /// </summary>
         public bool IsHealthy()
         {
             try
             {
+                // tạo biến hứng kết nối có các thông tin ở trên
                 var connectionFactory = GetConnectionFactory();
+                // using(...): khởi tạo kết nối (connection) và kênh giao tiếp(channel) using đảm bảo sau khi check xong ở } thì đóng hết lại và clear chống sập tài nguyên
                 using (var connection = connectionFactory.CreateConnection())
                 using (var channel = connection.CreateModel())
                 {
-                    // Kiểm tra kết nối tới RabbitMQ bằng cách khởi tạo kết nối và kênh
                     return connection.IsOpen && channel.IsOpen;
                 }
             }
+            // BrokerUnreachableException : lỗi văng ra khi ứng dụng hoàn toàn không tìm thấy hoặc không thể thiết lập kết nối mạng tới Server RabbitMQ
             catch (BrokerUnreachableException)
             {
-                // Xử lý lỗi khi không kết nối được tới RabbitMQ
                 return false;
             }
         }
+
+
     }
 }
