@@ -67,15 +67,15 @@ namespace Onion.CleanArchitecture.Infrastructure.Shared.Environments
         /// <summary>
         /// "ping" thử đến S RabbitMQ xem broker Islive? 
         /// </summary>
-        public bool IsHealthy()
+        public async Task<bool> IsHealthy()
         {
             try
             {
                 // tạo biến hứng kết nối có các thông tin ở trên
                 var connectionFactory = GetConnectionFactory();
                 // using(...): khởi tạo kết nối (connection) và kênh giao tiếp(channel) using đảm bảo sau khi check xong ở } thì đóng hết lại và clear chống sập tài nguyên
-                using (var connection = connectionFactory.CreateConnection())
-                using (var channel = connection.CreateModel())
+                using (var connection = await connectionFactory.CreateConnectionAsync())
+                using (var channel = await connection.CreateChannelAsync())
                 {
                     return connection.IsOpen && channel.IsOpen;
                 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.DTOs.Account;
 using Onion.CleanArchitecture.Application.DTOs.Email;
 using Onion.CleanArchitecture.Application.Enums;
@@ -33,6 +34,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
         private readonly JWTSettings _jwtSettings;
         private readonly IDateTimeService _dateTimeService;
         private readonly IdentityContext _context;
+        private readonly IEventBusService _eventBusService;
         public AccountService(
             IdentityContext context,
             UserManager<ApplicationUser> userManager,
@@ -40,7 +42,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
             IOptions<JWTSettings> jwtSettings,
             IDateTimeService dateTimeService,
             SignInManager<ApplicationUser> signInManager,
-            IEmailService emailService)
+            IEmailService emailService,
+            IEventBusService eventBusService)
         {
             _context = context;
             _userManager = userManager;
@@ -49,6 +52,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
             _dateTimeService = dateTimeService;
             _signInManager = signInManager;
             this._emailService = emailService;
+            _eventBusService = eventBusService;
         }
 
         public async Task<Response<AuthenticationResponse>> AuthenticateAsync(AuthenticationRequest request, string ipAddress)
@@ -104,6 +108,13 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "Người tạo đề xuất");
+                    await _eventBusService.PublishAsync(new UserEmailSyncedEvent(
+                        UserId: user.Id,
+                        Email: user.Email,
+                        DisplayName: $"{user.FirstName} {user.LastName}",
+                        EventType: "Created",
+                        OccurredAt: DateTime.UtcNow
+                    ));
                     var verificationUri = await SendVerificationEmail(user, origin);
                     //TODO: Attach Email Service here and configure it via appsettings
                     await _emailService.SendAsync(new Application.DTOs.Email.EmailRequest() { From = "mail@codewithmukesh.com", To = user.Email, Body = $"Please confirm your account by visiting this URL {verificationUri}", Subject = "Confirm Registration" });

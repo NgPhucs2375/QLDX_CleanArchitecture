@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.Enums;
 using Onion.CleanArchitecture.Application.Exceptions;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Commands.UpdateUser;
 using Onion.CleanArchitecture.Infrastructure.Identity.Models;
@@ -29,12 +31,15 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries
         {
             private readonly RoleManager<IdentityRole> _roleManager;
             private readonly UserManager<ApplicationUser> _userManager;
+            private readonly IEventBusService _eventBusService;
             public CreateUserCommandHandler(
                 RoleManager<IdentityRole> roleManager,
-                UserManager<ApplicationUser> userManager)
+                UserManager<ApplicationUser> userManager,
+                IEventBusService eventBusService)
             {
                 _roleManager = roleManager;
                 _userManager = userManager;
+                _eventBusService = eventBusService;
             }
 
             public async Task<Response<ApplicationUser>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -60,6 +65,13 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries
                     {
                         var role = await _roleManager.FindByIdAsync(request.RoleId);
                         await _userManager.AddToRoleAsync(user, role.Name);
+                        await _eventBusService.PublishAsync(new UserEmailSyncedEvent(
+                            UserId: user.Id,
+                            Email: user.Email,
+                            DisplayName: $"{user.FirstName} {user.LastName}",
+                            EventType: "Created",
+                            OccurredAt: DateTime.UtcNow
+                        ), cancellationToken);
                         // var verificationUri = await SendVerificationEmail(user, origin);
                         //TODO: Attach User Service here and configure it via appsettings
                         // await _emailService.SendAsync(new Application.DTOs.User.EmailRequest() { From = "mail@codewithmukesh.com", To = user.User, Body = $"Please confirm your account by visiting this URL {verificationUri}", Subject = "Confirm Registration" });

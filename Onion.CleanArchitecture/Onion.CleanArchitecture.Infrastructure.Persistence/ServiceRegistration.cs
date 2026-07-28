@@ -112,6 +112,21 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence
             }
         }
 
+        public static void AddNpgSqlSagaDbContext(this IServiceCollection services)
+        {
+            var sp = services.BuildServiceProvider();
+            using (var scope = sp.CreateScope())
+            {
+                var _dbSetting = scope.ServiceProvider.GetRequiredService<IDatabaseSettingsProvider>();
+                string appConnStr = _dbSetting.GetPostgresConnectionString();
+                if (!string.IsNullOrWhiteSpace(appConnStr))
+                {
+                    services.AddDbContext<SagaDbContext>(options =>
+                    options.UseNpgsql(appConnStr));
+                }
+            }
+        }
+
         /// <summary>
         /// AddPersistenceReposotories : Đăng ký Repository Pattern
         /// Generic repository (IGenericRepositoryAsync<T>) cho các thao tác CRUD

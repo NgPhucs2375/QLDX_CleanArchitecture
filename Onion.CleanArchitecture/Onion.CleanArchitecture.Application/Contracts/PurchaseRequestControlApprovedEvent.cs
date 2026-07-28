@@ -3,7 +3,8 @@ using System;
 namespace Onion.CleanArchitecture.Application.Contracts
 {
     /// <summary>
-    /// Báo cho cấp kiểm soát biết phiếu đề xuất đã được duyệt 
+    /// Publisher: Kiểm soát duyệt
+    /// Người nhận thông báo: Người tạo phiếu
     /// </summary>
     /// <param name="CorrelationId"></param>
     /// <param name="RequestId"></param>

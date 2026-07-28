@@ -26,9 +26,17 @@ namespace Onion.CleanArchitecture.Infrastructure.Shared.Services
         {
             try
             {
+                _logger.LogInformation("EmailFrom config: '{EmailFrom}', Request.From: '{RequestFrom}', Request.To: '{RequestTo}'", 
+                    _mailSettings.EmailFrom, request.From, request.To);
+                
                 // create message
                 var email = new MimeMessage();
-                email.Sender = MailboxAddress.Parse(request.From ?? _mailSettings.EmailFrom);
+                var fromAddress = request.From ?? _mailSettings.EmailFrom;
+                if (string.IsNullOrWhiteSpace(fromAddress))
+                    throw new ApiException("EmailFrom is not configured in MailSettings");
+                if (string.IsNullOrWhiteSpace(request.To))
+                    throw new ApiException("EmailTo is not provided");
+                email.Sender = MailboxAddress.Parse(fromAddress);
                 email.To.Add(MailboxAddress.Parse(request.To));
                 email.Subject = request.Subject;
                 var builder = new BodyBuilder();

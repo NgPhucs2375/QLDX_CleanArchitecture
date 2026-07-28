@@ -6,3 +6,6 @@
 # Onion.CleanArchitecture/Onion.CleanArchitecture.WebApp.Server/wwwroot/policy.csv
 
 .opencode/
+**/appsettings.Development.json
+**/appsettings.json
+**/.vs/ProjectEvaluation/

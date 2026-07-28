@@ -24,6 +24,19 @@ namespace Onion.CleanArchitecture.Infrastructure.Identity.Services
             return $"{user.FirstName} {user.LastName}".Trim();
         }
 
+        public async Task<string> GetEmailAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user?.Email ?? string.Empty;
+        }
+
+        public async Task<string> GetUserDepartmentIdAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return string.Empty;
+            return user.DepartmentId.ToString();
+        }
+
         public async Task<List<UserDepartmentInfo>> GetUsersByDepartmentIdAsync(int departmentId)
         {
             return await _userManager.Users

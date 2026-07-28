@@ -7,7 +7,7 @@ namespace Onion.CleanArchitecture.WebApp.Server.Services
     {
         public AuthenticatedUserService(IHttpContextAccessor httpContextAccessor)
         {
-            UserId = httpContextAccessor.HttpContext?.User?.FindFirstValue("uid");
+            UserId = httpContextAccessor.HttpContext?.User?.FindFirstValue("uid")?? string.Empty;
         }
 
         public string UserId { get; }

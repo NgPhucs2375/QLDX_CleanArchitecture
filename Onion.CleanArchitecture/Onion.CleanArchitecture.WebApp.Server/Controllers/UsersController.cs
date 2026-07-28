@@ -1,10 +1,15 @@
-﻿using Onion.CleanArchitecture.Infrastructure.Identity;
+﻿using Onion.CleanArchitecture.Application.Contracts;
+using Onion.CleanArchitecture.Application.Interfaces;
+using Onion.CleanArchitecture.Infrastructure.Identity;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries.CreateUser;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries.GetPagingUser;
 using Onion.CleanArchitecture.Infrastructure.Identity.Features.Users.Queries.GetUserById;
+using Onion.CleanArchitecture.Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Casbin;
+using Microsoft.AspNetCore.Identity;
+using System.Linq;
 
 namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
 {
@@ -13,8 +18,16 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
     [Route("api/users")]
     public class UsersController : BaseApiController
     {
-        public UsersController(Enforcer enforcer) : base(enforcer)
+        private readonly IEventBusService _eventBusService;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public UsersController(
+            Enforcer enforcer,
+            IEventBusService eventBusService,
+            UserManager<ApplicationUser> userManager) : base(enforcer)
         {
+            _eventBusService = eventBusService;
+            _userManager = userManager;
         }
         // GET: api/users?_start=0&_end=10&_order=asc&_sort=Id
         [HttpGet]
@@ -76,6 +89,27 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers.Identity
             return await EnforcePermissionAndExecute("users", "delete", async () =>
             {
                 return Ok(await Mediator.Send(new DeleteUserByIdCommand { Id = id }));
+            });
+        }
+
+        // POST: api/users/sync-all
+        [HttpPost("sync-all")]
+        public async Task<IActionResult> SyncAll()
+        {
+            return await EnforcePermissionAndExecute("users", "list", async () =>
+            {
+                var users = _userManager.Users.ToList();
+                foreach (var user in users)
+                {
+                    await _eventBusService.PublishAsync(new UserEmailSyncedEvent(
+                        UserId: user.Id,
+                        Email: user.Email,
+                        DisplayName: $"{user.FirstName} {user.LastName}",
+                        EventType: "Created",
+                        OccurredAt: DateTime.UtcNow
+                    ));
+                }
+                return Ok(new { synced = users.Count });
             });
         }
     }

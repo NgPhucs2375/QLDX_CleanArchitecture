@@ -21,6 +21,7 @@ _services.AddNpgSqlIdentityInfrastructure(_config);
 _services.AddIdentityRepositories(_config);
 
 _services.AddNpgSqlPersistenceInfrastructure();
+_services.AddNpgSqlSagaDbContext();
 _services.AddPersistenceRepositories();
 _services.AddSharedInfrastructure(_config);
 if (_env.IsDevelopment())
@@ -42,7 +43,9 @@ _services.AddControllers().AddJsonOptions(opts =>
                 .Select(e => new
                 {
                     Field = e.Key,
-                    Message = e.Value.Errors.First().ErrorMessage
+                    // Dùng ! báo cho C# biết e.Value không null (vì đã check ở Where)
+                    // Dùng FirstOrDefault() và ?? để cung cấp giá trị mặc định nếu ErrorMessage bị null
+                    Message = e.Value!.Errors.FirstOrDefault()?.ErrorMessage ?? "Lỗi dữ liệu không xác định"
                 }).ToList();
 
             var problemDetails = new

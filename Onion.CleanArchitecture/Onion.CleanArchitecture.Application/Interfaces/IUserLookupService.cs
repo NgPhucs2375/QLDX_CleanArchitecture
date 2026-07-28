@@ -12,6 +12,8 @@ namespace Onion.CleanArchitecture.Application.Interfaces
     public interface IUserLookupService
     {
         Task<string> GetDisplayNameAsync(string userId);
+        Task<string> GetEmailAsync(string userId);
         Task<List<UserDepartmentInfo>> GetUsersByDepartmentIdAsync(int departmentId);
+        Task<string> GetUserDepartmentIdAsync(string userId);
     }
 }

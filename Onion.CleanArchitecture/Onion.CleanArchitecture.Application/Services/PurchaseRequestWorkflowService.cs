@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MassTransit;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
@@ -33,6 +35,7 @@ namespace Onion.CleanArchitecture.Application.Services
         private readonly ILogger<PurchaseRequestWorkflowService> _logger;
         private readonly IDepartmentRepositoryAsync _departmentRepo;
         private readonly IUserLookupService _userLookup;
+        private readonly IEventBusService _eventBusService;
 
 
 
@@ -43,7 +46,8 @@ namespace Onion.CleanArchitecture.Application.Services
             IProductRepositoryAsync productRepository,
             ILogger<PurchaseRequestWorkflowService> logger,
             IDepartmentRepositoryAsync departmentRepo,
-            IUserLookupService userLookup)
+            IUserLookupService userLookup,
+            IEventBusService eventBusService)
         {
             _repository = repository;
             _configCategoryRepo = configCategoryRepo;
@@ -52,6 +56,7 @@ namespace Onion.CleanArchitecture.Application.Services
             _logger = logger;
             _departmentRepo = departmentRepo;
             _userLookup = userLookup;
+            _eventBusService = eventBusService;
         }
 
     // +++++++++++++++++++=++++++++++ Cac Ham validate du lieu truoc khi submit, approve, reject ++++++++++++++++++++++++++++
@@ -252,10 +257,28 @@ namespace Onion.CleanArchitecture.Application.Services
     {
         await ValidateQuotaOnSubmitAsync(entity, ct);
         UpdateApproverStatus(entity, (int)ApprovalLevel.CreatorLevel, (int)ApprovalLevel.DepartmentLevel, ApproverStatus.Approved);
+        await _eventBusService.PublishAsync(
+            new PurchaseRequestSubmittedEvent(
+                CorrelationId: NewId.NextGuid(),
+                RequestId: entity.Id,
+                TotalAmount: entity.TotalProposedAmount,
+                SubmittedBy: _authenticatedUser.UserId,
+                OccurredAt: DateTime.UtcNow
+            ),ct
+        );
         return entity;
     }
     public async Task<PurchaseRequest> ApproveByDepartmentAsync(PurchaseRequest entity,string note, CancellationToken ct){
         UpdateApproverStatus(entity, (int)ApprovalLevel.DepartmentLevel, (int)ApprovalLevel.ControlLevel, ApproverStatus.Approved);
+        await _eventBusService.PublishAsync(
+            new PurchaseRequestDepartmentApprovedEvent(
+                CorrelationId: NewId.NextGuid(),
+                RequestId: entity.Id,
+                ApprovedBy: _authenticatedUser.UserId,
+                ApprovedAt: DateTime.UtcNow,
+                Note: note
+            ),ct
+        );
         return entity;
         }
     public async Task<PurchaseRequest> RejectedByDepartmentAsync(PurchaseRequest entity,string note,CancellationToken ct)
@@ -266,12 +289,31 @@ namespace Onion.CleanArchitecture.Application.Services
             }
             foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.DepartmentLevel))
                 approver.Status = ApproverStatus.Rejected;
+
+            await _eventBusService.PublishAsync(
+                new PurchaseRequestDepartmentRejectedEvent(
+                    CorrelationId: NewId.NextGuid(),
+                    RequestId: entity.Id,
+                    RejectedBy: _authenticatedUser.UserId,
+                    Note: note,
+                    OccurredAt: DateTime.UtcNow
+                ),ct
+            );
             return entity;
         }
     public async Task<PurchaseRequest> ApproveByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
     {
         foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
             approver.Status = ApproverStatus.Approved;
+        await _eventBusService.PublishAsync(
+            new PurchaseRequestControlApprovedEvent(
+                CorrelationId: NewId.NextGuid(),
+                RequestId: entity.Id,
+                ApprovedBy: _authenticatedUser.UserId,
+                Note: note,
+                OccurredAt: DateTime.UtcNow
+            ),ct
+        );
         return entity;
         }    
     public async Task<PurchaseRequest> RejectedByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
@@ -282,6 +324,15 @@ namespace Onion.CleanArchitecture.Application.Services
             }
             foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
                 approver.Status = ApproverStatus.Rejected;
+            await _eventBusService.PublishAsync(
+                new PurchaseRequestControlRejectedEvent(
+                    CorrelationId: NewId.NextGuid(),
+                    RequestId: entity.Id,
+                    RejectedBy: _authenticatedUser.UserId,
+                    Note: note,
+                    OccurredAt: DateTime.UtcNow
+                ),ct
+            );
             return entity;
         }
     public async Task<PurchaseRequest> ReturnForEditByControlAsync(PurchaseRequest entity,string note,CancellationToken ct)
@@ -292,11 +343,32 @@ namespace Onion.CleanArchitecture.Application.Services
             }
             foreach (var approver in entity.Approvers.Where(a => a.StepOrder == (int)ApprovalLevel.ControlLevel))
                 approver.Status = ApproverStatus.Bypassed;
+            await _eventBusService.PublishAsync(
+                new PurchaseRequestReturnedForEditEvent(
+                    CorrelationId: NewId.NextGuid(),
+                    RequestId: entity.Id,
+                    ReturnedBy: _authenticatedUser.UserId,
+                    ReturnAt: DateTime.UtcNow,
+                    TotalAmount: entity.TotalProposedAmount,
+                    SubmittedBy: entity.CreatedBy,
+                    Note: note
+                ),ct
+            );
             return entity;
         }
     public async Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity,string note,CancellationToken ct)
         {
             await ValidateConfirmOrderAsync(entity, ct);
+            await _eventBusService.PublishAsync(
+                new PurchaseRequestOrderConfirmedEvent(
+                    CorrelationId: NewId.NextGuid(),
+                    RequestId: entity.Id,
+                    ConfirmedBy: _authenticatedUser.UserId,
+                    ConfirmedAt: DateTime.UtcNow,
+                    TotalAmount: entity.TotalProposedAmount,
+                    SubmittedBy: entity.CreatedBy
+                ),ct
+            );
             return entity;
         }
     }

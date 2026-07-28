@@ -64,11 +64,18 @@ namespace Onion.CleanArchitecture.WebApp.Server.Controllers
             return Ok(await _accountService.ResetPassword(model));
         }
         private string GenerateIPAddress()
-        {
-            if (Request.Headers.ContainsKey("X-Forwarded-For"))
-                return Request.Headers["X-Forwarded-For"];
-            else
-                return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
-        }
+{
+    if (Request.Headers.ContainsKey("X-Forwarded-For"))
+    {
+        // Header trả về kiểu StringValues, gọi ToString() để lấy chuỗi an toàn
+        return Request.Headers["X-Forwarded-For"].ToString();
+    }
+    else
+    {
+        // Dùng toán tử ?. để kiểm tra null cho RemoteIpAddress
+        // Dùng toán tử ?? để trả về giá trị mặc định nếu IP thực sự null
+        return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown";
+    }
+}
     }
 }

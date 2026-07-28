@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Casbin.Config;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,6 +7,7 @@ using Onion.CleanArchitecture.Application.Behaviours;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Services;
+using Onion.CleanArchitecture.Domain.Settings;
 using System.Reflection;
 
 namespace Onion.CleanArchitecture.Application
