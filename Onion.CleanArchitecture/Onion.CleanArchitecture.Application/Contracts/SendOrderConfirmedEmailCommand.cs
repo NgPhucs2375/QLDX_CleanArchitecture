@@ -6,6 +6,7 @@ namespace Onion.CleanArchitecture.Application.Contracts
         string To,
         int RequestId,
         string ConfirmedBy,
-        DateTime ConfirmedAt
+        DateTime ConfirmedAt,
+        string RecipientId
     );
 }

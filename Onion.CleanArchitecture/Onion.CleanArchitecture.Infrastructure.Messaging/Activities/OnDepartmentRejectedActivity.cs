@@ -43,7 +43,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
                 To: "tranphuc2375@gmail.com",
                 RequestId: msg.RequestId,
                 RejectedBy: msg.RejectedBy,
-                Note: msg.Note
+                Note: msg.Note,
+                RecipientId: saga.CreatedBy
             ));
 
             // 2. Gửi notification command đến queue "notify-rejected-by-department"

@@ -25,6 +25,7 @@ namespace Onion.CleanArchitecture.Application.Services
             { PurchaseRequestTrigger.Reject, "Từ chối" },
             { PurchaseRequestTrigger.ReturnForEdit, "Trả chỉnh sửa" },
             { PurchaseRequestTrigger.ConfirmOrder, "Xác nhận đơn hàng" },
+            { PurchaseRequestTrigger.Update, "Cập nhật phiếu" },
         };
 
         // Constructor của ApprovalRecordService nhận vào 2 tham số: approvalRepository và authenticatedUser
@@ -69,6 +70,7 @@ namespace Onion.CleanArchitecture.Application.Services
                 PurchaseRequestTrigger.Approve => "Cấp kiểm soát đã phê duyệt",
                 PurchaseRequestTrigger.ReturnForEdit => "Yêu cầu chỉnh sửa lại phiếu đề xuất",
                 PurchaseRequestTrigger.ConfirmOrder => "Đã xác nhận đơn hàng và nhập số lượng thực tế",
+                PurchaseRequestTrigger.Update => "Cập nhật thông tin phiếu đề xuất",
                 _ => "Hệ thống tự động ghi nhận hành động"
             };
         }

@@ -43,7 +43,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
                 RequestId: msg.RequestId,
                 ReturnedBy: msg.ReturnedBy,
                 ReturnedAt: msg.ReturnAt,
-                Note: msg.Note
+                Note: msg.Note,
+                RecipientId: saga.CreatedBy
             ));
 
             var notiEndpoint = await _sendEndpointProvider.GetSendEndpoint(

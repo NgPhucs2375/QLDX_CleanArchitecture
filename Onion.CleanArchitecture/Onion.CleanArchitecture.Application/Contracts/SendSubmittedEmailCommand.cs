@@ -4,6 +4,7 @@ namespace Onion.CleanArchitecture.Application.Contracts
         string To,
         int RequestId,
         decimal TotalAmount,
-        string SubmittedBy
+        string SubmittedBy,
+        string RecipientId
     );
 }

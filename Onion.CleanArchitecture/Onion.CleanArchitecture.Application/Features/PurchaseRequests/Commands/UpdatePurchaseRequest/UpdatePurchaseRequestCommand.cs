@@ -53,6 +53,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         private readonly IProductRepositoryAsync _productRepo;
         private readonly IUserLookupService _userLookup;
         private readonly IAuthenticatedUserService _authenticatedUser;
+        private readonly IApprovalRecordService _approvalRecordService;
 
         public UpdatePurchaseRequestCommandHandler(
             IPurchaseRequestRepositoryAsync purchaseRequestRepo,
@@ -63,7 +64,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             IConfigApproverRepositoryAsync configApproverRepo,
             IProductRepositoryAsync productRepo,
             IUserLookupService userLookup,
-            IAuthenticatedUserService authenticatedUser
+            IAuthenticatedUserService authenticatedUser,
+            IApprovalRecordService approvalRecordService
         )
         {
             _purchaseRequestRepo = purchaseRequestRepo;
@@ -75,6 +77,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             _productRepo = productRepo;
             _userLookup = userLookup;
             _authenticatedUser = authenticatedUser;
+            _approvalRecordService = approvalRecordService;
         }
 
         public async Task<Response<int>> Handle(UpdatePurchaseRequestCommand request, CancellationToken cancellationToken)
@@ -235,6 +238,17 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                             });
                         }
             await _purchaseRequestRepo.UpdateAsync(entity);
+
+            // Ghi lịch sử cập nhật phiếu
+            var statusBefore = entity.Status;
+            await _approvalRecordService.RecordAsync(
+                entity,
+                statusBefore,
+                PurchaseRequestTrigger.Update,
+                request.Note ?? "Cập nhật thông tin phiếu đề xuất",
+                cancellationToken
+            );
+
             return new Response<int>(entity.Id);
         }
     }

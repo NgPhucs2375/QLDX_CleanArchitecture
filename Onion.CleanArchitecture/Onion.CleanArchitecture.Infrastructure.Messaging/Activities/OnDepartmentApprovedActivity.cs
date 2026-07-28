@@ -43,7 +43,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
                 RequestId: msg.RequestId,
                 ApprovedBy: msg.ApprovedBy,
                 ApprovedAt: msg.ApprovedAt,
-                Note: msg.Note)
+                Note: msg.Note,
+                RecipientId: saga.CreatedBy)
             );
 
             //2. Gửi notification command đến queue "notify-approver"

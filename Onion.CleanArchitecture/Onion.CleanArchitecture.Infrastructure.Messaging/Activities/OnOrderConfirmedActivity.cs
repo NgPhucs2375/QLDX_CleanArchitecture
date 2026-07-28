@@ -42,7 +42,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
                 To: "all@example.com",
                 RequestId: msg.RequestId,
                 ConfirmedBy: msg.ConfirmedBy,
-                ConfirmedAt: msg.ConfirmedAt
+                ConfirmedAt: msg.ConfirmedAt,
+                RecipientId: saga.CreatedBy
             ));
 
             var notiEndpoint = await _sendEndpointProvider.GetSendEndpoint(

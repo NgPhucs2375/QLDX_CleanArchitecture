@@ -43,7 +43,8 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
                 To: "tranphuc2375@gmail.com",
                 RequestId: msg.RequestId,
                 TotalAmount: msg.TotalAmount,
-                SubmittedBy: msg.SubmittedBy
+                SubmittedBy: msg.SubmittedBy,
+                RecipientId: saga.CreatedBy
             ));
 
             // 2. Gửi notification command đến queue "notify-approver"

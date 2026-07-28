@@ -21,7 +21,7 @@ namespace Onion.CleanArchitecture.EmailService.Consumers
 
         public async Task Consume(ConsumeContext<SendDepartmentApprovedEmailCommand> context)
         {
-            var userEmail = await _emailDB.UserEmails.FindAsync(context.Message.ApprovedBy);
+            var userEmail = await _emailDB.UserEmails.FindAsync(context.Message.RecipientId);
             if (userEmail == null)
             {
                 _logger.LogWarning("Không tìm thấy thông tin email của user {UserId}, không thể gửi email", context.Message.ApprovedBy);

@@ -8,5 +8,6 @@ namespace Onion.CleanArchitecture.Domain.Enums
         ReturnForEdit = 4,     // PendingControl → ReturnedForEdit
         Approve = 5,           // PendingControl → PendingOrderConfirm
         ConfirmOrder = 6,      // PendingOrderConfirm → Completed
+        Update = 7,            // Draft/ReturnedForEdit → Cập nhật phiếu
     }
 }

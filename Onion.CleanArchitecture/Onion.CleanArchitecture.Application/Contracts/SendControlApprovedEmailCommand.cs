@@ -4,6 +4,7 @@ namespace Onion.CleanArchitecture.Application.Contracts
         string To,
         int RequestId,
         string ApprovedBy,
-        string Note
+        string Note,
+        string RecipientId
     );
 }

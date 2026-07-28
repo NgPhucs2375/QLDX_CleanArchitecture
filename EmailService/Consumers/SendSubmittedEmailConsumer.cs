@@ -32,7 +32,7 @@ namespace Onion.CleanArchitecture.EmailService.Consumers
         // đẩy tham số vào bằng ConsumeContext để tận dụng khả năng truy vết thông tin từ ngữ cảnh của sự kiện, chẳng hạn như các header, metadata, và các thông tin liên quan đến việc xử lý sự kiện. Điều này giúp consumer có thể truy cập và sử dụng các thông tin này một cách dễ dàng và hiệu quả.
         public async Task Consume(ConsumeContext<SendSubmittedEmailCommand> context)
         {
-            var userEmail = await _emailDB.UserEmails.FindAsync(context.Message.SubmittedBy);
+            var userEmail = await _emailDB.UserEmails.FindAsync(context.Message.RecipientId);
             if (userEmail == null)
             {
                 _logger.LogWarning("Không tìm thấy thông tin email của user {UserId}, không thể gửi email", context.Message.SubmittedBy);
