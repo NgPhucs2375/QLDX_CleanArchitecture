@@ -307,4 +307,36 @@ export function usePurchaseRequestForm(mode: "create" | "edit"): UsePurchaseRequ
   const totalProposed = useMemo(
     () =>
       selectedCategories.reduce(
-        (s, c) => s + c.items.reduce((s2, i) => s2 + i.unitPrice * i.proposedQuantity, 0
+        (s, c) => s + c.items.reduce((s2, i) => s2 + i.unitPrice * i.proposedQuantity, 0),
+        0
+      ),
+    [selectedCategories]
+  );
+
+  const totalItems = useMemo(
+    () => selectedCategories.reduce((s, c) => s + c.items.length, 0),
+    [selectedCategories]
+  );
+
+  return {
+    form,
+    selectedCategories,
+    selectedApproverId,
+    loadingCascade,
+    cascadeData,
+    productsCache,
+    totalProposed,
+    totalItems,
+    setSelectedApproverId,
+    setSelectedCategories,
+    handleConfigChange,
+    addCategory,
+    removeCategory,
+    addItem,
+    removeItem,
+    updateItemField,
+    handleSubmit,
+    initEditData,
+    setCascadeData,
+  };
+}
