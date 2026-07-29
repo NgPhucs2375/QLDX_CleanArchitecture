@@ -1,11 +1,11 @@
 using AutoMapper;
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
-using Onion.CleanArchitecture.Application.Interfaces.Repositories;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
-using Onion.CleanArchitecture.Domain.Enums; // Thêm enum status
+using Onion.CleanArchitecture.Domain.Enums; 
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,19 +26,22 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
         private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
         private readonly IPurchaseRequestRepositoryAsync _requestRepo;
         private readonly IRecalculateTotalsService _recalculateService;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
         public CreatePurchaseRequestItemCommandHandler(
             IPurchaseRequestItemRepositoryAsync PRItemsRepository, 
             IProductRepositoryAsync ProductRepository,
             IPurchaseRequestCategoryRepositoryAsync categoryRepo,
             IPurchaseRequestRepositoryAsync requestRepo,
-            IRecalculateTotalsService recalculateService)
+            IRecalculateTotalsService recalculateService,
+            ISagaInstanceRepository sagaRepository)
         {
             _PRItemsRepository = PRItemsRepository;
             _ProductRepository = ProductRepository;
             _categoryRepo = categoryRepo;
             _requestRepo = requestRepo;
             _recalculateService = recalculateService;
+            _sagaRepository = sagaRepository;
         }
 
         public async Task<Response<int>> Handle(CreatePurchaseRequestItemCommand request, CancellationToken cancellationToken)
@@ -50,8 +53,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
             var parentRequest = await _requestRepo.GetByIdAsync(category.PurchaseRequestId);
             if (parentRequest == null) throw new ApiException("Không tìm thấy Phiếu đề xuất cha.");
 
-            if (parentRequest.Status != PurchaseRequestStatus.Draft && parentRequest.Status != PurchaseRequestStatus.ReturnedForEdit)
-                throw new ApiException($"Không thể thêm Item khi phiếu đang ở trạng thái {parentRequest.Status}.");
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(parentRequest.Id);
+            if (sagaState != null && sagaState != "ReturnedForEdit")
+                throw new ApiException("Không thể thêm Item khi phiếu đã được submit.");
 
             // 2. Validate Product
             var product = await _ProductRepository.GetByIdAsync(request.ProductId);

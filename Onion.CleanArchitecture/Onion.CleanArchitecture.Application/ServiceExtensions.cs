@@ -24,8 +24,8 @@ namespace Onion.CleanArchitecture.Application
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             services.AddTransient<RecalculateTotalsService>();
             services.AddTransient<IApprovalRecordService, ApprovalRecordService>();
-            services.AddTransient<IPurchaseRequestWorkflowService, PurchaseRequestWorkflowService>();
             services.AddTransient<IRecalculateTotalsService, RecalculateTotalsService>();
+            // ISagaInstanceRepository được đăng ký trong Infrastructure.Persistence/ServiceRegistration.cs
         }
     }
 }

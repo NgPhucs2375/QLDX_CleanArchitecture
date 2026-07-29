@@ -39,12 +39,9 @@ namespace Onion.CleanArchitecture.Application.Services
             _userLookup = userLookup;
         }
         // 
-        public async Task RecordAsync(PurchaseRequest entity,PurchaseRequestStatus statusBefore, PurchaseRequestTrigger trigger, string note, CancellationToken ct)
+        public async Task RecordAsync(PurchaseRequest entity, PurchaseRequestTrigger trigger, string note, CancellationToken ct)
         {
-            // statusBfore : Trạng thái trước khi thực hiện trigger
-
-            // Xác định trạng thái sau khi thực hiện trigger
-            var statusAfter = entity.Status;
+            
          
 
             var approval = new PurchaseRequestApproval
@@ -52,8 +49,6 @@ namespace Onion.CleanArchitecture.Application.Services
                 PurchaseRequestId = entity.Id,
                 ApproverId = _authenticatedUser.UserId ?? string.Empty,
                 ApproverName = await _userLookup.GetDisplayNameAsync(_authenticatedUser.UserId ?? string.Empty),
-                FromStatus = statusBefore,
-                ToStatus = statusAfter,
                 Action = ActionLabels.GetValueOrDefault(trigger, trigger.ToString()),
                 Note = note ?? string.Empty,
             };

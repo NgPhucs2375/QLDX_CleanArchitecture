@@ -1,9 +1,10 @@
+using MassTransit;
 using MediatR;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
-using Onion.CleanArchitecture.Application.Services;
-using Onion.CleanArchitecture.Application.Wrappers;
+using Wrappers = Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
 using Onion.CleanArchitecture.Domain.Enums;
 using System;
@@ -26,21 +27,21 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         public List<CreatePurchaseRequestItemDto> Items { get; set; } = new();
     }
 
-    public class CreatePurchaseRequestCommand : IRequest<Response<int>>
+    public class CreatePurchaseRequestCommand : IRequest<Wrappers.Response<int>>
     {
         public string Code { get; set; } = string.Empty;
         public int DepartmentId { get; set; }
         public int ProposalConfigId { get; set; }
         public string ApproverId { get; set; } = string.Empty;
         public string Note { get; set; } = string.Empty;
-        public string? Reason { get; set; }
-        public string? ContactName { get; set; }
-        public string? ContactPhone { get; set; }
-        public string? ShippingAddress { get; set; }
+        public string Reason { get; set; }
+        public string ContactName { get; set; }
+        public string ContactPhone { get; set; }
+        public string ShippingAddress { get; set; }
         public List<CreatePurchaseRequestCategoryDto> Categories { get; set; } = new();
     }
 
-    public class CreatePurchaseRequestCommandHandler : IRequestHandler<CreatePurchaseRequestCommand, Response<int>>
+    public class CreatePurchaseRequestCommandHandler : IRequestHandler<CreatePurchaseRequestCommand, Wrappers.Response<int>>
     {
         private readonly IPurchaseRequestRepositoryAsync _purchaseRequestRepo;
         private readonly IConfigCategoryRepositoryAsync _configCategoryRepo;
@@ -48,11 +49,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         private readonly IConfigApproverRepositoryAsync _configApproverRepo;
         private readonly IDepartmentRepositoryAsync _departmentRepo;
         private readonly IUserLookupService _userLookup;
-        private readonly IPurchaseRequestWorkflowService  _workflowService;
         private readonly IAuthenticatedUserService _authenticatesUser;
-        private readonly IApprovalRecordService _approvalRecordService;
-
-
+        private readonly IEventBusService _bus;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
         public CreatePurchaseRequestCommandHandler(
             IPurchaseRequestRepositoryAsync purchaseRequestRepo,
@@ -61,9 +60,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             IConfigApproverRepositoryAsync configApproverRepo,
             IDepartmentRepositoryAsync departmentRepo,
             IUserLookupService userLookup,
-            IPurchaseRequestWorkflowService workflowService,
             IAuthenticatedUserService authenticatesUser,
-            IApprovalRecordService approvalRecordService
+            IEventBusService bus,
+            ISagaInstanceRepository sagaRepository
             )
         {
             _purchaseRequestRepo = purchaseRequestRepo;
@@ -72,12 +71,12 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             _configApproverRepo = configApproverRepo;
             _departmentRepo = departmentRepo;
             _userLookup = userLookup;
-            _workflowService = workflowService;
             _authenticatesUser = authenticatesUser;
-            _approvalRecordService = approvalRecordService;  
+            _bus = bus;
+            _sagaRepository = sagaRepository;
         }
 
-        public async Task<Response<int>> Handle(CreatePurchaseRequestCommand request, CancellationToken ct)
+        public async Task<Wrappers.Response<int>> Handle(CreatePurchaseRequestCommand request, CancellationToken ct)
         {
 
 
@@ -123,7 +122,6 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                 Code = request.Code,
                 DepartmentId = request.DepartmentId,
                 ProposalConfigId = request.ProposalConfigId,
-                Status = PurchaseRequestStatus.Draft,
                 TotalProposedAmount = 0,
                 TotalActualAmount = 0,
                 Reason = request.Reason,
@@ -230,17 +228,17 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
                     StepOrder = (int)ApprovalLevel.CreatorLevel,
                 });
             }
-            // 7. Save entity trước để có ID — OnEntryAsync cần ID để ghi ApprovalRecord
+            // 7. Save entity để có ID, Saga sẽ validate + update status sau
             await _purchaseRequestRepo.AddAsync(entity);
+            await _bus.PublishAsync(new PurchaseRequestSubmittedEvent(
+                CorrelationId: NewId.NextGuid(),
+                RequestId: entity.Id,
+                TotalAmount: entity.TotalProposedAmount,
+                SubmittedBy: _authenticatesUser.UserId,
+                OccurredAt: DateTime.UtcNow
+            ), ct);
 
-            // 8. Fire state machine: Draft → PendingDepartment (kèm ghi lịch sử tự động qua OnEntry)
-            var machine = new PurchaseRequestStateMachine(_workflowService, _approvalRecordService, entity, _authenticatesUser.UserId);
-            await machine.FireAsync(PurchaseRequestTrigger.Submit, request.Note, ct);
-
-            // 9. Update entity sau khi state machine thay đổi Status + ApproverStatus
-            await _purchaseRequestRepo.UpdateAsync(entity);
-
-            return new Response<int>(entity.Id);
+            return new Wrappers.Response<int>(entity.Id);
         }
     }
 }

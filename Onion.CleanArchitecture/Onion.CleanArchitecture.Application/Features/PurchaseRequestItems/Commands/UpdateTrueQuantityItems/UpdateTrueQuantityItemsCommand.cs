@@ -1,8 +1,8 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
-using Onion.CleanArchitecture.Domain.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,24 +27,27 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
         private readonly IPurchaseRequestRepositoryAsync _phieudexuatRepo;
         private readonly IPurchaseRequestItemRepositoryAsync _itemRepo;
         private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
         public UpdateTrueQuantityItemsCommandHandler(
             IPurchaseRequestRepositoryAsync phieudexuatRepo,
             IPurchaseRequestItemRepositoryAsync itemRepo,
-            IPurchaseRequestCategoryRepositoryAsync categoryRepo
+            IPurchaseRequestCategoryRepositoryAsync categoryRepo,
+            ISagaInstanceRepository sagaRepository
         )
         {
             _phieudexuatRepo = phieudexuatRepo;
             _itemRepo = itemRepo;
             _categoryRepo = categoryRepo;
+            _sagaRepository = sagaRepository;
         }
 
         public async Task<Response<int>> Handle(UpdateTrueQuantityItemsCommand request, CancellationToken cancellationToken)
         {
-            var status = await _phieudexuatRepo.GetStatusByIdAsync(request.PurchaseRequestId);
-            if (status == null)
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(request.PurchaseRequestId);
+            if (sagaState == null)
                 throw new ApiException($"Phiếu đề xuất {request.PurchaseRequestId} không tồn tại!");
-            if (status != PurchaseRequestStatus.PendingOrderConfirm)
+            if (sagaState != "PendingOrderConfirm")
                 throw new ApiException($"Phiếu đề xuất {request.PurchaseRequestId} không ở trạng thái chờ xác nhận đặt hàng!");
 
             var categoryIds = new HashSet<int>();

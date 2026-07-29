@@ -147,6 +147,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence
             services.AddTransient<IPurchaseRequestItemRepositoryAsync, PurchaseRequestItemRepositoryAsync>();
             services.AddTransient<IPurchaseRequestApprovalRepositoryAsync, PurchaseRequestApprovalRepositoryAsync>();
             services.AddTransient<IPurchaseRequestApproverRepositoryAsync, PurchaseRequestApproverRepositoryAsync>();
+            services.AddScoped<ISagaInstanceRepository, SagaInstanceRepository>();
             #endregion
         }
     }

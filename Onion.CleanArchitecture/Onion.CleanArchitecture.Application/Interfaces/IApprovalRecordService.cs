@@ -7,7 +7,7 @@ namespace Onion.CleanArchitecture.Application.Interfaces
 {
     public interface IApprovalRecordService
     {
-        Task RecordAsync(PurchaseRequest entity, PurchaseRequestStatus statusBefore, PurchaseRequestTrigger trigger, string note, CancellationToken ct);
+        Task RecordAsync(PurchaseRequest entity, PurchaseRequestTrigger trigger, string note, CancellationToken ct);
         string GetDefaultNote(PurchaseRequestTrigger trigger);
     }
 }

@@ -1,9 +1,8 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
-using Onion.CleanArchitecture.Application.Interfaces.Repositories;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
-using Onion.CleanArchitecture.Domain.Enums;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,18 +19,21 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
         private readonly IPurchaseRequestItemRepositoryAsync _itemRepo;
         private readonly IPurchaseRequestCategoryRepositoryAsync _categoryRepo;
         private readonly IPurchaseRequestRepositoryAsync _requestRepo;
-        private readonly IRecalculateTotalsService _recalcService; // Sửa tại đây
+        private readonly IRecalculateTotalsService _recalcService;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
         public UpdateActualQuantityCommandHandler(
             IPurchaseRequestItemRepositoryAsync itemRepo,
             IPurchaseRequestCategoryRepositoryAsync categoryRepo,
             IPurchaseRequestRepositoryAsync requestRepo,
-            IRecalculateTotalsService recalcService) // Sửa tại đây
+            IRecalculateTotalsService recalcService,
+            ISagaInstanceRepository sagaRepository)
         {
             _itemRepo = itemRepo;
             _categoryRepo = categoryRepo;
             _requestRepo = requestRepo;
             _recalcService = recalcService;
+            _sagaRepository = sagaRepository;
         }
 
         public async Task<Response<int>> Handle(UpdateActualQuantityCommand request, CancellationToken ct)
@@ -45,7 +47,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestItems.Comm
             var purchaseRequest = await _requestRepo.GetByIdAsync(category.PurchaseRequestId);
             if (purchaseRequest == null) throw new ApiException("PurchaseRequest not found for PurchaseRequestItem");
 
-            if (purchaseRequest.Status != PurchaseRequestStatus.PendingOrderConfirm)
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(purchaseRequest.Id);
+            if (sagaState != "PendingOrderConfirm")
                 throw new ApiException("Cannot update Actual Quantity in current status");
 
             item.ActualQuantity = request.ActualQuantity;

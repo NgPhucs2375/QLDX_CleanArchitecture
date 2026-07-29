@@ -54,6 +54,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         private readonly IUserLookupService _userLookup;
         private readonly IAuthenticatedUserService _authenticatedUser;
         private readonly IApprovalRecordService _approvalRecordService;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
         public UpdatePurchaseRequestCommandHandler(
             IPurchaseRequestRepositoryAsync purchaseRequestRepo,
@@ -65,7 +66,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             IProductRepositoryAsync productRepo,
             IUserLookupService userLookup,
             IAuthenticatedUserService authenticatedUser,
-            IApprovalRecordService approvalRecordService
+            IApprovalRecordService approvalRecordService,
+            ISagaInstanceRepository sagaRepository
         )
         {
             _purchaseRequestRepo = purchaseRequestRepo;
@@ -78,6 +80,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             _userLookup = userLookup;
             _authenticatedUser = authenticatedUser;
             _approvalRecordService = approvalRecordService;
+            _sagaRepository = sagaRepository;
         }
 
         public async Task<Response<int>> Handle(UpdatePurchaseRequestCommand request, CancellationToken cancellationToken)
@@ -85,8 +88,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             var entity = await _purchaseRequestRepo.GetByIdWithDetailsAsync(request.Id);
             if (entity == null)
                 throw new ApiException($"PurchaseRequest Not Found.");
-            if (entity.Status != PurchaseRequestStatus.Draft && entity.Status != PurchaseRequestStatus.ReturnedForEdit)
-                throw new ApiException($"Không thể chỉnh phiếu ở trạng thái {entity.Status}.");
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(request.Id);
+            if (sagaState != null && sagaState != "ReturnedForEdit")
+                throw new ApiException("Không thể chỉnh phiếu khi đã được submit.");
 
             var configCategories = await _configCategoryRepo.GetByConfigAndDepartmentAsync(
                 request.ProposalConfigId, request.DepartmentId);
@@ -240,10 +244,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             await _purchaseRequestRepo.UpdateAsync(entity);
 
             // Ghi lịch sử cập nhật phiếu
-            var statusBefore = entity.Status;
+            var statusBefore = sagaState;
             await _approvalRecordService.RecordAsync(
                 entity,
-                statusBefore,
                 PurchaseRequestTrigger.Update,
                 request.Note ?? "Cập nhật thông tin phiếu đề xuất",
                 cancellationToken

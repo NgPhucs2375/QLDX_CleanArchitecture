@@ -2,6 +2,8 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Onion.CleanArchitecture.Application.Contracts;
+using Onion.CleanArchitecture.Application.Interfaces.Repositories;
+using Onion.CleanArchitecture.Domain.Enums;
 using Onion.CleanArchitecture.Domain.Settings;
 using Onion.CleanArchitecture.Infrastructure.Messaging.Sagas;
 
@@ -13,16 +15,19 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
         private readonly ISendEndpointProvider _sendEndpointProvider;
         private readonly ILogger<OnDepartmentRejectedActivity> _logger;
         private readonly QueueSetting _queues;
+        private readonly IPurchaseRequestRepositoryAsync _pdxRepo;
 
         public OnDepartmentRejectedActivity(
             ISendEndpointProvider sendEndpointProvider,
             ILogger<OnDepartmentRejectedActivity> logger,
-            IOptions<QueueSetting> queues
+            IOptions<QueueSetting> queues,
+            IPurchaseRequestRepositoryAsync pdxRepo
             )
         {
             _sendEndpointProvider = sendEndpointProvider;
             _logger = logger;
             _queues = queues.Value;
+            _pdxRepo = pdxRepo;
         }
 
         public async Task Execute(
@@ -31,6 +36,12 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Activities
         {
             var saga = context.Saga;
             var msg = context.Message;
+            var entity = await _pdxRepo.GetByIdAsync(saga.RequestId);
+            if (entity != null)
+            {
+                entity.Status = PurchaseRequestStatus.RejectedByDepartment;
+                await _pdxRepo.UpdateAsync(entity);
+            }
 
             _logger.LogInformation(
                 "[Activity] OnDepartmentRejected: RequestId={RequestId}, State={State}",

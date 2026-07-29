@@ -1,98 +1,173 @@
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using MediatR;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
-using Onion.CleanArchitecture.Application.Services;
-using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Enums;
-using System.Linq;
+using Wrappers = Onion.CleanArchitecture.Application.Wrappers;
+
 
 namespace Onion.CleanArchitecture.Application.Features.TriggerPurchaseRequest.Commands.TriggerPurchaseRequestCommand
 {
-    public class TriggerPurchaseRequestCommand : IRequest<Response<int>>
+    public class TriggerPurchaseRequestCommand : IRequest<Wrappers.Response<int>>
     {
         public int Id { get; set; }
         public string Action { get; set; } = string.Empty;
         public string Note { get; set; } = string.Empty;
     }
 
-    public class TriggerPurchaseRequestCommandHandler: IRequestHandler<TriggerPurchaseRequestCommand, Response<int>>
+    public class TriggerPurchaseRequestCommandHandler: IRequestHandler<TriggerPurchaseRequestCommand, Wrappers.Response<int>>
     {
         private readonly IPurchaseRequestRepositoryAsync _purchaseRequestRepository;
-        private readonly IPurchaseRequestWorkflowService _workflowService;
-        private readonly IApprovalRecordService _approvalRecordService;
         private readonly IAuthenticatedUserService _authenticatedUser;
-
+        private readonly IEventBusService _bus;
+        private readonly ISagaInstanceRepository _sagaRepository; 
 
         public TriggerPurchaseRequestCommandHandler(
             IPurchaseRequestRepositoryAsync purchaseRequestRepositoryAsync,
-            IPurchaseRequestWorkflowService workflowService,
-            IApprovalRecordService approvalRecordService,
-            IAuthenticatedUserService authenticatedUser
+            IAuthenticatedUserService authenticatedUser,
+            IEventBusService bus,
+            ISagaInstanceRepository sagaRepository
         )
         {
             _purchaseRequestRepository = purchaseRequestRepositoryAsync;
-            _workflowService = workflowService;
-            _approvalRecordService = approvalRecordService;
             _authenticatedUser = authenticatedUser;
+            _bus = bus;
+            _sagaRepository = sagaRepository;
         }
 
-        public async Task<Response<int>> Handle(TriggerPurchaseRequestCommand request, CancellationToken ct)
+        public async Task<Wrappers.Response<int>> Handle(TriggerPurchaseRequestCommand request, CancellationToken ct)
         {
-            // 1. Get du lieu tu database
             var entity = await _purchaseRequestRepository.GetByIdWithDetailsAsync(request.Id);
-            if (entity == null) // $ để nội suy
+            if (entity == null)
                throw new ApiException($"Không tìm thấy phiếu đề xuất với ID: {request.Id}");
 
-            // 2. Map action to trigger        
-            PurchaseRequestTrigger trigger = MapActionToTrigger(request.Action, entity.Status);
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(request.Id);
+            PurchaseRequestTrigger trigger = MapActionToTrigger(request.Action, sagaState);
+            var userId = _authenticatedUser.UserId;
 
-            // 3. Fire event
-            var machine = new PurchaseRequestStateMachine(_workflowService, _approvalRecordService, entity, _authenticatedUser.UserId);
-            await machine.FireAsync(trigger, request.Note, ct);
+            // Publish event tương ứng — Saga sẽ validate + update state
+            await PublishEventAsync(trigger, entity, userId, request.Note, sagaState, ct);
 
-            // 4. Nếu action là confirm, tính lại TotalActualAmount từ items
+            // ConfirmOrder cần tính TotalActualAmount từ items do user nhập trên Modal
             if (trigger == PurchaseRequestTrigger.ConfirmOrder)
             {
-                decimal totalActual = 0;
-                if (entity.RequestCategories != null)
-                {
-                    foreach (var cat in entity.RequestCategories)
-                    {
-                        if (cat.RequestItems == null) continue;
-                        totalActual += cat.RequestItems.Sum(i => i.ActualTotalAmount);
-                    }
-                }
-                entity.TotalActualAmount = totalActual;
+                entity.TotalActualAmount = entity.RequestCategories
+                    ?.Where(c => c.RequestItems != null)
+                    .SelectMany(c => c.RequestItems)
+                    .Sum(i => i.ActualTotalAmount) ?? 0;
             }
 
-            // 5. Update entity in database 
             await _purchaseRequestRepository.UpdateAsync(entity);
-
-            // 6. Return response
-            return new Response<int>(entity.Id);
-
+            return new Wrappers.Response<int>(entity.Id);
         }
-        private PurchaseRequestTrigger MapActionToTrigger(string action, PurchaseRequestStatus currentStatus)
+
+        private async Task PublishEventAsync(PurchaseRequestTrigger trigger, Domain.Entities.PurchaseRequest entity,
+            string userId, string note, string? sagaState,CancellationToken ct)
         {
-            string ChuanHoaAction = action?.Trim().ToLower() ?? "";
-
-            return ChuanHoaAction switch
+            switch (trigger)
             {
-                "submit" => PurchaseRequestTrigger.Submit,
-                "approve" => currentStatus switch
-                {
-                    PurchaseRequestStatus.PendingDepartment => PurchaseRequestTrigger.ApproveDepartment,
-                    PurchaseRequestStatus.PendingControl => PurchaseRequestTrigger.Approve,
-                    _ => throw new ApiException($"Không thể thực hiện hành động '{action}' khi trạng thái hiện tại là '{currentStatus}'")
-                },
-                "reject" => PurchaseRequestTrigger.Reject,
-                "return" => PurchaseRequestTrigger.ReturnForEdit,
-                "confirm" => PurchaseRequestTrigger.ConfirmOrder,
-                _ => throw new ApiException($"Hành động '{action}' không được hệ thống hỗ trợ."),
-            };
+                case PurchaseRequestTrigger.Submit:
+                    await _bus.PublishAsync(new PurchaseRequestSubmittedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        TotalAmount: entity.TotalProposedAmount,
+                        SubmittedBy: userId,
+                        OccurredAt: DateTime.UtcNow
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.ApproveDepartment:
+                    await _bus.PublishAsync(new PurchaseRequestDepartmentApprovedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        ApprovedBy: userId,
+                        ApprovedAt: DateTime.UtcNow,
+                        Note: note
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.Reject when sagaState == "PendingDepartment":
+                    await _bus.PublishAsync(new PurchaseRequestDepartmentRejectedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        RejectedBy: userId,
+                        Note: note,
+                        OccurredAt: DateTime.UtcNow
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.Reject:
+                    await _bus.PublishAsync(new PurchaseRequestControlRejectedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        RejectedBy: userId,
+                        Note: note,
+                        OccurredAt: DateTime.UtcNow
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.Approve:
+                    await _bus.PublishAsync(new PurchaseRequestControlApprovedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        ApprovedBy: userId,
+                        Note: note,
+                        OccurredAt: DateTime.UtcNow
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.ReturnForEdit:
+                    await _bus.PublishAsync(new PurchaseRequestReturnedForEditEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        ReturnedBy: userId,
+                        ReturnAt: DateTime.UtcNow,
+                        TotalAmount: entity.TotalProposedAmount,
+                        SubmittedBy: entity.CreatedBy,
+                        Note: note
+                    ), ct);
+                    break;
+
+                case PurchaseRequestTrigger.ConfirmOrder:
+                    await _bus.PublishAsync(new PurchaseRequestOrderConfirmedEvent(
+                        CorrelationId: NewId.NextGuid(),
+                        RequestId: entity.Id,
+                        ConfirmedBy: userId,
+                        ConfirmedAt: DateTime.UtcNow,
+                        TotalAmount: entity.TotalProposedAmount,
+                        SubmittedBy: entity.CreatedBy
+                    ), ct);
+                    break;
+
+                default:
+                    throw new ApiException($"Không hỗ trợ trigger '{trigger}'");
+            }
         }
+private PurchaseRequestTrigger MapActionToTrigger(string action, string? sagaState)
+{
+    string ChuanHoaAction = action?.Trim().ToLower() ?? "";
+
+    return ChuanHoaAction switch
+    {
+        "submit" => PurchaseRequestTrigger.Submit,
+        "approve" => sagaState switch
+        {
+            "PendingDepartment" => PurchaseRequestTrigger.ApproveDepartment,
+            "PendingControl" => PurchaseRequestTrigger.Approve,
+            null => throw new ApiException("Phiếu chưa được submit, không thể duyệt."),
+            _ => throw new ApiException($"Không thể thực hiện hành động '{action}' khi trạng thái hiện tại là '{sagaState}'")
+        },
+        "reject" => PurchaseRequestTrigger.Reject,
+        "return" => PurchaseRequestTrigger.ReturnForEdit,
+        "confirm" => PurchaseRequestTrigger.ConfirmOrder,
+        _ => throw new ApiException($"Hành động '{action}' không được hệ thống hỗ trợ."),
+    };
+}
     }
 }

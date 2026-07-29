@@ -1,7 +1,8 @@
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
-using Onion.CleanArchitecture.Application.Services; // Thêm namespace
+using Onion.CleanArchitecture.Application.Services;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Enums;
 using System.Threading;
@@ -25,15 +26,18 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
             private readonly IPurchaseRequestCategoryRepositoryAsync _repository;
             private readonly IPurchaseRequestRepositoryAsync _purchaseRequestRepository;
             private readonly IRecalculateTotalsService _recalculateTotalsService;
+            private readonly ISagaInstanceRepository _sagaRepository;
 
             public UpdatePurchaseRequestCategoryCommandHandler(
                 IPurchaseRequestCategoryRepositoryAsync repository,
                 IPurchaseRequestRepositoryAsync purchaseRequestRepository,
-                IRecalculateTotalsService recalculateTotalsService)
+                IRecalculateTotalsService recalculateTotalsService,
+                ISagaInstanceRepository sagaRepository)
             {
                 _repository = repository;
                 _purchaseRequestRepository = purchaseRequestRepository;
                 _recalculateTotalsService = recalculateTotalsService;
+                _sagaRepository = sagaRepository;
             }
 
             public async Task<Response<int>> Handle(UpdatePurchaseRequestCategoryCommand command, CancellationToken cancellationToken)
@@ -50,8 +54,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
                 if (parentRequest == null)
                     throw new ApiException($"Không tìm thấy Phiếu đề xuất cha (ID: {entity.PurchaseRequestId}).");
 
-                if (parentRequest.Status != PurchaseRequestStatus.Draft && parentRequest.Status != PurchaseRequestStatus.ReturnedForEdit)
-                    throw new ApiException($"Không thể chỉnh sửa danh mục khi phiếu đang ở trạng thái {parentRequest.Status}.");
+                var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(parentRequest.Id);
+                if (sagaState != null && sagaState != "ReturnedForEdit")
+                    throw new ApiException("Không thể chỉnh sửa danh mục khi phiếu đã được submit.");
 
                 // 3. Thực hiện Update
                 entity.PurchaseRequestId = command.PurchaseRequestId;

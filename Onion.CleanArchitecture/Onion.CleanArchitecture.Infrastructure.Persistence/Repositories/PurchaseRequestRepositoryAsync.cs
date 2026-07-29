@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Onion.CleanArchitecture.Application.Extensions;
 using Onion.CleanArchitecture.Application.Features.PurchaseRequests.Queries.GetAllPurchaseRequests;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -15,12 +17,16 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
     public class PurchaseRequestRepositoryAsync : GenericRepositoryAsync<PurchaseRequest>, IPurchaseRequestRepositoryAsync
     {
         private readonly DbSet<PurchaseRequest> _entities;
-        private readonly ApplicationDbContext _dbContext; 
+        private readonly ApplicationDbContext _dbContext;
+        private readonly ISagaInstanceRepository _sagaRepo;
 
-        public PurchaseRequestRepositoryAsync(ApplicationDbContext dbContext) : base(dbContext)
+        public PurchaseRequestRepositoryAsync(
+            ApplicationDbContext dbContext,
+            ISagaInstanceRepository sagaRepo) : base(dbContext)
         {
             _entities = dbContext.Set<PurchaseRequest>();
-            _dbContext = dbContext; 
+            _dbContext = dbContext;
+            _sagaRepo = sagaRepo;
         }
 
         public override async Task UpdateAsync(PurchaseRequest entity)
@@ -80,33 +86,26 @@ namespace Onion.CleanArchitecture.Infrastructure.Persistence.Repositories
 
         public async Task<PurchaseRequestStatus?> GetStatusByIdAsync(int id)
         {
-            return await _entities
-                .Where(pr => pr.Id == id)
-                .Select(pr => (PurchaseRequestStatus?)pr.Status)
-                .FirstOrDefaultAsync();
+            var sagaState = await _sagaRepo.GetCurrentStateByRequestIdAsync(id);
+            return sagaState?.MapToPurchaseRequestStatus() ?? PurchaseRequestStatus.Draft;
         }
 
-        // Bổ sung từ khóa 'async' để giải quyết lỗi CS4032
         public async Task<decimal> GetUsedAmountByCategoryAsync(int proposalConfigId, int departmentId, int categoryId, int? excludePurchaseRequestId = null)
         {
-            // Các trạng thái được coi là đã/đang chiếm dụng hạn mức quota
-            var activeStatuses = new[]
-            {
-                PurchaseRequestStatus.PendingDepartment,
-                PurchaseRequestStatus.PendingControl,
-                PurchaseRequestStatus.PendingOrderConfirm,
-                PurchaseRequestStatus.Completed
-            };
+            var activeSagaStates = new[] { "PendingDepartment", "PendingControl", "PendingOrderConfirm", "Completed" };
+            var activeRequestIds = await _sagaRepo.GetActiveRequestIdsByStatesAsync(activeSagaStates);
 
-            // Truy vấn động trực tiếp từ bảng lưu chi tiết danh mục
-            // Giải quyết lỗi CS1061 bằng cách gọi _dbContext.Set thay vì _entities.Select
             return await _dbContext.Set<PurchaseRequestCategory>()
-                .Where(prc => prc.CategoryId == categoryId // Sửa lỗi CS0103: Lambda dùng '=>' thay vì '='
+                .Where(prc => prc.CategoryId == categoryId
                     && prc.PurchaseRequest.ProposalConfigId == proposalConfigId
                     && prc.PurchaseRequest.DepartmentId == departmentId
-                    && activeStatuses.Contains(prc.PurchaseRequest.Status) // Sửa lỗi CS0103: Sai chính tả tên biến
+                    && activeRequestIds.Contains(prc.PurchaseRequestId)
                     && (excludePurchaseRequestId == null || prc.PurchaseRequestId != excludePurchaseRequestId))
                 .SumAsync(prc => prc.TotalProposedAmount);
+        }
+        public async Task<PurchaseRequest?> GetByIdAsync(int id)
+        {
+            return await _entities.FirstOrDefaultAsync(pr => pr.Id == id);
         }
     }
 }

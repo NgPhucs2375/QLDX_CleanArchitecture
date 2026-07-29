@@ -11,7 +11,6 @@ namespace Onion.CleanArchitecture.Domain.Entities
         public int DepartmentId { get; set; }
         public int ProposalConfigId { get; set; }
 
-        public PurchaseRequestStatus Status { get; set; } = PurchaseRequestStatus.Draft;
         public decimal TotalProposedAmount { get; set; }
         public decimal TotalActualAmount { get; set; }
 

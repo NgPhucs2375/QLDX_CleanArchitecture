@@ -1,9 +1,11 @@
+import { PurchaseRequestStatus } from "./constants/enums";
+
 export interface IPurchaseRequest {
   Id: number;
   Code: string;
   DepartmentId: number;
   ProposalConfigId: number;
-  Status: number;
+  Status: PurchaseRequestStatus;
   TotalProposedAmount: number;
   TotalActualAmount: number;
   CreatedBy: string;
@@ -72,21 +74,26 @@ export interface ICascadeProduct {
 }
 
 export interface ICreateItem {
-  productId: number;
-  proposedQuantity: number;
+  ProductId: number;
+  ProposedQuantity: number;
+  Note?: string;
 }
 
 export interface ICreateCategory {
-  categoryId: number;
-  items: ICreateItem[];
+  CategoryId: number;
+  Items: ICreateItem[];
 }
 
 export interface ICreatePayload {
-  code: string;
-  departmentId: number;
-  proposalConfigId: number;
-  approverId: string;
-  categories: ICreateCategory[];
+  Code: string;
+  DepartmentId: number;
+  ProposalConfigId: number;
+  ApproverId: string;
+  Reason?: string;
+  ContactName?: string;
+  ContactPhone?: string;
+  ShippingAddress?: string;
+  Categories: ICreateCategory[];
 }
 
 export interface ISelectedItem {
@@ -98,11 +105,44 @@ export interface ISelectedItem {
   rowId: string;
 }
 
+export interface IFormItem extends ISelectedItem {
+  id?: number;
+  note: string;
+}
+
 export interface ISelectedCategory {
   categoryId: number;
   categoryName: string;
   allowedQuota: number;
-  items: ISelectedItem[];
+  items: IFormItem[];
+}
+
+export interface ILocalItem {
+  Id: number;
+  ProductId: number;
+  ProductName: string;
+  ProposedQuantity: number;
+  UnitPrice: number;
+  TotalAmount: number;
+  ActualQuantity: number;
+  Product?: { Name: string; Code: string; Unit: string };
+}
+
+export interface ILocalCategory {
+  Id: number;
+  CategoryId: number;
+  Name: string;
+  AllowedQuota: number;
+  RequestItems: ILocalItem[];
+  Category?: { Name: string; AllowedQuota: number };
+}
+
+export interface ILocalPurchaseRequest extends IPurchaseRequest {
+  Reason: string;
+  ContactName: string;
+  ContactPhone: string;
+  ShippingAddress: string;
+  RequestCategories: ILocalCategory[];
 }
 // export enum StatusEnum {
 //   Draft = 0,

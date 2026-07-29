@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using Onion.CleanArchitecture.Application.Exceptions;
+using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
 using Onion.CleanArchitecture.Application.Wrappers;
 using Onion.CleanArchitecture.Domain.Entities;
@@ -27,13 +28,20 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
         private readonly IMapper _mapper;
         private readonly IRecalculateTotalsService _recalculateTotalsService;
         private readonly IPurchaseRequestRepositoryAsync _purchaseRequestRepository;
+        private readonly ISagaInstanceRepository _sagaRepository;
 
-        public CreatePurchaseRequestCategoryCommandHandler(IPurchaseRequestCategoryRepositoryAsync repository, IMapper mapper, IRecalculateTotalsService recalculateTotalsService, IPurchaseRequestRepositoryAsync purchaseRequestRepository)
+        public CreatePurchaseRequestCategoryCommandHandler(
+            IPurchaseRequestCategoryRepositoryAsync repository,
+            IMapper mapper,
+            IRecalculateTotalsService recalculateTotalsService,
+            IPurchaseRequestRepositoryAsync purchaseRequestRepository,
+            ISagaInstanceRepository sagaRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _recalculateTotalsService = recalculateTotalsService;
             _purchaseRequestRepository = purchaseRequestRepository;
+            _sagaRepository = sagaRepository;
         }
 
     
@@ -45,8 +53,9 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequestCategories
             if (parentRequest == null)
                 throw new ApiException($"Không tìm thấy Phiếu đề xuất với ID: {request.PurchaseRequestId}");
 
-            if (parentRequest.Status != PurchaseRequestStatus.Draft && parentRequest.Status != PurchaseRequestStatus.ReturnedForEdit)
-                throw new ApiException($"Không thể thêm danh mục khi phiếu đang ở trạng thái {parentRequest.Status}. Chỉ thao tác được khi phiếu lưu nháp hoặc bị trả về.");
+            var sagaState = await _sagaRepository.GetCurrentStateByRequestIdAsync(parentRequest.Id);
+            if (sagaState != null && sagaState != "ReturnedForEdit")
+                throw new ApiException("Không thể thêm danh mục khi phiếu đã được submit.");
 
             // 2. Thực hiện thêm mới
             var entity = _mapper.Map<PurchaseRequestCategory>(request);

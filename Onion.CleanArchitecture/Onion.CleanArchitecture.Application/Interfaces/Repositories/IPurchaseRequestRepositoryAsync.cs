@@ -16,6 +16,7 @@ namespace Onion.CleanArchitecture.Application.Interfaces.Repositories
         Task<PurchaseRequest> GetByIdWithDetailsAsync(int id);
         Task<decimal> GetUsedAmountByCategoryAsync(int proposalConfigId ,int departmentId, int categoryId,int? excludePurchaseRequestId = null);
         Task<PurchaseRequestStatus?> GetStatusByIdAsync(int id);
+        Task<PurchaseRequest?> GetByIdAsync(int id);
 
 
     }
