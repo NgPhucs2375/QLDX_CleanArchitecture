@@ -11,5 +11,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Sagas
         public string CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public string? LastErrorMessage { get; set; }
+        public DateTime? LastErrorAt { get; set; } = DateTime.UtcNow;
     }
 }

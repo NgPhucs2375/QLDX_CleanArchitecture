@@ -24,6 +24,14 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Sagas
         public Event<PurchaseRequestReturnedForEditEvent> RequestReturnedForEdit { get; private set; }
         public Event<PurchaseRequestOrderConfirmedEvent> RequestOrderConfirmed { get; private set; }
 
+        public Event<SubmitPurchaseRequestCommand> SubmitPDX { get; private set; }
+        public Event<ApproveDepartmentCommand> ApproveDepartment { get; private set; }
+        public Event<RejectDepartmentCommand> RejectDepartment { get; private set; }
+        public Event<ApproveControlCommand> ApproveControl { get; private set; }
+        public Event<RejectControlCommand> RejectControl { get; private set; }
+        public Event<ReturnForEditCommand> ReturnForEdit { get; private set; }
+        public Event<ConfirmOrderCommand> ConfirmOrder { get; private set; }
+
         public PurchaseRequestSagaStateMachine()
         {
             InstanceState(x => x.CurrentState);
@@ -31,7 +39,7 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Sagas
             // ======== TRANSITION LOGIC ========
 
             Initially(
-                When(RequestSubmitted)
+                When(SubmitPDX)
                     .Then(ctx =>
                     {
                         ctx.Saga.RequestId = ctx.Message.RequestId;
@@ -41,38 +49,82 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Sagas
                     })
                     .Activity(x => x.OfType<OnSubmittedActivity>())
                     .TransitionTo(PendingDepartment)
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(Submitted)
+                        )
             );
 
             During(PendingDepartment,
-                When(RequestDepartmentApproved)
+                When(ApproveDepartment)
                     .Activity(x=> x.OfType<OnDepartmentApprovedActivity>())
-                    .TransitionTo(PendingControl),
-                When(RequestDepartmentRejected)
+                    .TransitionTo(PendingControl)
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(PendingDepartment)
+                    ),
+                When(RejectDepartment)
                     .Activity(x=> x.OfType<OnDepartmentRejectedActivity>())
                     .TransitionTo(RejectedDepartment)
+                    .Catch<Exception>(ex => ex
+                        .TransitionTo(PendingDepartment))
                     );
 
             During(PendingControl,
-                When(RequestControlApproved)
+                When(ApproveControl)
                     .Activity(x=> x.OfType<OnControlApprovedActivity>())
-                    .TransitionTo(PendingOrderConfirm),
-                When(RequestControlRejected)
+                    .TransitionTo(PendingOrderConfirm)
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(PendingControl)
+                        ),
+                When(RejectControl)
                     .Activity(x=> x.OfType<OnControlRejectedActivity>())
-                    .TransitionTo(RejectedControl),
-                When(RequestReturnedForEdit)
+                    .TransitionTo(RejectedControl)
+                    .Catch<Exception>(ex => ex
+                        .TransitionTo(PendingControl)
+                        ),
+                When(ReturnForEdit)
                     .Activity(x=> x.OfType<OnReturnedForEditActivity>())
                     .TransitionTo(ReturnedForEdit)
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(PendingControl)
+                    )
             );
 
             During(PendingOrderConfirm,
-                When(RequestOrderConfirmed)
+                When(ConfirmOrder)
                     .Then(ctx => ctx.Saga.CompletedAt = DateTime.UtcNow)
                     .Activity(x => x.OfType<OnOrderConfirmedActivity>())
                     .TransitionTo(Completed)
-                    );
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(PendingOrderConfirm)
+                    ));
 
             During(ReturnedForEdit,
-                When(RequestSubmitted)
+                When(SubmitPDX)
                     .Then(ctx =>
                     {
                         ctx.Saga.TotalAmount = ctx.Message.TotalAmount;
@@ -80,33 +132,61 @@ namespace Onion.CleanArchitecture.Infrastructure.Messaging.Sagas
                     })
                     .Activity(x => x.OfType<OnSubmittedActivity>())
                     .TransitionTo(PendingDepartment)
+                    .Catch<Exception>(ex => ex
+                        .Then(ctx =>
+                        {
+                            ctx.Saga.LastErrorMessage = ctx.Exception.Message;
+                            ctx.Saga.LastErrorAt = DateTime.UtcNow;
+                        })
+                        .TransitionTo(ReturnedForEdit)
+                    )
                    );
 
             // ======== CORRELATION ========
 
-            Event(() => RequestSubmitted, e =>
+            // ============== Command ================== //
+            Event(() => SubmitPDX, e =>
             {
                 e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
                 e.SelectId(context => context.Message.CorrelationId);
             });
 
-            Event(() => RequestDepartmentApproved, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => ApproveDepartment, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault()); 
+            });
 
-            Event(() => RequestDepartmentRejected, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => RejectDepartment, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault());
+            });
 
-            Event(() => RequestControlApproved, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => ApproveControl, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault());
+            });
 
-            Event(() => RequestControlRejected, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => RejectControl, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault());
+            });
 
-            Event(() => RequestReturnedForEdit, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => ReturnForEdit, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault());
+            });
 
-            Event(() => RequestOrderConfirmed, e =>
-                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId));
+            Event(() => ConfirmOrder, e =>
+            {
+                e.CorrelateBy((saga, context) => saga.RequestId == context.Message.RequestId);
+                e.OnMissingInstance(m => m.Fault());
+            });
+            
         }
     }
 }

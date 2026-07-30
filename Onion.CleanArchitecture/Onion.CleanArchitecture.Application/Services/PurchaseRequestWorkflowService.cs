@@ -15,13 +15,13 @@ namespace Onion.CleanArchitecture.Application.Services
 {
     public interface IPurchaseRequestWorkflowService
     {
-        Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, CancellationToken ct);
         Task<PurchaseRequest> ApproveByDepartmentAsync(PurchaseRequest entity, string note, CancellationToken ct);
         Task<PurchaseRequest> RejectedByDepartmentAsync(PurchaseRequest entity, string note, CancellationToken ct);
         Task<PurchaseRequest> ApproveByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
         Task<PurchaseRequest> RejectedByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
         Task<PurchaseRequest> ReturnForEditByControlAsync(PurchaseRequest entity, string note, CancellationToken ct);
-        Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity, string note, CancellationToken ct);
+        Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity, CancellationToken ct);
 
         // Guards — được state machine gọi TRƯỚC khi fire trigger
         Task ValidateApproverForCurrentStep(PurchaseRequest entity);
@@ -253,7 +253,7 @@ namespace Onion.CleanArchitecture.Application.Services
         }
     }
 
-    public async Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity, string note, CancellationToken ct)
+    public async Task<PurchaseRequest> SubmitAsync(PurchaseRequest entity,  CancellationToken ct)
     {
         await ValidateQuotaOnSubmitAsync(entity, ct);
         UpdateApproverStatus(entity, (int)ApprovalLevel.CreatorLevel, (int)ApprovalLevel.DepartmentLevel, ApproverStatus.Approved);
@@ -356,7 +356,7 @@ namespace Onion.CleanArchitecture.Application.Services
             );
             return entity;
         }
-    public async Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity,string note,CancellationToken ct)
+    public async Task<PurchaseRequest> ConfirmOrderAsync(PurchaseRequest entity,CancellationToken ct)
         {
             await ValidateConfirmOrderAsync(entity, ct);
             await _eventBusService.PublishAsync(

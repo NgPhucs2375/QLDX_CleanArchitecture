@@ -1,4 +1,5 @@
 using MediatR;
+using Onion.CleanArchitecture.Application.Contracts;
 using Onion.CleanArchitecture.Application.Exceptions;
 using Onion.CleanArchitecture.Application.Interfaces;
 using Onion.CleanArchitecture.Application.Interfaces.Repositories;
@@ -51,6 +52,7 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
         private readonly IPurchaseRequestWorkflowService  _workflowService;
         private readonly IAuthenticatedUserService _authenticatesUser;
         private readonly IApprovalRecordService _approvalRecordService;
+        private readonly IEventBusService _bus;
 
 
 
@@ -63,7 +65,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             IUserLookupService userLookup,
             IPurchaseRequestWorkflowService workflowService,
             IAuthenticatedUserService authenticatesUser,
-            IApprovalRecordService approvalRecordService
+            IApprovalRecordService approvalRecordService,
+            IEventBusService bus
             )
         {
             _purchaseRequestRepo = purchaseRequestRepo;
@@ -74,7 +77,8 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             _userLookup = userLookup;
             _workflowService = workflowService;
             _authenticatesUser = authenticatesUser;
-            _approvalRecordService = approvalRecordService;  
+            _approvalRecordService = approvalRecordService; 
+            _bus = bus;
         }
 
         public async Task<Response<int>> Handle(CreatePurchaseRequestCommand request, CancellationToken ct)
@@ -232,11 +236,18 @@ namespace Onion.CleanArchitecture.Application.Features.PurchaseRequests.Commands
             }
             // 7. Save entity trước để có ID — OnEntryAsync cần ID để ghi ApprovalRecord
             await _purchaseRequestRepo.AddAsync(entity);
-
-            // 8. Fire state machine: Draft → PendingDepartment (kèm ghi lịch sử tự động qua OnEntry)
-            var machine = new PurchaseRequestStateMachine(_workflowService, _approvalRecordService, entity, _authenticatesUser.UserId);
-            await machine.FireAsync(PurchaseRequestTrigger.Submit, request.Note, ct);
-
+            // 8. MassTransit Saga
+            var correlationId = MassTransit.NewId.NextGuid();
+            // vì SubmitPurchaseRequestCommand là 1 record có tham số nên khi contructor cũng phải dùng có tham số chứu không tham số nó không ăn được vì chưa có khỏi tạo trong record
+            var sagaCommand = new SubmitPurchaseRequestCommand(
+                correlationId, // Guid
+                entity.Id, // int
+                entity.TotalProposedAmount, // decimal
+                _authenticatesUser.UserId, // string
+                DateTime.UtcNow // DateTime
+            );
+           
+            await _bus.PublishAsync(sagaCommand, ct);
             // 9. Update entity sau khi state machine thay đổi Status + ApproverStatus
             await _purchaseRequestRepo.UpdateAsync(entity);
 
